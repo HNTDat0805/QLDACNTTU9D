@@ -1,5 +1,7 @@
 import uuid
 from datetime import UTC, date, datetime, time
+from enum import StrEnum
+from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import CheckConstraint, Date, DateTime, Time
@@ -15,12 +17,20 @@ def get_datetime_utc() -> datetime:
 # ============================================================================
 
 
+class UserRole(StrEnum):
+    CUSTOMER = "customer"
+    STAFF = "staff"
+    TECHNICIAN = "technician"
+    MANAGER = "manager"
+    ADMIN = "admin"
+
+
 class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
-    role: str = Field(default="customer", max_length=50, index=True)
+    role: str = Field(default=UserRole.CUSTOMER.value, max_length=50, index=True)
 
 
 class UserCreate(UserBase):
@@ -61,9 +71,9 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    items: list[Item] = Relationship(back_populates="owner", cascade_delete=True)
-    customer_profile: Customer | None = Relationship(back_populates="user")
-    technician_profile: Technician | None = Relationship(back_populates="user")
+    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)  # noqa: UP037
+    customer_profile: Optional["Customer"] = Relationship(back_populates="user")  # noqa: UP037, UP045
+    technician_profile: Optional["Technician"] = Relationship(back_populates="user")  # noqa: UP037, UP045
 
 
 class UserPublic(UserBase):
@@ -423,10 +433,12 @@ class AppointmentBase(SQLModel):
     customer_notes: str | None = Field(default=None, max_length=1000)
     technician_diagnosis: str | None = Field(default=None, max_length=1000)
     estimated_completion_date: datetime | None = Field(
-        default=None, sa_type=DateTime(timezone=True)  # type: ignore
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
     )
     actual_completion_date: datetime | None = Field(
-        default=None, sa_type=DateTime(timezone=True)  # type: ignore
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
     )
     total_amount: float = Field(default=0.0)
 
@@ -490,9 +502,9 @@ class Appointment(AppointmentBase, table=True):
     status_history: list[RepairStatusHistory] = Relationship(
         back_populates="appointment", cascade_delete=True
     )
-    quotes: list[Quote] = Relationship(back_populates="appointment")
-    invoice: Invoice | None = Relationship(back_populates="appointment")
-    review: Review | None = Relationship(back_populates="appointment")
+    quotes: list["Quote"] = Relationship(back_populates="appointment")  # noqa: UP037
+    invoice: Optional["Invoice"] = Relationship(back_populates="appointment")  # noqa: UP037, UP045
+    review: Optional["Review"] = Relationship(back_populates="appointment")  # noqa: UP037, UP045
 
 
 class AppointmentPublic(AppointmentBase):
@@ -1039,11 +1051,19 @@ class Message(SQLModel):
 
 class Token(SQLModel):
     access_token: str
+    refresh_token: str | None = None
     token_type: str = "bearer"
+
+
+class RefreshTokenInput(SQLModel):
+    refresh_token: str
 
 
 class TokenPayload(SQLModel):
     sub: str | None = None
+    type: str | None = None
+    role: str | None = None
+    email: str | None = None
 
 
 class NewPassword(SQLModel):
