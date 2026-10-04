@@ -79,10 +79,6 @@ General development docs: [development.md](./development.md).
 
 This includes the local FastAPI and Vite workflow, Docker Compose services, `.env` configuration, and more.
 
-## Release Notes
-
-Check the file [release-notes.md](./release-notes.md).
-
 ## License
 
 The Full Stack FastAPI Template is licensed under the terms of the MIT license.
