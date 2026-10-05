@@ -16,14 +16,54 @@ password_hash = PasswordHash(
 )
 
 
-ALGORITHM = "HS256"
+ALGORITHM = settings.JWT_ALGORITHM
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
-    expire = datetime.now(UTC) + expires_delta
-    to_encode = {"exp": expire, "sub": str(subject)}
+def create_access_token(
+    subject: str | Any,
+    expires_delta: timedelta | None = None,
+    role: str | None = None,
+    email: str | None = None,
+) -> str:
+    if expires_delta:
+        expire = datetime.now(UTC) + expires_delta
+    else:
+        expire = datetime.now(UTC) + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+    to_encode: dict[str, Any] = {
+        "exp": expire,
+        "iat": datetime.now(UTC),
+        "sub": str(subject),
+        "type": "access",
+    }
+    if role is not None:
+        to_encode["role"] = role
+    if email is not None:
+        to_encode["email"] = email
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_refresh_token(
+    subject: str | Any, expires_delta: timedelta | None = None
+) -> str:
+    if expires_delta:
+        expire = datetime.now(UTC) + expires_delta
+    else:
+        expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode: dict[str, Any] = {
+        "exp": expire,
+        "iat": datetime.now(UTC),
+        "sub": str(subject),
+        "type": "refresh",
+    }
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> dict[str, Any]:
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
 
 
 def verify_password(
