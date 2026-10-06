@@ -39,10 +39,9 @@ services:
       dockerfile: backend/Dockerfile
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     command:
-      - fastapi
-      - dev
-      - --host
-      - "0.0.0.0"
+      - bash
+      - -c
+      - "bash scripts/prestart.sh && fastapi dev --host 0.0.0.0"
     develop:
       watch:
         - path: ./backend
@@ -61,6 +60,9 @@ services:
             - ./frontend/test-results
     # TODO: remove once coverage is done locally
     volumes:
+      - ./backend/app:/app/backend/app
+      - ./backend/tests:/app/backend/tests
+      - ./backend/scripts:/app/backend/scripts
       - ./backend/htmlcov:/app/backend/htmlcov
     environment:
       FASTAPI_ENV: "development"
