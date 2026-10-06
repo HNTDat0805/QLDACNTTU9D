@@ -45,74 +45,6 @@ export type HTTPValidationError = {
 };
 
 /**
- * ItemCreate
- */
-export type ItemCreate = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * ItemPublic
- */
-export type ItemPublic = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Owner Id
-     */
-    owner_id: string;
-    /**
-     * Created At
-     */
-    created_at?: string | null;
-};
-
-/**
- * ItemUpdate
- */
-export type ItemUpdate = {
-    /**
-     * Title
-     */
-    title?: string | null;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * ItemsPublic
- */
-export type ItemsPublic = {
-    /**
-     * Data
-     */
-    data: Array<ItemPublic>;
-    /**
-     * Count
-     */
-    count: number;
-};
-
-/**
  * Message
  */
 export type Message = {
@@ -159,6 +91,16 @@ export type PrivateUserCreate = {
 };
 
 /**
+ * RefreshTokenInput
+ */
+export type RefreshTokenInput = {
+    /**
+     * Refresh Token
+     */
+    refresh_token: string;
+};
+
+/**
  * Token
  */
 export type Token = {
@@ -166,6 +108,10 @@ export type Token = {
      * Access Token
      */
     access_token: string;
+    /**
+     * Refresh Token
+     */
+    refresh_token?: string | null;
     /**
      * Token Type
      */
@@ -207,6 +153,10 @@ export type UserCreate = {
      */
     full_name?: string | null;
     /**
+     * Role
+     */
+    role?: string;
+    /**
      * Password
      */
     password: string;
@@ -232,6 +182,10 @@ export type UserPublic = {
      * Full Name
      */
     full_name?: string | null;
+    /**
+     * Role
+     */
+    role?: string;
     /**
      * Id
      */
@@ -284,6 +238,10 @@ export type UserUpdate = {
      * Password
      */
     password?: string | null;
+    /**
+     * Role
+     */
+    role?: string | null;
 };
 
 /**
@@ -366,6 +324,56 @@ export type loginLoginAccessTokenResponses = {
 };
 
 export type loginLoginAccessTokenResponse = loginLoginAccessTokenResponses[keyof loginLoginAccessTokenResponses];
+
+export type loginRefreshAccessTokenData = {
+    body: RefreshTokenInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/refresh-token';
+};
+
+export type loginRefreshAccessTokenErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginRefreshAccessTokenError = loginRefreshAccessTokenErrors[keyof loginRefreshAccessTokenErrors];
+
+export type loginRefreshAccessTokenResponses = {
+    /**
+     * Successful Response
+     */
+    200: Token;
+};
+
+export type loginRefreshAccessTokenResponse = loginRefreshAccessTokenResponses[keyof loginRefreshAccessTokenResponses];
+
+export type loginRegisterUserData = {
+    body: UserRegister;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/register';
+};
+
+export type loginRegisterUserErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginRegisterUserError = loginRegisterUserErrors[keyof loginRegisterUserErrors];
+
+export type loginRegisterUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPublic;
+};
+
+export type loginRegisterUserResponse = loginRegisterUserResponses[keyof loginRegisterUserResponses];
 
 export type loginTestTokenData = {
     body?: never;
@@ -771,155 +779,6 @@ export type utilsHealthCheckResponses = {
 };
 
 export type utilsHealthCheckResponse = utilsHealthCheckResponses[keyof utilsHealthCheckResponses];
-
-export type itemsReadItemsData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Skip
-         */
-        skip?: number;
-        /**
-         * Limit
-         */
-        limit?: number;
-    };
-    url: '/api/v1/items/';
-};
-
-export type itemsReadItemsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type itemsReadItemsError = itemsReadItemsErrors[keyof itemsReadItemsErrors];
-
-export type itemsReadItemsResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemsPublic;
-};
-
-export type itemsReadItemsResponse = itemsReadItemsResponses[keyof itemsReadItemsResponses];
-
-export type itemsCreateItemData = {
-    body: ItemCreate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/items/';
-};
-
-export type itemsCreateItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type itemsCreateItemError = itemsCreateItemErrors[keyof itemsCreateItemErrors];
-
-export type itemsCreateItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemPublic;
-};
-
-export type itemsCreateItemResponse = itemsCreateItemResponses[keyof itemsCreateItemResponses];
-
-export type itemsDeleteItemData = {
-    body?: never;
-    path: {
-        /**
-         * Id
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/items/{id}';
-};
-
-export type itemsDeleteItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type itemsDeleteItemError = itemsDeleteItemErrors[keyof itemsDeleteItemErrors];
-
-export type itemsDeleteItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: Message;
-};
-
-export type itemsDeleteItemResponse = itemsDeleteItemResponses[keyof itemsDeleteItemResponses];
-
-export type itemsReadItemData = {
-    body?: never;
-    path: {
-        /**
-         * Id
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/items/{id}';
-};
-
-export type itemsReadItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type itemsReadItemError = itemsReadItemErrors[keyof itemsReadItemErrors];
-
-export type itemsReadItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemPublic;
-};
-
-export type itemsReadItemResponse = itemsReadItemResponses[keyof itemsReadItemResponses];
-
-export type itemsUpdateItemData = {
-    body: ItemUpdate;
-    path: {
-        /**
-         * Id
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/items/{id}';
-};
-
-export type itemsUpdateItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type itemsUpdateItemError = itemsUpdateItemErrors[keyof itemsUpdateItemErrors];
-
-export type itemsUpdateItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemPublic;
-};
-
-export type itemsUpdateItemResponse = itemsUpdateItemResponses[keyof itemsUpdateItemResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

@@ -13,7 +13,6 @@ from app.models import (
     Device,
     Invoice,
     InvoiceItem,
-    Item,
     Notification,
     Payment,
     Quote,
@@ -133,40 +132,6 @@ def seed_all_data(session: Session) -> None:  # noqa: C901
     tech_user_2 = users_map["tech.tran@fixphone.vn"]
     cust_user_1 = users_map["customer1@gmail.com"]
     cust_user_2 = users_map["customer2@gmail.com"]
-
-    # =========================================================================
-    # 2. TEMPLATE ITEMS
-    # =========================================================================
-    sample_items = [
-        (
-            "Bộ dụng cụ mở máy đa năng iFixit Pro",
-            "Bộ tuốc nơ vít sửa chữa chính xác",
-            admin_user.id,
-        ),
-        (
-            "Máy ép kính chân không đa năng Yaxun",
-            "Dùng cho ép kính màn hình cong và phẳng",
-            admin_user.id,
-        ),
-        (
-            "Kính hiển vi quang học 3 mắt Relife",
-            "Soi mạch vi điều khiển và mối hàn",
-            admin_user.id,
-        ),
-        (
-            "Máy in bill nhiệt Xprinter XP-420B",
-            "In phiếu tiếp nhận máy và hóa đơn tại quầy",
-            staff_user.id,
-        ),
-    ]
-    for title, desc, owner_id in sample_items:
-        existing_item = session.exec(
-            select(Item).where(Item.title == title, Item.owner_id == owner_id)
-        ).first()
-        if not existing_item:
-            item_obj = Item(title=title, description=desc, owner_id=owner_id)
-            session.add(item_obj)
-    session.commit()
 
     # =========================================================================
     # 3. SERVICES (Dịch vụ sửa chữa)
