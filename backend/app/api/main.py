@@ -10,6 +10,7 @@ api_router.include_router(utils.router)
 api_router.include_router(items.router)
 api_router.include_router(slots.router)
 api_router.include_router(appointments.router)
+api_router.include_router(appointments.bookings_router)
 
 
 if settings.FASTAPI_ENV == "development":

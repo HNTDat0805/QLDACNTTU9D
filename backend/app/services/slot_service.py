@@ -329,229 +329,164 @@ def check_slot_availability(
     )
 
 
+def check_can_update(user: User, appointment: Appointment, session: Session) -> None:
+    """Validate that the user has permission to update the appointment.
+
+    Allowed:
+    - superuser, admin, manager, staff, technician
+    - customer who owns the appointment (linked via customer.user_id)
+    Forbidden:
+    - any other user or a customer attempting to update someone else's appointment.
+    """
+    if user.is_superuser:
+        return
+    role = (user.role or "").lower()
+    if role in ("admin", "manager", "staff", "technician"):
+        return
+    if role == "customer":
+        customer = session.get(Customer, appointment.customer_id)
+        if customer and customer.user_id == user.id:
+            return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Không đủ quyền cập nhật lịch hẹn",
+    )
+
+
 def create_booking_appointment(
     session: Session, data: AppointmentBookingCreate
 ) -> AppointmentBookingResponse:
-    """API 2: Create a new repair appointment with atomic concurrency locking."""
-    customer = session.get(Customer, data.customer_id)
-    if not customer:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy khách hàng"
-        )
-
-    # Resolve or create customer device
-    device: Device | None = None
-    if data.device_id:
-        device = session.get(Device, data.device_id)
-        if not device or device.customer_id != customer.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Không tìm thấy thiết bị hợp lệ của khách hàng",
-            )
-    else:
-        # Use existing device or create default
-        device = session.exec(
-            select(Device).where(Device.customer_id == customer.id)
-        ).first()
-        if not device:
-            device = Device(
-                customer_id=customer.id,
-                device_type="Smartphone",
-                brand=data.device_brand or "Generic",
-                model=data.device_model or "Smartphone",
-            )
-            session.add(device)
-            session.flush()
-
-    service = session.get(Service, data.service_id)
-    if not service:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy dịch vụ"
-        )
-    if not service.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Dịch vụ hiện không hoạt động",
-        )
-
-    duration_minutes = service.estimated_duration_minutes
-    slot_start_dt = datetime.combine(data.appointment_date, data.start_time, tzinfo=UTC)
-    slot_end_dt = slot_start_dt + timedelta(minutes=duration_minutes)
-    end_time = slot_end_dt.time()
-
-    assigned_tech_id: uuid.UUID | None = None
-
-    if data.technician_id:
-        tech = session.exec(
-            select(Technician)
-            .where(Technician.id == data.technician_id)
-            .with_for_update()
-        ).first()
-        if not tech:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Không tìm thấy kỹ thuật viên",
-            )
-        if not tech.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Kỹ thuật viên không hoạt động",
-            )
-
-        schedule = session.exec(
-            select(TechnicianSchedule)
-            .where(TechnicianSchedule.technician_id == tech.id)
-            .where(TechnicianSchedule.work_date == data.appointment_date)
-            .where(TechnicianSchedule.status == "AVAILABLE")
-            .where(TechnicianSchedule.start_time <= data.start_time)
-            .where(TechnicianSchedule.end_time >= end_time)
-        ).first()
-        if not schedule:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Kỹ thuật viên không có ca làm việc phù hợp trong khung giờ này",
-            )
-
-        if check_overlap(session, tech.id, slot_start_dt, slot_end_dt):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Khung giờ đã có lịch hẹn khác",
-            )
-        assigned_tech_id = tech.id
-    else:
-        # Auto-assignment: Find candidate technicians and lock row
-        candidates = list(
-            session.exec(
-                select(TechnicianSchedule)
-                .join(Technician)
-                .where(col(Technician.is_active).is_(True))
-                .where(TechnicianSchedule.work_date == data.appointment_date)
-                .where(TechnicianSchedule.status == "AVAILABLE")
-                .where(TechnicianSchedule.start_time <= data.start_time)
-                .where(TechnicianSchedule.end_time >= end_time)
-            ).all()
-        )
-        if not candidates:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Không có kỹ thuật viên nào làm việc trong khung giờ này",
-            )
-
-        for sch in candidates:
-            cand_tech = session.exec(
-                select(Technician)
-                .where(Technician.id == sch.technician_id)
-                .with_for_update()
+    """API 1: Create a new repair appointment with atomic concurrency locking."""
+    try:
+        # 1. Resolve or create customer
+        customer: Customer | None = None
+        if data.customer_id:
+            customer = session.get(Customer, data.customer_id)
+            if not customer:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Không tìm thấy khách hàng",
+                )
+        elif data.customer_phone and data.customer_phone.strip():
+            phone = data.customer_phone.strip()
+            customer = session.exec(
+                select(Customer).where(Customer.phone_number == phone)
             ).first()
-            if not cand_tech:
-                continue
-            if not check_overlap(session, cand_tech.id, slot_start_dt, slot_end_dt):
-                assigned_tech_id = cand_tech.id
-                break
-
-        if not assigned_tech_id:
+            if not customer:
+                customer = Customer(
+                    full_name=data.customer_name or "Khách hàng",
+                    phone_number=phone,
+                    email=data.customer_email,
+                    address=data.customer_address,
+                )
+                session.add(customer)
+                session.flush()
+            else:
+                if data.customer_name:
+                    customer.full_name = data.customer_name
+                if data.customer_email:
+                    customer.email = data.customer_email
+                if data.customer_address:
+                    customer.address = data.customer_address
+                session.add(customer)
+                session.flush()
+        else:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Tất cả kỹ thuật viên đều đã kín lịch trong khung giờ này",
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Cần cung cấp thông tin khách hàng (customer_id hoặc customer_phone)",
             )
 
-    appt_code = generate_appointment_code(session, data.appointment_date)
+        # 2. Resolve or create customer device
+        device: Device | None = None
+        if data.device_id:
+            device = session.get(Device, data.device_id)
+            if not device or device.customer_id != customer.id:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Không tìm thấy thiết bị hợp lệ của khách hàng",
+                )
+        else:
+            device = session.exec(
+                select(Device).where(Device.customer_id == customer.id)
+            ).first()
+            if not device:
+                device = Device(
+                    customer_id=customer.id,
+                    device_type=data.device_type or "Smartphone",
+                    brand=data.device_brand or "Generic",
+                    model=data.device_model or "Smartphone",
+                )
+                session.add(device)
+                session.flush()
+            elif data.device_brand and (
+                device.brand != data.device_brand
+                or (data.device_model and device.model != data.device_model)
+            ):
+                device = Device(
+                    customer_id=customer.id,
+                    device_type=data.device_type or "Smartphone",
+                    brand=data.device_brand,
+                    model=data.device_model or "Smartphone",
+                )
+                session.add(device)
+                session.flush()
 
-    appointment = Appointment(
-        appointment_number=appt_code,
-        customer_id=customer.id,
-        device_id=device.id,
-        technician_id=assigned_tech_id,
-        appointment_date=slot_start_dt,
-        status="PENDING",
-        customer_notes=data.description,
-        total_amount=service.base_price,
-    )
-    session.add(appointment)
-    session.flush()
+        # 3. Resolve services
+        svc_ids: list[uuid.UUID] = []
+        if data.service_ids:
+            svc_ids.extend(data.service_ids)
+        elif data.service_id:
+            svc_ids.append(data.service_id)
 
-    appt_service = AppointmentService(
-        appointment_id=appointment.id,
-        service_id=service.id,
-        price_at_booking=service.base_price,
-        quantity=1,
-    )
-    session.add(appt_service)
+        if not svc_ids:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Cần chọn ít nhất một dịch vụ sửa chữa",
+            )
 
-    history = RepairStatusHistory(
-        appointment_id=appointment.id,
-        previous_status=None,
-        new_status="PENDING",
-        note="Tạo lịch hẹn thành công",
-    )
-    session.add(history)
+        selected_services: list[Service] = []
+        for sid in svc_ids:
+            svc = session.get(Service, sid)
+            if not svc:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Không tìm thấy dịch vụ",
+                )
+            if not svc.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Dịch vụ '{svc.name}' hiện không hoạt động",
+                )
+            selected_services.append(svc)
 
-    session.commit()
-    session.refresh(appointment)
+        duration_minutes = sum(s.estimated_duration_minutes for s in selected_services)
+        total_price = sum(s.base_price for s in selected_services)
 
-    return AppointmentBookingResponse(
-        appointment_id=appointment.id,
-        appointment_code=appointment.appointment_number,
-        appointment_date=data.appointment_date,
-        start_time=data.start_time.strftime("%H:%M"),
-        status=appointment.status,
-        message="Tạo lịch hẹn thành công",
-    )
+        # 4. Check appointment date/time
+        if data.appointment_date < date.today():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể đặt lịch trong quá khứ",
+            )
 
-
-def update_booking_appointment(
-    session: Session,
-    appointment_id: uuid.UUID,
-    data: AppointmentBookingUpdate,
-) -> AppointmentBookingResponse:
-    """API 3: Update an existing appointment (reschedule or change technician)."""
-    appointment = session.get(Appointment, appointment_id)
-    if not appointment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy lịch hẹn"
+        slot_start_dt = datetime.combine(
+            data.appointment_date, data.start_time, tzinfo=UTC
         )
+        if data.appointment_date == date.today() and slot_start_dt < get_datetime_utc():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể đặt lịch trong quá khứ",
+            )
 
-    if (appointment.status or "").upper() in ("CANCELLED", "COMPLETED"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Không thể cập nhật lịch hẹn đã hoàn thành hoặc đã bị hủy",
-        )
+        slot_end_dt = slot_start_dt + timedelta(minutes=duration_minutes)
+        end_time = slot_end_dt.time()
 
-    # Determine if rescheduling date/time or changing technician
-    is_rescheduling = (
-        data.appointment_date is not None
-        or data.start_time is not None
-        or data.technician_id is not None
-    )
-
-    if is_rescheduling:
-        existing_dt = appointment.appointment_date
-        if existing_dt.tzinfo is None:
-            existing_dt = existing_dt.replace(tzinfo=UTC)
-
-        target_date = (
-            data.appointment_date
-            if data.appointment_date is not None
-            else existing_dt.date()
-        )
-        target_time = (
-            data.start_time if data.start_time is not None else existing_dt.time()
-        )
-        target_tech_id = (
-            data.technician_id
-            if data.technician_id is not None
-            else appointment.technician_id
-        )
-
-        duration = get_appointment_duration(session, appointment.id)
-        target_start_dt = datetime.combine(target_date, target_time, tzinfo=UTC)
-        target_end_dt = target_start_dt + timedelta(minutes=duration)
-        target_end_time = target_end_dt.time()
-
-        if target_tech_id:
+        # 5. Technician assignment with row lock
+        assigned_tech_id: uuid.UUID | None = None
+        if data.technician_id:
             tech = session.exec(
                 select(Technician)
-                .where(Technician.id == target_tech_id)
+                .where(Technician.id == data.technician_id)
                 .with_for_update()
             ).first()
             if not tech:
@@ -568,10 +503,10 @@ def update_booking_appointment(
             schedule = session.exec(
                 select(TechnicianSchedule)
                 .where(TechnicianSchedule.technician_id == tech.id)
-                .where(TechnicianSchedule.work_date == target_date)
+                .where(TechnicianSchedule.work_date == data.appointment_date)
                 .where(TechnicianSchedule.status == "AVAILABLE")
-                .where(TechnicianSchedule.start_time <= target_time)
-                .where(TechnicianSchedule.end_time >= target_end_time)
+                .where(TechnicianSchedule.start_time <= data.start_time)
+                .where(TechnicianSchedule.end_time >= end_time)
             ).first()
             if not schedule:
                 raise HTTPException(
@@ -579,52 +514,351 @@ def update_booking_appointment(
                     detail="Kỹ thuật viên không có ca làm việc phù hợp trong khung giờ này",
                 )
 
-            # Exclude current appointment from conflict check
-            if check_overlap(
-                session,
-                tech.id,
-                target_start_dt,
-                target_end_dt,
-                exclude_appt_id=appointment.id,
-            ):
+            if check_overlap(session, tech.id, slot_start_dt, slot_end_dt):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail="Khung giờ mới đã bị trùng với lịch hẹn khác",
+                    detail="Khung giờ đã có lịch hẹn khác",
+                )
+            assigned_tech_id = tech.id
+        else:
+            # Auto-assignment: Find candidate technicians and lock rows in deterministic order
+            candidates = list(
+                session.exec(
+                    select(TechnicianSchedule)
+                    .join(Technician)
+                    .where(col(Technician.is_active).is_(True))
+                    .where(TechnicianSchedule.work_date == data.appointment_date)
+                    .where(TechnicianSchedule.status == "AVAILABLE")
+                    .where(TechnicianSchedule.start_time <= data.start_time)
+                    .where(TechnicianSchedule.end_time >= end_time)
+                    .order_by(col(TechnicianSchedule.technician_id))
+                ).all()
+            )
+            if not candidates:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Không có kỹ thuật viên nào làm việc trong khung giờ này",
                 )
 
-            appointment.technician_id = tech.id
-        else:
-            # Reassign if technician wasn't set
-            pass
+            for sch in candidates:
+                cand_tech = session.exec(
+                    select(Technician)
+                    .where(Technician.id == sch.technician_id)
+                    .with_for_update()
+                ).first()
+                if not cand_tech:
+                    continue
+                if not check_overlap(session, cand_tech.id, slot_start_dt, slot_end_dt):
+                    assigned_tech_id = cand_tech.id
+                    break
 
-        appointment.appointment_date = target_start_dt
+            if not assigned_tech_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Tất cả kỹ thuật viên đều đã kín lịch trong khung giờ này",
+                )
 
-    if data.description is not None:
-        appointment.customer_notes = data.description
+        appt_code = generate_appointment_code(session, data.appointment_date)
 
-    history = RepairStatusHistory(
-        appointment_id=appointment.id,
-        previous_status=appointment.status,
-        new_status=appointment.status,
-        note="Cập nhật thông tin lịch hẹn",
-    )
-    session.add(history)
+        appointment = Appointment(
+            appointment_number=appt_code,
+            customer_id=customer.id,
+            device_id=device.id,
+            technician_id=assigned_tech_id,
+            appointment_date=slot_start_dt,
+            status="PENDING",
+            customer_notes=data.description,
+            total_amount=total_price,
+        )
+        session.add(appointment)
+        session.flush()
 
-    session.commit()
-    session.refresh(appointment)
+        for svc in selected_services:
+            appt_service = AppointmentService(
+                appointment_id=appointment.id,
+                service_id=svc.id,
+                price_at_booking=svc.base_price,
+                quantity=1,
+            )
+            session.add(appt_service)
 
-    appt_dt = appointment.appointment_date
-    if appt_dt.tzinfo is None:
-        appt_dt = appt_dt.replace(tzinfo=UTC)
+        history = RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status=None,
+            new_status="PENDING",
+            note="Tạo lịch hẹn thành công",
+            changed_by_user_id=customer.user_id if customer else None,
+        )
+        session.add(history)
 
-    return AppointmentBookingResponse(
-        appointment_id=appointment.id,
-        appointment_code=appointment.appointment_number,
-        appointment_date=appt_dt.date(),
-        start_time=appt_dt.time().strftime("%H:%M"),
-        status=appointment.status,
-        message="Cập nhật lịch hẹn thành công",
-    )
+        session.commit()
+        session.refresh(appointment)
+
+        return AppointmentBookingResponse(
+            appointment_id=appointment.id,
+            appointment_code=appointment.appointment_number,
+            appointment_date=data.appointment_date,
+            start_time=data.start_time.strftime("%H:%M"),
+            end_time=end_time.strftime("%H:%M"),
+            status=appointment.status,
+            message="Tạo lịch hẹn thành công",
+            customer_id=customer.id,
+            device_id=device.id,
+            technician_id=assigned_tech_id,
+            total_amount=total_price,
+            service_names=[s.name for s in selected_services],
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        logger.error(
+            f"Lỗi hệ thống khi tạo lịch hẹn: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi tạo lịch hẹn",
+        ) from e
+
+
+def update_booking_appointment(
+    session: Session,
+    appointment_id: uuid.UUID,
+    data: AppointmentBookingUpdate,
+    current_user: User | None = None,
+) -> AppointmentBookingResponse:
+    """API 2: Update an existing appointment (reschedule or change technician)."""
+    try:
+        appointment = session.exec(
+            select(Appointment)
+            .where(Appointment.id == appointment_id)
+            .with_for_update()
+        ).first()
+        if not appointment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy lịch hẹn"
+            )
+
+        # Authorization check
+        if current_user is not None:
+            check_can_update(
+                user=current_user, appointment=appointment, session=session
+            )
+
+        # Status check: HTTP 409 Conflict if already cancelled, completed, or in progress
+        current_status = (appointment.status or "").upper()
+        if current_status in (
+            AppointmentStatus.CANCELLED.value,
+            AppointmentStatus.COMPLETED.value,
+            AppointmentStatus.IN_PROGRESS.value,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Không thể cập nhật lịch hẹn đã hoàn thành, đang sửa chữa hoặc đã bị hủy",
+            )
+
+        # Update contact info if provided
+        if data.contact_name or data.contact_phone:
+            cust = session.get(Customer, appointment.customer_id)
+            if cust:
+                if data.contact_name:
+                    cust.full_name = data.contact_name
+                if data.contact_phone:
+                    cust.phone_number = data.contact_phone
+                session.add(cust)
+
+        # Update device info if provided
+        if data.device_brand or data.device_model:
+            dev = session.get(Device, appointment.device_id)
+            if dev:
+                if data.device_brand:
+                    dev.brand = data.device_brand
+                if data.device_model:
+                    dev.model = data.device_model
+                session.add(dev)
+
+        # Determine if rescheduling date/time or changing technician
+        is_rescheduling = (
+            data.appointment_date is not None
+            or data.start_time is not None
+            or data.technician_id is not None
+        )
+
+        if is_rescheduling:
+            existing_dt = appointment.appointment_date
+            if existing_dt.tzinfo is None:
+                existing_dt = existing_dt.replace(tzinfo=UTC)
+
+            target_date = (
+                data.appointment_date
+                if data.appointment_date is not None
+                else existing_dt.date()
+            )
+            target_time = (
+                data.start_time if data.start_time is not None else existing_dt.time()
+            )
+            target_tech_id = (
+                data.technician_id
+                if data.technician_id is not None
+                else appointment.technician_id
+            )
+
+            if target_date < date.today():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Không thể đổi lịch sang ngày trong quá khứ",
+                )
+
+            duration = get_appointment_duration(session, appointment.id)
+            target_start_dt = datetime.combine(target_date, target_time, tzinfo=UTC)
+            target_end_dt = target_start_dt + timedelta(minutes=duration)
+            target_end_time = target_end_dt.time()
+
+            if target_tech_id:
+                tech = session.exec(
+                    select(Technician)
+                    .where(Technician.id == target_tech_id)
+                    .with_for_update()
+                ).first()
+                if not tech:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Không tìm thấy kỹ thuật viên",
+                    )
+                if not tech.is_active:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Kỹ thuật viên không hoạt động",
+                    )
+
+                schedule = session.exec(
+                    select(TechnicianSchedule)
+                    .where(TechnicianSchedule.technician_id == tech.id)
+                    .where(TechnicianSchedule.work_date == target_date)
+                    .where(TechnicianSchedule.status == "AVAILABLE")
+                    .where(TechnicianSchedule.start_time <= target_time)
+                    .where(TechnicianSchedule.end_time >= target_end_time)
+                ).first()
+                if not schedule:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Kỹ thuật viên không có ca làm việc phù hợp trong khung giờ này",
+                    )
+
+                # Exclude current appointment from conflict check
+                if check_overlap(
+                    session,
+                    tech.id,
+                    target_start_dt,
+                    target_end_dt,
+                    exclude_appt_id=appointment.id,
+                ):
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Khung giờ mới đã bị trùng với lịch hẹn khác",
+                    )
+
+                appointment.technician_id = tech.id
+            else:
+                # Auto-assignment: Find candidate technicians and lock rows
+                candidates = list(
+                    session.exec(
+                        select(TechnicianSchedule)
+                        .join(Technician)
+                        .where(col(Technician.is_active).is_(True))
+                        .where(TechnicianSchedule.work_date == target_date)
+                        .where(TechnicianSchedule.status == "AVAILABLE")
+                        .where(TechnicianSchedule.start_time <= target_time)
+                        .where(TechnicianSchedule.end_time >= target_end_time)
+                        .order_by(col(TechnicianSchedule.technician_id))
+                    ).all()
+                )
+                if not candidates:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Không có kỹ thuật viên nào làm việc trong khung giờ này",
+                    )
+                assigned_tech_id = None
+                for sch in candidates:
+                    cand_tech = session.exec(
+                        select(Technician)
+                        .where(Technician.id == sch.technician_id)
+                        .with_for_update()
+                    ).first()
+                    if not cand_tech:
+                        continue
+                    if not check_overlap(
+                        session,
+                        cand_tech.id,
+                        target_start_dt,
+                        target_end_dt,
+                        exclude_appt_id=appointment.id,
+                    ):
+                        assigned_tech_id = cand_tech.id
+                        break
+                if not assigned_tech_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Tất cả kỹ thuật viên đều đã kín lịch trong khung giờ này",
+                    )
+                appointment.technician_id = assigned_tech_id
+
+            appointment.appointment_date = target_start_dt
+
+        if data.description is not None:
+            appointment.customer_notes = data.description
+
+        appointment.updated_at = get_datetime_utc()
+
+        audit_note = "Cập nhật thông tin lịch hẹn"
+        if data.reschedule_reason:
+            audit_note += f". Lý do đổi lịch: {data.reschedule_reason}"
+
+        history = RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status=appointment.status,
+            new_status=appointment.status,
+            note=audit_note,
+            changed_by_user_id=current_user.id if current_user else None,
+        )
+        session.add(history)
+
+        session.commit()
+        session.refresh(appointment)
+
+        appt_dt = appointment.appointment_date
+        if appt_dt.tzinfo is None:
+            appt_dt = appt_dt.replace(tzinfo=UTC)
+
+        duration = get_appointment_duration(session, appointment.id)
+        end_dt = appt_dt + timedelta(minutes=duration)
+
+        return AppointmentBookingResponse(
+            appointment_id=appointment.id,
+            appointment_code=appointment.appointment_number,
+            appointment_date=appt_dt.date(),
+            start_time=appt_dt.time().strftime("%H:%M"),
+            end_time=end_dt.time().strftime("%H:%M"),
+            status=appointment.status,
+            message="Cập nhật lịch hẹn thành công",
+            customer_id=appointment.customer_id,
+            device_id=appointment.device_id,
+            technician_id=appointment.technician_id,
+            total_amount=appointment.total_amount,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        logger.error(
+            f"Lỗi hệ thống khi cập nhật lịch hẹn {appointment_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi cập nhật lịch hẹn",
+        ) from e
 
 
 def check_can_confirm(user: User) -> None:

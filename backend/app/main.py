@@ -62,5 +62,6 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 # Direct /api route aliases matching proposed endpoints without /v1
 app.include_router(slots_route.router, prefix="/api")
 app.include_router(appointments_route.router, prefix="/api")
+app.include_router(appointments_route.bookings_router, prefix="/api")
 if FRONTEND_DIR.exists():
     app.frontend("/", directory=FRONTEND_DIR)

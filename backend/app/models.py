@@ -1,9 +1,9 @@
 import uuid
 from datetime import UTC, date, datetime, time
 from enum import StrEnum
-from typing import Optional
+from typing import Optional, Self
 
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr, field_validator, model_validator
 from sqlalchemy import CheckConstraint, Date, DateTime, Time
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -1114,9 +1114,15 @@ class SlotCheckResponse(SQLModel):
 
 
 class AppointmentBookingCreate(SQLModel):
-    customer_id: uuid.UUID
-    service_id: uuid.UUID
+    customer_id: uuid.UUID | None = None
+    customer_name: str | None = None
+    customer_phone: str | None = None
+    customer_email: EmailStr | None = None
+    customer_address: str | None = None
+    service_id: uuid.UUID | None = None
+    service_ids: list[uuid.UUID] | None = None
     device_id: uuid.UUID | None = None
+    device_type: str | None = None
     device_brand: str | None = None
     device_model: str | None = None
     appointment_date: date
@@ -1124,12 +1130,29 @@ class AppointmentBookingCreate(SQLModel):
     technician_id: uuid.UUID | None = None
     description: str | None = None
 
+    @model_validator(mode="after")
+    def validate_customer_and_service(self) -> Self:
+        if not self.customer_id and not (
+            self.customer_phone and self.customer_phone.strip()
+        ):
+            raise ValueError("Cần cung cấp customer_id hoặc customer_phone")
+        if not self.service_id and not self.service_ids:
+            raise ValueError(
+                "Cần chọn ít nhất một dịch vụ sửa chữa (service_id hoặc service_ids)"
+            )
+        return self
+
 
 class AppointmentBookingUpdate(SQLModel):
     appointment_date: date | None = None
     start_time: time | None = None
     technician_id: uuid.UUID | None = None
     description: str | None = None
+    reschedule_reason: str | None = None
+    contact_name: str | None = None
+    contact_phone: str | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
 
 
 class AppointmentBookingResponse(SQLModel):
@@ -1139,6 +1162,12 @@ class AppointmentBookingResponse(SQLModel):
     start_time: str
     status: str
     message: str
+    end_time: str | None = None
+    customer_id: uuid.UUID | None = None
+    device_id: uuid.UUID | None = None
+    technician_id: uuid.UUID | None = None
+    total_amount: float | None = None
+    service_names: list[str] | None = None
 
 
 # ============================================================================
