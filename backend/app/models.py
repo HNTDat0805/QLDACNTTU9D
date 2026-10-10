@@ -1076,3 +1076,66 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# ============================================================================
+# SLOT & APPOINTMENT BOOKING API SCHEMAS
+# ============================================================================
+
+
+class AvailableSlotItem(SQLModel):
+    start_time: str
+    end_time: str
+    available: bool = True
+    technician_id: uuid.UUID | None = None
+
+
+class AvailableSlotsResponse(SQLModel):
+    date: date
+    service_id: uuid.UUID
+    available_slots: list[AvailableSlotItem]
+
+
+class SlotCheckRequest(SQLModel):
+    service_id: uuid.UUID
+    appointment_date: date
+    start_time: time
+    technician_id: uuid.UUID | None = None
+    exclude_appointment_id: uuid.UUID | None = None
+
+
+class SlotCheckResponse(SQLModel):
+    available: bool
+    reason: str | None = None
+    message: str | None = None
+    start_time: str | None = None
+    end_time: str | None = None
+    technician_id: uuid.UUID | None = None
+
+
+class AppointmentBookingCreate(SQLModel):
+    customer_id: uuid.UUID
+    service_id: uuid.UUID
+    device_id: uuid.UUID | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
+    appointment_date: date
+    start_time: time
+    technician_id: uuid.UUID | None = None
+    description: str | None = None
+
+
+class AppointmentBookingUpdate(SQLModel):
+    appointment_date: date | None = None
+    start_time: time | None = None
+    technician_id: uuid.UUID | None = None
+    description: str | None = None
+
+
+class AppointmentBookingResponse(SQLModel):
+    appointment_id: uuid.UUID
+    appointment_code: str
+    appointment_date: date
+    start_time: str
+    status: str
+    message: str

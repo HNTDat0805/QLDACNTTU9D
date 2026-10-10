@@ -8,6 +8,8 @@ from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
+from app.api.routes import appointments as appointments_route
+from app.api.routes import slots as slots_route
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 from app.core.middleware import RequestLoggingMiddleware
@@ -57,5 +59,8 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+# Direct /api route aliases matching proposed endpoints without /v1
+app.include_router(slots_route.router, prefix="/api")
+app.include_router(appointments_route.router, prefix="/api")
 if FRONTEND_DIR.exists():
     app.frontend("/", directory=FRONTEND_DIR)
