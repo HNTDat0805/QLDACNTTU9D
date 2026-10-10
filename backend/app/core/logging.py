@@ -35,11 +35,11 @@ class TextFormatter(logging.Formatter):
     """Human-readable log formatter with ANSI colors for development."""
 
     COLORS: dict[int, str] = {
-        logging.DEBUG: "\033[36m",      # Cyan
-        logging.INFO: "\033[32m",       # Green
-        logging.WARNING: "\033[33m",    # Yellow
-        logging.ERROR: "\033[31m",      # Red
-        logging.CRITICAL: "\033[1;31m", # Bold Red
+        logging.DEBUG: "\033[36m",  # Cyan
+        logging.INFO: "\033[32m",  # Green
+        logging.WARNING: "\033[33m",  # Yellow
+        logging.ERROR: "\033[31m",  # Red
+        logging.CRITICAL: "\033[1;31m",  # Bold Red
     }
     RESET: str = "\033[0m"
 
@@ -126,7 +126,9 @@ def setup_logging() -> None:
         )
         file_handler.setLevel(log_level)
         file_handler.setFormatter(
-            JSONFormatter() if settings.LOG_FORMAT == "json" else TextFormatter(use_colors=False)
+            JSONFormatter()
+            if settings.LOG_FORMAT == "json"
+            else TextFormatter(use_colors=False)
         )
         file_handler.addFilter(request_id_filter)
         root_logger.addHandler(file_handler)

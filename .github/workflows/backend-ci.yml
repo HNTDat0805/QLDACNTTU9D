@@ -1,0 +1,124 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - Dev
+      - main
+      - master
+      - "feat/**"
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - "compose*.yml"
+      - ".env*"
+  pull_request:
+    branches:
+      - Dev
+      - main
+      - master
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - "compose*.yml"
+      - ".env*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-typecheck:
+    name: Code Quality & Typing
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+        working-directory: backend
+
+      - name: Ruff Lint Check
+        run: uv run ruff check app
+        working-directory: backend
+
+      - name: Ruff Format Check
+        run: uv run ruff format app --check
+        working-directory: backend
+
+      - name: Mypy Type Check
+        run: uv run mypy app
+        working-directory: backend
+
+  test:
+    name: Database Migration & Pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Start Database & Mailpit services
+        run: docker compose up -d --wait db mailpit
+
+      - name: Run Database Migrations & Initial Data
+        run: uv run bash scripts/prestart.sh
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:changethis@localhost:5432/app
+          PROJECT_NAME: "FixPhone Test"
+          SECRET_KEY: "changethisinproductionverysecurekey123"
+          FIRST_SUPERUSER: "admin@example.com"
+          FIRST_SUPERUSER_PASSWORD: "changethisinproduction123"
+
+      - name: Run Pytest with Coverage
+        run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:changethis@localhost:5432/app
+          SECRET_KEY: "changethisinproductionverysecurekey123"
+          FIRST_SUPERUSER: "admin@example.com"
+          FIRST_SUPERUSER_PASSWORD: "changethisinproduction123"
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+      - name: Store Coverage HTML Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-html
+          path: backend/htmlcov
+          retention-days: 7
+
+      - name: Coverage Summary
+        run: uv run coverage report
+        working-directory: backend

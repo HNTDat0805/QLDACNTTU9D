@@ -8,10 +8,12 @@ from app.core.logging import get_logger, request_id_ctx_var
 
 logger = get_logger("app.middleware")
 
-HEALTH_CHECK_PATHS: frozenset[str] = frozenset({
-    "/api/v1/utils/health-check",
-    "/api/v1/utils/health-check/",
-})
+HEALTH_CHECK_PATHS: frozenset[str] = frozenset(
+    {
+        "/api/v1/utils/health-check",
+        "/api/v1/utils/health-check/",
+    }
+)
 
 
 class RequestLoggingMiddleware:
@@ -43,8 +45,12 @@ class RequestLoggingMiddleware:
             nonlocal status_code
             if message["type"] == "http.response.start":
                 status_code = message.get("status", 200)
-                headers_list: list[tuple[bytes, bytes]] = list(message.get("headers", []))
-                has_x_request_id = any(h[0].lower() == b"x-request-id" for h in headers_list)
+                headers_list: list[tuple[bytes, bytes]] = list(
+                    message.get("headers", [])
+                )
+                has_x_request_id = any(
+                    h[0].lower() == b"x-request-id" for h in headers_list
+                )
                 if not has_x_request_id:
                     headers_list.append((b"x-request-id", request_id.encode("latin-1")))
                 message["headers"] = headers_list

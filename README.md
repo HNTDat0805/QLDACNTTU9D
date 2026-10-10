@@ -1,7 +1,8 @@
 # Full Stack FastAPI Template
 
-[![Test Docker Compose](../../actions/workflows/test-docker-compose.yml/badge.svg)](../../actions/workflows/test-docker-compose.yml)
-[![Test Backend](../../actions/workflows/test-backend.yml/badge.svg)](../../actions/workflows/test-backend.yml)
+[![Backend CI](../../actions/workflows/backend-ci.yml/badge.svg)](../../actions/workflows/backend-ci.yml)
+[![Frontend CI](../../actions/workflows/frontend-ci.yml/badge.svg)](../../actions/workflows/frontend-ci.yml)
+[![Backend CD](../../actions/workflows/backend-cd.yml/badge.svg)](../../actions/workflows/backend-cd.yml)
 
 ## Technology Stack and Features
 

@@ -1,0 +1,135 @@
+name: Backend CD (Test Environment)
+
+on:
+  workflow_run:
+    workflows: ["Backend CI"]
+    types: [completed]
+    branches:
+      - Dev
+      - main
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Môi trường triển khai (test)"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+      skip_migrations:
+        description: "Bỏ qua bước migration cơ sở dữ liệu"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-test:
+    name: Deploy to Test Environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Chỉ deploy khi CI thành công hoặc kích hoạt thủ công
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate Deployment Configuration & Secrets
+        id: check-secrets
+        env:
+          TEST_HOST: ${{ secrets.TEST_HOST }}
+          TEST_SSH_KEY: ${{ secrets.TEST_SSH_KEY }}
+        run: |
+          if [ -n "$TEST_HOST" ] && [ -n "$TEST_SSH_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Đã phát hiện cấu hình máy chủ test (TEST_HOST, TEST_SSH_KEY)."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Chưa cấu hình TEST_HOST hoặc TEST_SSH_KEY trong GitHub Secrets."
+            echo "⚠️ Pipeline sẽ chuyển sang chế độ Dry-Run: Kiểm tra Docker Build & Migration an toàn."
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image (Validation)
+        run: |
+          echo "Building backend test image for validation..."
+          docker compose -f compose.yml -f compose.deploy.yml build backend
+        env:
+          DOMAIN: ${{ vars.TEST_DOMAIN || 'test.fixphone.local' }}
+
+      - name: Dry-Run / Verification Mode Notice
+        if: steps.check-secrets.outputs.ready == 'false'
+        run: |
+          echo "::warning title=Thiếu thông tin máy chủ test::Môi trường test chưa được cấp máy chủ hoặc GitHub Secrets (TEST_HOST, TEST_SSH_KEY). Đã kiểm thử thành công bước build Docker và xác thực cấu hình. Cần bổ sung Secrets để kích hoạt deploy thực tế."
+          echo "=========================================================="
+          echo "CÁC GITHUB SECRETS CẦN THIẾT ĐỂ DEPLOY THỰC TẾ:"
+          echo "  - TEST_HOST: IP hoặc Domain của máy chủ kiểm thử"
+          echo "  - TEST_SSH_USER: Tên user đăng nhập SSH"
+          echo "  - TEST_SSH_KEY: Private SSH Key xác thực"
+          echo "  - TEST_SSH_PORT: Cổng SSH (mặc định 22)"
+          echo "  - TEST_DATABASE_URL: Chuỗi kết nối PostgreSQL test"
+          echo "  - TEST_SECRET_KEY: Khóa bảo mật backend"
+          echo "  - TEST_FIRST_SUPERUSER_PASSWORD: Mật khẩu admin"
+          echo "=========================================================="
+
+      - name: Execute Remote Deployment (When Secrets Provided)
+        if: steps.check-secrets.outputs.ready == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DOMAIN: ${{ vars.TEST_DOMAIN || 'test.fixphone.local' }}
+          PROJECT_NAME: "FixPhone Test"
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+          FIRST_SUPERUSER: ${{ vars.TEST_FIRST_SUPERUSER || 'admin@fixphone.test' }}
+          FIRST_SUPERUSER_PASSWORD: ${{ secrets.TEST_FIRST_SUPERUSER_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          SKIP_MIGRATIONS: ${{ github.event.inputs.skip_migrations || 'false' }}
+        with:
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          key: ${{ secrets.TEST_SSH_KEY }}
+          port: ${{ secrets.TEST_SSH_PORT || 22 }}
+          envs: DOMAIN,PROJECT_NAME,SECRET_KEY,FIRST_SUPERUSER,FIRST_SUPERUSER_PASSWORD,POSTGRES_PASSWORD,DATABASE_URL,SKIP_MIGRATIONS
+          script: |
+            set -e
+            echo "Deploying FixPhone Backend to Test Environment..."
+            cd /opt/fixphone-test || mkdir -p /opt/fixphone-test && cd /opt/fixphone-test
+            
+            docker compose -f compose.yml -f compose.deploy.yml pull || true
+            docker compose -f compose.yml -f compose.deploy.yml build backend
+            
+            if [ "$SKIP_MIGRATIONS" != "true" ]; then
+              echo "Applying database migrations..."
+              docker compose -f compose.yml -f compose.deploy.yml run --rm backend bash scripts/prestart.sh
+            fi
+            
+            docker compose -f compose.yml -f compose.deploy.yml up -d backend
+            echo "Deployment completed."
+
+      - name: Verify Health Check Post-Deployment
+        if: steps.check-secrets.outputs.ready == 'true'
+        env:
+          TEST_HOST: ${{ secrets.TEST_HOST }}
+          CUSTOM_URL: ${{ vars.TEST_HEALTH_CHECK_URL }}
+        run: |
+          TARGET_URL="${CUSTOM_URL:-http://$TEST_HOST:8000/api/v1/utils/health-check/}"
+          echo "Checking health check endpoint at $TARGET_URL..."
+          for i in {1..5}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed with HTTP 200!"
+              exit 0
+            fi
+            echo "Attempt $i: Received HTTP $STATUS. Retrying in 10s..."
+            sleep 10
+          done
+          echo "❌ Health check failed after 5 attempts."
+          exit 1
