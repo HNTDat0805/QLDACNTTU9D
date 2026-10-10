@@ -1139,3 +1139,59 @@ class AppointmentBookingResponse(SQLModel):
     start_time: str
     status: str
     message: str
+
+
+# ============================================================================
+# APPOINTMENT CONFIRM & CANCEL API SCHEMAS
+# ============================================================================
+
+
+class AppointmentStatus(StrEnum):
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
+class AppointmentConfirmData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    status: str
+    appointment_date: datetime
+    customer_id: uuid.UUID
+    technician_id: uuid.UUID | None = None
+
+
+class AppointmentConfirmResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AppointmentConfirmData
+
+
+class AppointmentCancelRequest(SQLModel):
+    reason: str = Field(min_length=1, max_length=500, description="Lý do hủy lịch hẹn")
+    note: str | None = Field(
+        default=None, max_length=1000, description="Ghi chú thêm khi hủy"
+    )
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Lý do hủy không được để trống")
+        return v.strip()
+
+
+class AppointmentCancelData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    status: str
+    cancellation_reason: str | None = None
+    customer_notes: str | None = None
+
+
+class AppointmentCancelResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AppointmentCancelData

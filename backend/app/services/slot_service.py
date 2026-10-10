@@ -5,12 +5,19 @@ from datetime import UTC, date, datetime, time, timedelta
 from fastapi import HTTPException, status
 from sqlmodel import Session, col, select
 
+from app.core.logging import get_logger
 from app.models import (
     Appointment,
     AppointmentBookingCreate,
     AppointmentBookingResponse,
     AppointmentBookingUpdate,
+    AppointmentCancelData,
+    AppointmentCancelRequest,
+    AppointmentCancelResponse,
+    AppointmentConfirmData,
+    AppointmentConfirmResponse,
     AppointmentService,
+    AppointmentStatus,
     AvailableSlotItem,
     AvailableSlotsResponse,
     Customer,
@@ -21,7 +28,11 @@ from app.models import (
     SlotCheckResponse,
     Technician,
     TechnicianSchedule,
+    User,
+    get_datetime_utc,
 )
+
+logger = get_logger("app.services.slot_service")
 
 
 def generate_appointment_code(session: Session, appt_date: date) -> str:
@@ -614,3 +625,259 @@ def update_booking_appointment(
         status=appointment.status,
         message="Cập nhật lịch hẹn thành công",
     )
+
+
+def check_can_confirm(user: User) -> None:
+    """Validate that the user has permission to confirm appointments.
+
+    Allowed: superuser, admin, manager, staff, technician.
+    Forbidden: customer.
+    """
+    if user.is_superuser:
+        return
+    role = (user.role or "").lower()
+    if role in ("admin", "manager", "staff", "technician"):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Không đủ quyền xác nhận lịch hẹn",
+    )
+
+
+def check_can_cancel(user: User, appointment: Appointment, session: Session) -> None:
+    """Validate that the user has permission to cancel the appointment.
+
+    Allowed:
+    - superuser, admin, manager, staff
+    - customer who owns the appointment (linked via customer.user_id)
+    Forbidden:
+    - any other user or a customer attempting to cancel someone else's appointment.
+    """
+    if user.is_superuser:
+        return
+    role = (user.role or "").lower()
+    if role in ("admin", "manager", "staff"):
+        return
+    if role == "customer":
+        customer = session.get(Customer, appointment.customer_id)
+        if customer and customer.user_id == user.id:
+            return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Không đủ quyền hủy lịch hẹn",
+    )
+
+
+def confirm_appointment(
+    session: Session,
+    appointment_id: uuid.UUID,
+    current_user: User,
+) -> AppointmentConfirmResponse:
+    """API: Xác nhận lịch hẹn.
+
+    Quy tắc nghiệp vụ:
+    1. Kiểm tra tồn tại lịch hẹn (404 Not Found).
+    2. Kiểm tra quyền của người gọi (403 Forbidden).
+    3. Idempotent: nếu đã xác nhận (CONFIRMED), trả về thành công không tạo tác dụng phụ.
+    4. Không cho xác nhận lịch đã hủy (CANCELLED), hoàn tất (COMPLETED), hoặc đang xử lý (IN_PROGRESS) -> 409 Conflict.
+    5. Cập nhật trạng thái sang CONFIRMED, lưu audit log vào RepairStatusHistory, commit transaction.
+    """
+    try:
+        # 1. Lock appointment row for concurrency safety
+        appointment = session.exec(
+            select(Appointment)
+            .where(Appointment.id == appointment_id)
+            .with_for_update()
+        ).first()
+
+        if not appointment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy lịch hẹn",
+            )
+
+        # 2. Check authorization
+        check_can_confirm(current_user)
+
+        # 3. Status checks
+        current_status = (appointment.status or "").upper()
+        if current_status == AppointmentStatus.CONFIRMED.value:
+            # Idempotent response
+            return AppointmentConfirmResponse(
+                success=True,
+                message="Lịch hẹn đã được xác nhận trước đó",
+                data=AppointmentConfirmData(
+                    id=appointment.id,
+                    appointment_number=appointment.appointment_number,
+                    status=appointment.status,
+                    appointment_date=appointment.appointment_date,
+                    customer_id=appointment.customer_id,
+                    technician_id=appointment.technician_id,
+                ),
+            )
+
+        if current_status == AppointmentStatus.CANCELLED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Không thể xác nhận lịch hẹn đã bị hủy",
+            )
+        if current_status == AppointmentStatus.COMPLETED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Không thể xác nhận lịch hẹn đã hoàn tất",
+            )
+        if current_status == AppointmentStatus.IN_PROGRESS.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Không thể xác nhận lịch hẹn đang được thực hiện sửa chữa",
+            )
+
+        # 4. Perform update
+        prev_status = appointment.status
+        appointment.status = AppointmentStatus.CONFIRMED.value
+        appointment.updated_at = get_datetime_utc()
+        session.add(appointment)
+
+        history = RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status=prev_status,
+            new_status=AppointmentStatus.CONFIRMED.value,
+            note="Xác nhận lịch hẹn",
+            changed_by_user_id=current_user.id,
+        )
+        session.add(history)
+
+        session.commit()
+        session.refresh(appointment)
+
+        return AppointmentConfirmResponse(
+            success=True,
+            message="Xác nhận lịch hẹn thành công",
+            data=AppointmentConfirmData(
+                id=appointment.id,
+                appointment_number=appointment.appointment_number,
+                status=appointment.status,
+                appointment_date=appointment.appointment_date,
+                customer_id=appointment.customer_id,
+                technician_id=appointment.technician_id,
+            ),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        logger.error(
+            f"Lỗi hệ thống khi xác nhận lịch hẹn {appointment_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi xác nhận lịch hẹn",
+        ) from e
+
+
+def cancel_appointment(
+    session: Session,
+    appointment_id: uuid.UUID,
+    data: AppointmentCancelRequest,
+    current_user: User,
+) -> AppointmentCancelResponse:
+    """API: Hủy lịch hẹn.
+
+    Quy tắc nghiệp vụ:
+    1. Kiểm tra tồn tại lịch hẹn (404 Not Found).
+    2. Kiểm tra quyền của người gọi (403 Forbidden).
+    3. Không cho hủy lịch đã hoàn tất (COMPLETED) hoặc đã hủy (CANCELLED) hoặc đang xử lý (IN_PROGRESS) -> 409 Conflict.
+    4. Cập nhật trạng thái sang CANCELLED, lưu lý do hủy cancellation_reason.
+    5. Lưu audit log vào RepairStatusHistory với changed_by_user_id và ghi chú hủy.
+    6. Slot tự động được giải phóng cho kỹ thuật viên nhờ bộ lọc Appointment.status != 'CANCELLED'.
+    7. Không xóa vật lý bản ghi.
+    """
+    try:
+        # 1. Lock appointment row
+        appointment = session.exec(
+            select(Appointment)
+            .where(Appointment.id == appointment_id)
+            .with_for_update()
+        ).first()
+
+        if not appointment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy lịch hẹn",
+            )
+
+        # 2. Check authorization
+        check_can_cancel(user=current_user, appointment=appointment, session=session)
+
+        # 3. Status checks
+        current_status = (appointment.status or "").upper()
+        if current_status == AppointmentStatus.CANCELLED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Lịch hẹn đã bị hủy trước đó",
+            )
+        if current_status == AppointmentStatus.COMPLETED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Không thể hủy lịch hẹn đã hoàn tất",
+            )
+        if current_status == AppointmentStatus.IN_PROGRESS.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Không thể hủy lịch hẹn đang được thực hiện sửa chữa",
+            )
+
+        # 4. Perform cancellation update
+        prev_status = appointment.status
+        appointment.status = AppointmentStatus.CANCELLED.value
+        appointment.cancellation_reason = data.reason
+        if data.note:
+            appointment.customer_notes = (
+                f"{appointment.customer_notes}\n[Hủy lịch]: {data.note}"
+                if appointment.customer_notes
+                else f"[Hủy lịch]: {data.note}"
+            )
+        appointment.updated_at = get_datetime_utc()
+        session.add(appointment)
+
+        # Audit history
+        audit_note = f"Lý do hủy: {data.reason}"
+        if data.note:
+            audit_note += f" | Ghi chú: {data.note}"
+
+        history = RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status=prev_status,
+            new_status=AppointmentStatus.CANCELLED.value,
+            note=audit_note,
+            changed_by_user_id=current_user.id,
+        )
+        session.add(history)
+
+        session.commit()
+        session.refresh(appointment)
+
+        return AppointmentCancelResponse(
+            success=True,
+            message="Hủy lịch hẹn thành công",
+            data=AppointmentCancelData(
+                id=appointment.id,
+                appointment_number=appointment.appointment_number,
+                status=appointment.status,
+                cancellation_reason=appointment.cancellation_reason,
+                customer_notes=appointment.customer_notes,
+            ),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        logger.error(
+            f"Lỗi hệ thống khi hủy lịch hẹn {appointment_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi hủy lịch hẹn",
+        ) from e

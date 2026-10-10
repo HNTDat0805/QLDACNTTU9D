@@ -3,11 +3,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, status
 
-from app.api.deps import SessionDep
+from app.api.deps import CurrentUser, SessionDep
 from app.models import (
     AppointmentBookingCreate,
     AppointmentBookingResponse,
     AppointmentBookingUpdate,
+    AppointmentCancelRequest,
+    AppointmentCancelResponse,
+    AppointmentConfirmResponse,
 )
 from app.services import slot_service
 
@@ -39,4 +42,40 @@ def update_appointment(
     """API 3: Cập nhật thông tin lịch hẹn (đổi ngày giờ hoặc kỹ thuật viên)."""
     return slot_service.update_booking_appointment(
         session=session, appointment_id=appointment_id, data=body
+    )
+
+
+@router.patch(
+    "/{appointment_id}/confirm",
+    response_model=AppointmentConfirmResponse,
+    summary="Xác nhận lịch hẹn",
+)
+def confirm_appointment(
+    session: SessionDep,
+    current_user: CurrentUser,
+    appointment_id: Annotated[uuid.UUID, Path(description="Mã ID của lịch hẹn")],
+) -> AppointmentConfirmResponse:
+    """API: Cho phép người dùng có quyền quản lý xác nhận một lịch hẹn hợp lệ."""
+    return slot_service.confirm_appointment(
+        session=session, appointment_id=appointment_id, current_user=current_user
+    )
+
+
+@router.patch(
+    "/{appointment_id}/cancel",
+    response_model=AppointmentCancelResponse,
+    summary="Hủy lịch hẹn",
+)
+def cancel_appointment(
+    session: SessionDep,
+    current_user: CurrentUser,
+    appointment_id: Annotated[uuid.UUID, Path(description="Mã ID của lịch hẹn")],
+    body: AppointmentCancelRequest,
+) -> AppointmentCancelResponse:
+    """API: Cho phép người dùng có quyền hủy một lịch hẹn hợp lệ và ghi nhận lý do hủy."""
+    return slot_service.cancel_appointment(
+        session=session,
+        appointment_id=appointment_id,
+        data=body,
+        current_user=current_user,
     )
