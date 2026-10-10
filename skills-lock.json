@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "backend-development": {
+      "source": "rommapp/romm",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/backend-development/SKILL.md",
+      "computedHash": "e1628ac6eac38dd7a3fb874b82f4a165a97a108209bc265ae3761f801c244db5"
+    }
+  }
+}

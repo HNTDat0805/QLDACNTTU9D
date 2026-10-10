@@ -32,6 +32,19 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     DATABASE_URL: PostgresDsn
 
+    # Logging
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    LOG_FORMAT: Literal["text", "json"] = "text"
+    LOG_SQL_QUERIES: bool = False
+    LOG_FILE_PATH: str | None = None
+
+    @field_validator("LOG_LEVEL", mode="before")
+    @classmethod
+    def _normalize_log_level(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.upper()
+        return value
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def _use_psycopg_driver(cls, value: str | PostgresDsn) -> str:
