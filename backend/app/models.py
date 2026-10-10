@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime, time
 from enum import StrEnum
 from typing import Optional
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from sqlalchemy import CheckConstraint, Date, DateTime, Time
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -60,6 +60,13 @@ class UserUpdateMe(SQLModel):
 class UpdatePassword(SQLModel):
     current_password: str = Field(min_length=8, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Password cannot be blank or only whitespace")
+        return v
 
 
 class User(UserBase, table=True):

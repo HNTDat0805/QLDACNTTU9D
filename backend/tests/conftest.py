@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel, Session, delete
+from sqlmodel import Session, SQLModel, delete
 
 from app.api.deps import get_db
 from app.core import db as core_db

@@ -2,13 +2,11 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import jwt
-import pytest
 from fastapi import APIRouter, Depends
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.api.deps import (
-    CurrentUser,
     RequireAdmin,
     RequireCustomer,
     RequireManager,
@@ -17,11 +15,11 @@ from app.api.deps import (
 )
 from app.core import security
 from app.core.config import settings
-from app.core.security import get_password_hash, verify_password
+from app.core.security import verify_password
 from app.crud import create_user
 from app.main import app
 from app.models import User, UserCreate, UserRole
-from tests.utils.utils import random_email, random_lower_string
+from tests.utils.utils import random_email
 
 # Create a temporary test router on app to test role authorization dependencies
 rbac_test_router = APIRouter(prefix="/test-rbac", tags=["test-rbac"])
@@ -49,7 +47,7 @@ def admin_endpoint(user: RequireAdmin):
 
 @rbac_test_router.get("/custom-roles")
 def custom_roles_endpoint(
-    user: User = Depends(require_role(UserRole.MANAGER, UserRole.ADMIN))
+    user: User = Depends(require_role(UserRole.MANAGER, UserRole.ADMIN)),
 ):
     return {"message": "hello manager/admin", "role": user.role}
 
@@ -298,7 +296,9 @@ def test_jwt_invalid_token_type(client: TestClient, db: Session) -> None:
         "type": "invalid_type",
         "exp": datetime.now(UTC) + timedelta(minutes=15),
     }
-    invalid_type_token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    invalid_type_token = jwt.encode(
+        payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
     res = client.post(
         f"{settings.API_V1_STR}/login/test-token",
         headers={"Authorization": f"Bearer {invalid_type_token}"},
@@ -339,7 +339,9 @@ def test_refresh_token_success(client: TestClient, db: Session) -> None:
     assert test_res.status_code == 200
 
 
-def test_refresh_token_cannot_be_used_as_access_token(client: TestClient, db: Session) -> None:
+def test_refresh_token_cannot_be_used_as_access_token(
+    client: TestClient, db: Session
+) -> None:
     user, password = create_test_user_with_role(db, role="customer")
     login_res = client.post(
         f"{settings.API_V1_STR}/login/access-token",
@@ -356,7 +358,9 @@ def test_refresh_token_cannot_be_used_as_access_token(client: TestClient, db: Se
     assert "access token required" in res.json()["detail"].lower()
 
 
-def test_access_token_cannot_be_used_as_refresh_token(client: TestClient, db: Session) -> None:
+def test_access_token_cannot_be_used_as_refresh_token(
+    client: TestClient, db: Session
+) -> None:
     user, password = create_test_user_with_role(db, role="customer")
     login_res = client.post(
         f"{settings.API_V1_STR}/login/access-token",
@@ -454,7 +458,9 @@ def test_rbac_staff_and_technician_access(client: TestClient, db: Session) -> No
     assert client.get("/test-rbac/staff-only", headers=tech_headers).status_code == 200
 
     # Neither staff nor technician can access manager-only or admin-only
-    assert client.get("/test-rbac/manager-only", headers=staff_headers).status_code == 403
+    assert (
+        client.get("/test-rbac/manager-only", headers=staff_headers).status_code == 403
+    )
     assert client.get("/test-rbac/admin-only", headers=tech_headers).status_code == 403
 
 
