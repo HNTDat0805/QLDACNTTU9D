@@ -74,6 +74,23 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
+reusable_oauth2_optional = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/login/access-token",
+    auto_error=False,
+)
+
+
+def get_current_user_optional(
+    session: SessionDep,
+    token: Annotated[str | None, Depends(reusable_oauth2_optional)] = None,
+) -> User | None:
+    if not token:
+        return None
+    return get_current_user(session=session, token=token)
+
+
+CurrentUserOptional = Annotated[User | None, Depends(get_current_user_optional)]
+
 
 def require_role(*allowed_roles: str | UserRole) -> Callable[[User], User]:
     """

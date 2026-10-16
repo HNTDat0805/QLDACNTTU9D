@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import col, delete, func, select
 
 from app import crud
@@ -110,15 +110,26 @@ def update_password_me(
     """
     verified, _ = verify_password(body.current_password, current_user.hashed_password)
     if not verified:
-        raise HTTPException(status_code=400, detail="Incorrect password")
-    if body.current_password == body.new_password:
         raise HTTPException(
-            status_code=400, detail="New password cannot be the same as the current one"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password"
+        )
+    same_password, _ = verify_password(body.new_password, current_user.hashed_password)
+    if body.current_password == body.new_password or same_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password cannot be the same as the current one",
         )
     hashed_password = get_password_hash(body.new_password)
-    current_user.hashed_password = hashed_password
-    session.add(current_user)
-    session.commit()
+    try:
+        current_user.hashed_password = hashed_password
+        session.add(current_user)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update password due to database error",
+        )
     return Message(message="Password updated successfully")
 
 

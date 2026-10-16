@@ -1,9 +1,9 @@
 import uuid
 from datetime import UTC, date, datetime, time
 from enum import StrEnum
-from typing import Optional
+from typing import Optional, Self
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator, model_validator
 from sqlalchemy import CheckConstraint, Date, DateTime, Time
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -60,6 +60,13 @@ class UserUpdateMe(SQLModel):
 class UpdatePassword(SQLModel):
     current_password: str = Field(min_length=8, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Password cannot be blank or only whitespace")
+        return v
 
 
 class User(UserBase, table=True):
@@ -1069,3 +1076,151 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# ============================================================================
+# SLOT & APPOINTMENT BOOKING API SCHEMAS
+# ============================================================================
+
+
+class AvailableSlotItem(SQLModel):
+    start_time: str
+    end_time: str
+    available: bool = True
+    technician_id: uuid.UUID | None = None
+
+
+class AvailableSlotsResponse(SQLModel):
+    date: date
+    service_id: uuid.UUID
+    available_slots: list[AvailableSlotItem]
+
+
+class SlotCheckRequest(SQLModel):
+    service_id: uuid.UUID
+    appointment_date: date
+    start_time: time
+    technician_id: uuid.UUID | None = None
+    exclude_appointment_id: uuid.UUID | None = None
+
+
+class SlotCheckResponse(SQLModel):
+    available: bool
+    reason: str | None = None
+    message: str | None = None
+    start_time: str | None = None
+    end_time: str | None = None
+    technician_id: uuid.UUID | None = None
+
+
+class AppointmentBookingCreate(SQLModel):
+    customer_id: uuid.UUID | None = None
+    customer_name: str | None = None
+    customer_phone: str | None = None
+    customer_email: EmailStr | None = None
+    customer_address: str | None = None
+    service_id: uuid.UUID | None = None
+    service_ids: list[uuid.UUID] | None = None
+    device_id: uuid.UUID | None = None
+    device_type: str | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
+    appointment_date: date
+    start_time: time
+    technician_id: uuid.UUID | None = None
+    description: str | None = None
+
+    @model_validator(mode="after")
+    def validate_customer_and_service(self) -> Self:
+        if not self.customer_id and not (
+            self.customer_phone and self.customer_phone.strip()
+        ):
+            raise ValueError("Cần cung cấp customer_id hoặc customer_phone")
+        if not self.service_id and not self.service_ids:
+            raise ValueError(
+                "Cần chọn ít nhất một dịch vụ sửa chữa (service_id hoặc service_ids)"
+            )
+        return self
+
+
+class AppointmentBookingUpdate(SQLModel):
+    appointment_date: date | None = None
+    start_time: time | None = None
+    technician_id: uuid.UUID | None = None
+    description: str | None = None
+    reschedule_reason: str | None = None
+    contact_name: str | None = None
+    contact_phone: str | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
+
+
+class AppointmentBookingResponse(SQLModel):
+    appointment_id: uuid.UUID
+    appointment_code: str
+    appointment_date: date
+    start_time: str
+    status: str
+    message: str
+    end_time: str | None = None
+    customer_id: uuid.UUID | None = None
+    device_id: uuid.UUID | None = None
+    technician_id: uuid.UUID | None = None
+    total_amount: float | None = None
+    service_names: list[str] | None = None
+
+
+# ============================================================================
+# APPOINTMENT CONFIRM & CANCEL API SCHEMAS
+# ============================================================================
+
+
+class AppointmentStatus(StrEnum):
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
+class AppointmentConfirmData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    status: str
+    appointment_date: datetime
+    customer_id: uuid.UUID
+    technician_id: uuid.UUID | None = None
+
+
+class AppointmentConfirmResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AppointmentConfirmData
+
+
+class AppointmentCancelRequest(SQLModel):
+    reason: str = Field(min_length=1, max_length=500, description="Lý do hủy lịch hẹn")
+    note: str | None = Field(
+        default=None, max_length=1000, description="Ghi chú thêm khi hủy"
+    )
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Lý do hủy không được để trống")
+        return v.strip()
+
+
+class AppointmentCancelData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    status: str
+    cancellation_reason: str | None = None
+    customer_notes: str | None = None
+
+
+class AppointmentCancelResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AppointmentCancelData

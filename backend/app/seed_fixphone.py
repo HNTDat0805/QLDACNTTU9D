@@ -6,13 +6,13 @@ Chạy sau khi migration hoàn thành:
 Dữ liệu này chỉ dùng cho mục đích demo/trình bày. Không phải dữ liệu nghiệp vụ chính thức.
 """
 
-import logging
 import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlmodel import Session, select
 
 from app.core.db import engine
+from app.core.logging import get_logger, setup_logging
 from app.core.security import get_password_hash
 from app.models import (
     Appointment,
@@ -33,8 +33,7 @@ from app.models import (
     User,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def now() -> datetime:
@@ -630,6 +629,7 @@ def seed(session: Session) -> None:
 
 
 def main() -> None:
+    setup_logging()
     logger.info("Bắt đầu seed DEMO data cho FixPhone...")
     with Session(engine) as session:
         seed(session)

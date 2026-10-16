@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -11,9 +10,9 @@ from jwt.exceptions import InvalidTokenError
 
 from app.core import security
 from app.core.config import settings
+from app.core.logging import get_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -25,7 +24,7 @@ class EmailData:
 def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
     template_str = (
         Path(__file__).parent / "email-templates" / template_name
-    ).read_text()
+    ).read_text(encoding="utf-8")
     template: Template = Template(template_str)
     html_content = template.render(context)
     return html_content
