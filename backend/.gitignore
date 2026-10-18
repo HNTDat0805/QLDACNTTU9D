@@ -1,8 +1,57 @@
-__pycache__
-app.egg-info
-*.pyc
-.mypy_cache
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing, type-checking, and coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.cache/
 .coverage
-htmlcov
-.cache
-.venv
+.coverage.*
+coverage.xml
+nosetests.xml
+htmlcov/
+.tox/
+.nox/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+logs/
+*.log
+
+# Built frontend served by FastAPI
+app/frontend/
+
+# Environment files
+.env.local
+.env.*.local
+*.local
