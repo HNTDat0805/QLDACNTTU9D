@@ -1,3 +1,5 @@
+import hashlib
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -45,18 +47,27 @@ def create_access_token(
     return encoded_jwt
 
 
+def hash_token(token: str) -> str:
+    """Tạo mã băm SHA-256 an toàn từ chuỗi token, không lưu token dạng plain-text."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def create_refresh_token(
-    subject: str | Any, expires_delta: timedelta | None = None
+    subject: str | Any,
+    expires_delta: timedelta | None = None,
+    jti: str | None = None,
 ) -> str:
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
         expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    token_jti = jti or uuid.uuid4().hex
     to_encode: dict[str, Any] = {
         "exp": expire,
         "iat": datetime.now(UTC),
         "sub": str(subject),
         "type": "refresh",
+        "jti": token_jti,
     }
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

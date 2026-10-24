@@ -81,6 +81,9 @@ class User(UserBase, table=True):
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)  # noqa: UP037
     customer_profile: Optional["Customer"] = Relationship(back_populates="user")  # noqa: UP037, UP045
     technician_profile: Optional["Technician"] = Relationship(back_populates="user")  # noqa: UP037, UP045
+    refresh_tokens: list["RefreshToken"] = Relationship(  # noqa: UP037
+        back_populates="user", cascade_delete=True
+    )
 
 
 class UserPublic(UserBase):
@@ -1071,6 +1074,42 @@ class TokenPayload(SQLModel):
     type: str | None = None
     role: str | None = None
     email: str | None = None
+    jti: str | None = None
+
+
+# ============================================================================
+# FIXPHONE ENTITY: REFRESH TOKEN (SERVER-SIDE TRACKING & REVOCATION)
+# ============================================================================
+
+
+class RefreshTokenBase(SQLModel):
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", ondelete="CASCADE", nullable=False, index=True
+    )
+    token_hash: str = Field(unique=True, index=True, max_length=64)
+    jti: str = Field(unique=True, index=True, max_length=64)
+    expires_at: datetime = Field(
+        sa_type=DateTime(timezone=True),
+        index=True,  # type: ignore
+    )
+    is_revoked: bool = Field(default=False, index=True)
+    revoked_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    replaced_by_jti: str | None = Field(default=None, max_length=64)
+
+
+class RefreshToken(RefreshTokenBase, table=True):
+    __tablename__ = "refresh_token"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+    user: User = Relationship(back_populates="refresh_tokens")
 
 
 class NewPassword(SQLModel):
