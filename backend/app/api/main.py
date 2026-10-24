@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.routes import (
     appointments,
     customers,
+    intake,
     items,
     login,
     private,
@@ -27,6 +28,7 @@ api_router.include_router(customers.router)
 api_router.include_router(technicians.router)
 api_router.include_router(work_schedules.router)
 api_router.include_router(queue.router)
+api_router.include_router(intake.router)
 
 
 if settings.FASTAPI_ENV == "development":

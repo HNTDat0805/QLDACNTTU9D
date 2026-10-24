@@ -1323,3 +1323,157 @@ class AppointmentHistoryDetail(SQLModel):
 class AppointmentsHistoryPublic(SQLModel):
     data: list[AppointmentHistoryDetail]
     count: int
+
+
+# ============================================================================
+# FIXPHONE REPAIR ORDER / DEVICE INTAKE SCHEMAS
+# ============================================================================
+
+
+class DeviceIntakeCreate(SQLModel):
+    appointment_id: uuid.UUID | None = Field(
+        default=None, description="ID lịch hẹn có sẵn nếu khách đã đặt lịch hẹn trước"
+    )
+
+    customer_id: uuid.UUID | None = Field(
+        default=None, description="ID khách hàng nếu đã có trong hệ thống"
+    )
+    customer_name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Họ và tên khách hàng (bắt buộc nếu không có customer_id và appointment_id)",
+    )
+    customer_phone: str | None = Field(
+        default=None,
+        max_length=20,
+        description="Số điện thoại khách hàng (bắt buộc nếu không có customer_id và appointment_id)",
+    )
+    customer_email: str | None = Field(default=None, max_length=255)
+    customer_address: str | None = Field(default=None, max_length=500)
+
+    device_id: uuid.UUID | None = Field(
+        default=None, description="ID thiết bị nếu đã có trong hệ thống"
+    )
+    brand: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Hãng sản xuất thiết bị (Apple, Samsung, Xiaomi...)",
+    )
+    model: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Dòng máy (iPhone 13, Galaxy S23...)",
+    )
+    device_type: str = Field(default="Smartphone", max_length=50)
+    serial_number: str | None = Field(default=None, max_length=100)
+    imei: str | None = Field(default=None, max_length=50)
+    color: str | None = Field(default=None, max_length=50)
+
+    physical_condition: str = Field(
+        min_length=1,
+        max_length=1000,
+        description="Tình trạng ngoại quan máy khi tiếp nhận (vỡ màn hình, cấn móp, trầy xước...)",
+    )
+    fault_description: str = Field(
+        min_length=1,
+        max_length=1000,
+        description="Mô tả lỗi hoặc triệu chứng hỏng hóc từ khách hàng",
+    )
+    accessories_received: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Phụ kiện khách bàn giao (sạc, cáp, que SIM, ốp lưng, hộp...)",
+    )
+
+    technician_id: uuid.UUID | None = Field(
+        default=None, description="Kỹ thuật viên phụ trách tiếp nhận/sửa chữa (nếu có)"
+    )
+    service_ids: list[uuid.UUID] | None = Field(
+        default=None, description="Danh sách ID dịch vụ sửa chữa dự kiến"
+    )
+    estimated_completion_date: datetime | None = Field(
+        default=None, description="Thời gian dự kiến hoàn thành"
+    )
+    initial_status: AppointmentStatus = Field(
+        default=AppointmentStatus.CONFIRMED,
+        description="Trạng thái ban đầu của phiếu: CONFIRMED hoặc IN_PROGRESS",
+    )
+
+    @field_validator("physical_condition")
+    @classmethod
+    def validate_physical_condition(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Tình trạng ngoại quan thiết bị không được để trống")
+        return v.strip()
+
+    @field_validator("fault_description")
+    @classmethod
+    def validate_fault_description(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Mô tả lỗi thiết bị không được để trống")
+        return v.strip()
+
+    @field_validator("initial_status")
+    @classmethod
+    def validate_initial_status(cls, v: AppointmentStatus) -> AppointmentStatus:
+        if v not in (AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS):
+            raise ValueError(
+                "Trạng thái ban đầu của phiếu tiếp nhận chỉ có thể là CONFIRMED hoặc IN_PROGRESS"
+            )
+        return v
+
+    @model_validator(mode="after")
+    def validate_intake_payload(self) -> Self:
+        # Nếu không có appointment_id (tiếp nhận walk-in trực tiếp)
+        if not self.appointment_id:
+            # Phải có customer_id hoặc (customer_name và customer_phone)
+            if not self.customer_id:
+                if not self.customer_name or not self.customer_name.strip():
+                    raise ValueError(
+                        "Cần cung cấp tên khách hàng (customer_name) hoặc customer_id"
+                    )
+                if not self.customer_phone or not self.customer_phone.strip():
+                    raise ValueError(
+                        "Cần cung cấp số điện thoại khách hàng (customer_phone) hoặc customer_id"
+                    )
+            # Phải có device_id hoặc (brand và model)
+            if not self.device_id:
+                if not self.brand or not self.brand.strip():
+                    raise ValueError(
+                        "Cần cung cấp hãng thiết bị (brand) hoặc device_id"
+                    )
+                if not self.model or not self.model.strip():
+                    raise ValueError(
+                        "Cần cung cấp dòng máy thiết bị (model) hoặc device_id"
+                    )
+        return self
+
+
+class DeviceIntakeDetail(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    status: str
+    appointment_date: datetime
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str
+    device_id: uuid.UUID
+    device_brand: str
+    device_model: str
+    device_imei: str | None = None
+    device_color: str | None = None
+    physical_condition: str
+    fault_description: str
+    accessories_received: str | None = None
+    technician_id: uuid.UUID | None = None
+    technician_name: str | None = None
+    estimated_completion_date: datetime | None = None
+    total_amount: float = 0.0
+    services: list[AppointmentServiceItemDetail] = Field(default_factory=list)
+    created_at: datetime | None = None
+
+
+class DeviceIntakeResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: DeviceIntakeDetail
