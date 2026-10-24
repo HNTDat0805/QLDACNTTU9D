@@ -1224,3 +1224,102 @@ class AppointmentCancelResponse(SQLModel):
     success: bool = True
     message: str
     data: AppointmentCancelData
+
+
+# ============================================================================
+# FIXPHONE MANAGEMENT & QUEUE & HISTORY API SCHEMAS
+# ============================================================================
+
+
+class CustomersPublic(SQLModel):
+    data: list[CustomerPublic]
+    count: int
+
+
+class TechniciansPublic(SQLModel):
+    data: list[TechnicianPublic]
+    count: int
+
+
+class TechnicianStatusUpdate(SQLModel):
+    is_active: bool
+
+
+class TechnicianSchedulesPublic(SQLModel):
+    data: list[TechnicianSchedulePublic]
+    count: int
+
+
+class TechnicianScheduleStatusUpdate(SQLModel):
+    status: str = Field(max_length=50)
+    notes: str | None = Field(default=None, max_length=500)
+
+
+class QueueItemPublic(SQLModel):
+    appointment_id: uuid.UUID
+    appointment_number: str
+    status: str
+    appointment_date: datetime
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str
+    device_id: uuid.UUID
+    device_info: str
+    technician_id: uuid.UUID | None = None
+    technician_name: str | None = None
+    service_names: list[str] = Field(default_factory=list)
+    total_amount: float = 0.0
+    estimated_duration_minutes: int = 30
+    queue_position: int = 1
+    technician_diagnosis: str | None = None
+    customer_notes: str | None = None
+    created_at: datetime | None = None
+
+
+class QueueListResponse(SQLModel):
+    data: list[QueueItemPublic]
+    count: int
+    date: date | None = None
+
+
+class QueueStatusUpdate(SQLModel):
+    status: str = Field(
+        max_length=50,
+        description="Trạng thái mới: CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED",
+    )
+    technician_id: uuid.UUID | None = None
+    technician_diagnosis: str | None = Field(default=None, max_length=1000)
+    note: str | None = Field(default=None, max_length=1000)
+
+
+class AppointmentServiceItemDetail(SQLModel):
+    service_id: uuid.UUID
+    service_name: str
+    price_at_booking: float
+    quantity: int = 1
+    notes: str | None = None
+
+
+class AppointmentHistoryDetail(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    appointment_date: datetime
+    status: str
+    cancellation_reason: str | None = None
+    customer_notes: str | None = None
+    technician_diagnosis: str | None = None
+    estimated_completion_date: datetime | None = None
+    actual_completion_date: datetime | None = None
+    total_amount: float = 0.0
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    customer: CustomerPublic | None = None
+    device: DevicePublic | None = None
+    technician: TechnicianPublic | None = None
+    services: list[AppointmentServiceItemDetail] = Field(default_factory=list)
+    status_history: list[RepairStatusHistoryPublic] = Field(default_factory=list)
+
+
+class AppointmentsHistoryPublic(SQLModel):
+    data: list[AppointmentHistoryDetail]
+    count: int
