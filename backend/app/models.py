@@ -1678,3 +1678,38 @@ class AssignTechnicianResponse(SQLModel):
     success: bool = True
     message: str
     data: AssignTechnicianData
+
+
+# ============================================================================
+# FIXPHONE APPOINTMENT TECHNICIAN ASSIGNMENT SCHEMAS
+# ============================================================================
+
+
+class AppointmentAssignTechnicianRequest(SQLModel):
+    technician_id: uuid.UUID = Field(
+        description="Mã UUID của kỹ thuật viên cần phân công"
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú phân công công việc (tùy chọn)",
+    )
+
+
+class AppointmentAssignTechnicianData(SQLModel):
+    appointment_id: uuid.UUID
+    appointment_number: str
+    appointment_date: datetime
+    technician_id: uuid.UUID
+    technician_name: str
+    technician_phone: str | None = None
+    technician_specialization: str | None = None
+    status: str
+    assigned_at: datetime
+    note: str | None = None
+
+
+class AppointmentAssignTechnicianResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AppointmentAssignTechnicianData

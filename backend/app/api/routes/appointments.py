@@ -6,6 +6,8 @@ from fastapi import APIRouter, Path, Query, status
 
 from app.api.deps import CurrentUser, CurrentUserOptional, RequireStaff, SessionDep
 from app.models import (
+    AppointmentAssignTechnicianRequest,
+    AppointmentAssignTechnicianResponse,
     AppointmentBookingCreate,
     AppointmentBookingResponse,
     AppointmentBookingUpdate,
@@ -172,6 +174,37 @@ def cancel_appointment(
     )
 
 
+@router.post(
+    "/{appointment_id}/assign-technician",
+    response_model=AppointmentAssignTechnicianResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Phân công kỹ thuật viên cho lịch hẹn sửa chữa",
+    description="""
+API phân công một kỹ thuật viên vào lịch hẹn sửa chữa điện thoại:
+- Kiểm tra dữ liệu đầu vào và quyền truy cập (yêu cầu nhân viên cửa hàng `RequireStaff`).
+- Kiểm tra lịch hẹn tồn tại và chưa kết thúc (không ở trạng thái COMPLETED hoặc CANCELLED).
+- Kiểm tra kỹ thuật viên tồn tại, đang hoạt động (`is_active=True`) và không đăng ký nghỉ phép (`OFF`).
+- Kiểm tra kỹ thuật viên có chuyên môn phù hợp với các dịch vụ đã đăng ký trong lịch hẹn.
+- Kiểm tra ca làm việc và xung đột trùng giờ với các lịch hẹn khác của kỹ thuật viên.
+- Khóa dòng dữ liệu (`with_for_update`) chống xung đột tranh chấp đồng thời.
+- Cập nhật phân công và tự động ghi nhật ký vào `repair_status_history` trong cùng transaction an toàn.
+""",
+)
+def assign_technician_to_appointment(
+    session: SessionDep,
+    current_user: RequireStaff,
+    appointment_id: Annotated[uuid.UUID, Path(description="Mã ID của lịch hẹn")],
+    body: AppointmentAssignTechnicianRequest,
+) -> AppointmentAssignTechnicianResponse:
+    """API: Phân công kỹ thuật viên cho lịch hẹn sửa chữa."""
+    return slot_service.assign_technician_to_appointment(
+        session=session,
+        appointment_id=appointment_id,
+        data=body,
+        current_user=current_user,
+    )
+
+
 # Register identical endpoints under bookings_router
 bookings_router.add_api_route(
     "",
@@ -201,4 +234,12 @@ bookings_router.add_api_route(
     methods=["PATCH"],
     response_model=AppointmentConfirmResponse,
     summary="Xác nhận đặt chỗ",
+)
+bookings_router.add_api_route(
+    "/{appointment_id}/assign-technician",
+    assign_technician_to_appointment,
+    methods=["POST"],
+    response_model=AppointmentAssignTechnicianResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Phân công kỹ thuật viên cho lịch hẹn",
 )
