@@ -1594,3 +1594,11 @@ class QuotationResponse(SQLModel):
     success: bool = True
     message: str
     data: QuotationDetail
+
+
+class QuotationAcceptRequest(SQLModel):
+    note: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Ghi chú thêm khi duyệt báo giá sửa chữa (tùy chọn)",
+    )

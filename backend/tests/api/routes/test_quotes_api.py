@@ -181,9 +181,7 @@ def test_create_quotation_success_with_multiple_items(
     assert db_quote.total_amount == expected_total
     assert db_quote.status == "DRAFT"
 
-    db_items = db.exec(
-        select(QuoteItem).where(QuoteItem.quote_id == db_quote.id)
-    ).all()
+    db_items = db.exec(select(QuoteItem).where(QuoteItem.quote_id == db_quote.id)).all()
     assert len(db_items) == 3
 
 
@@ -294,9 +292,7 @@ def test_create_quotation_empty_items_validation_error(
             }
         ],
     }
-    res3 = client.post(
-        "/api/v1/quotes", json=payload_negative_price, headers=headers
-    )
+    res3 = client.post("/api/v1/quotes", json=payload_negative_price, headers=headers)
     assert res3.status_code == 422
 
     # 4. Thiếu cả appointment_id lẫn appointment_number -> 422
@@ -386,9 +382,7 @@ def test_create_quotation_appointment_invalid_status(
     assert "đã hoàn thành, không thể tạo báo giá mới" in res2.json()["detail"]
 
 
-def test_create_quotation_service_not_found(
-    client: TestClient, db: Session
-) -> None:
+def test_create_quotation_service_not_found(client: TestClient, db: Session) -> None:
     """Test trả về 404 Not Found khi chỉ định service_id không tồn tại."""
     staff = create_role_user(db, "staff")
     headers = get_token_headers(staff)
@@ -450,9 +444,7 @@ def test_create_quotation_database_error_transaction_rollback(
 
     payload = {
         "appointment_id": str(appt.id),
-        "items": [
-            {"item_name": "Kiểm tra lỗi nguồn IC", "unit_price": 500_000.0}
-        ],
+        "items": [{"item_name": "Kiểm tra lỗi nguồn IC", "unit_price": 500_000.0}],
     }
 
     # Mock generate_quote_number sinh lỗi bất ngờ
@@ -462,15 +454,308 @@ def test_create_quotation_database_error_transaction_rollback(
     ):
         response = client.post("/api/v1/quotes", json=payload, headers=headers)
         assert response.status_code == 500
-        assert "Đã xảy ra lỗi trong quá trình tạo báo giá sửa chữa" in (
-            response.json()["detail"]
+        assert (
+            "Đã xảy ra lỗi trong quá trình tạo báo giá sửa chữa"
+            in (response.json()["detail"])
         )
 
     # Đảm bảo rollback sạch sẽ, không có QuoteItem hay Quote nào bị lưu dở dang
     db.expire_all()
     leftover_items = db.exec(
-        select(QuoteItem).where(
-            QuoteItem.item_name == "Kiểm tra lỗi nguồn IC"
-        )
+        select(QuoteItem).where(QuoteItem.item_name == "Kiểm tra lỗi nguồn IC")
     ).all()
     assert len(leftover_items) == 0
+
+
+# ============================================================================
+# TESTS FOR ACCEPT / APPROVE QUOTATION API
+# ============================================================================
+
+
+def create_quote_record(
+    db: Session,
+    appt: Appointment,
+    status: str = "DRAFT",
+    total: float = 1_000_000.0,
+) -> Quote:
+    q = Quote(
+        quote_number=f"QUO-{uuid.uuid4().hex[:8].upper()}",
+        appointment_id=appt.id,
+        total_amount=total,
+        status=status,
+        customer_notes="Ghi chú ban đầu",
+    )
+    db.add(q)
+    db.commit()
+
+    item = QuoteItem(
+        quote_id=q.id,
+        item_name="Dịch vụ test duyệt",
+        unit_price=total,
+        quantity=1,
+        total_price=total,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(q)
+    return q
+
+
+def test_accept_quotation_success_by_owner_customer(
+    client: TestClient, db: Session
+) -> None:
+    """Test khách hàng chủ sở hữu phiếu sửa chữa duyệt báo giá thành công."""
+    cust_user = create_role_user(db, "customer")
+    cust_headers = get_token_headers(cust_user)
+
+    # Tạo customer liên kết với user này
+    cust = Customer(
+        user_id=cust_user.id,
+        full_name="Khách Hàng Duyệt Báo Giá",
+        phone_number=f"094{uuid.uuid4().int % 10000000:07d}",
+        email=cust_user.email,
+    )
+    db.add(cust)
+    db.commit()
+
+    device = Device(
+        customer_id=cust.id,
+        brand="Apple",
+        model="iPhone 13",
+    )
+    db.add(device)
+    db.commit()
+
+    appt = Appointment(
+        appointment_number=f"APPT-20261024-{uuid.uuid4().hex[:4].upper()}",
+        appointment_date=datetime.now(UTC),
+        status=AppointmentStatus.IN_PROGRESS.value,
+        customer_id=cust.id,
+        device_id=device.id,
+        customer_notes="Thay màn hình",
+        technician_diagnosis="Màn hình nứt kính",
+        total_amount=0.0,
+    )
+    db.add(appt)
+    db.commit()
+
+    quote = create_quote_record(db, appt, status="DRAFT", total=1_500_000.0)
+
+    # Khách hàng gọi API duyệt báo giá
+    response = client.post(
+        f"/api/v1/quotes/{quote.id}/accept",
+        headers=cust_headers,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert "Duyệt báo giá" in body["message"]
+
+    data = body["data"]
+    assert data["id"] == str(quote.id)
+    assert data["quote_number"] == quote.quote_number
+    assert data["status"] == "ACCEPTED"
+    assert data["total_amount"] == 1_500_000.0
+    assert data["customer_name"] == "Khách Hàng Duyệt Báo Giá"
+
+    # Kiểm tra database được cập nhật trạng thái ACCEPTED
+    db.expire_all()
+    db_quote = db.get(Quote, quote.id)
+    assert db_quote is not None
+    assert db_quote.status == "ACCEPTED"
+
+    # Đảm bảo không làm thay đổi trạng thái sửa chữa của Appointment
+    db_appt = db.get(Appointment, appt.id)
+    assert db_appt is not None
+    assert db_appt.status == AppointmentStatus.IN_PROGRESS.value
+
+
+def test_accept_quotation_success_by_staff_with_notes(
+    client: TestClient, db: Session
+) -> None:
+    """Test nhân viên duyệt báo giá thay mặt khách hàng kèm ghi chú duyệt."""
+    staff = create_role_user(db, "staff")
+    headers = get_token_headers(staff)
+    fix = setup_quote_fixture(db)
+    appt = fix["appointment"]
+    assert isinstance(appt, Appointment)
+
+    quote = create_quote_record(db, appt, status="SENT", total=2_000_000.0)
+
+    payload = {"note": "Khách hàng đã gọi điện thoại xác nhận đồng ý làm"}
+    response = client.post(
+        f"/api/v1/quotes/{quote.id}/accept",
+        json=payload,
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["status"] == "ACCEPTED"
+    assert "Khách hàng đã gọi điện thoại" in (data["customer_notes"] or "")
+
+    # Kiểm tra database
+    db.expire_all()
+    db_quote = db.get(Quote, quote.id)
+    assert db_quote is not None
+    assert db_quote.status == "ACCEPTED"
+    assert "[Ghi chú duyệt]" in (db_quote.customer_notes or "")
+
+
+def test_accept_quotation_alias_approve_success(
+    client: TestClient, db: Session
+) -> None:
+    """Test duyệt báo giá qua endpoint alias /approve."""
+    staff = create_role_user(db, "staff")
+    headers = get_token_headers(staff)
+    fix = setup_quote_fixture(db)
+    appt = fix["appointment"]
+    assert isinstance(appt, Appointment)
+
+    quote = create_quote_record(db, appt, status="DRAFT")
+
+    response = client.post(
+        f"/api/v1/quotes/{quote.id}/approve",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["status"] == "ACCEPTED"
+
+
+def test_accept_quotation_not_found(client: TestClient, db: Session) -> None:
+    """Test trả về 404 khi quote_id không tồn tại."""
+    staff = create_role_user(db, "staff")
+    headers = get_token_headers(staff)
+    random_id = uuid.uuid4()
+
+    response = client.post(
+        f"/api/v1/quotes/{random_id}/accept",
+        headers=headers,
+    )
+    assert response.status_code == 404
+    assert "Không tìm thấy báo giá" in response.json()["detail"]
+
+
+def test_accept_quotation_already_accepted_conflict(
+    client: TestClient, db: Session
+) -> None:
+    """Test trả về 409 Conflict khi báo giá đã được duyệt trước đó."""
+    staff = create_role_user(db, "staff")
+    headers = get_token_headers(staff)
+    fix = setup_quote_fixture(db)
+    appt = fix["appointment"]
+    assert isinstance(appt, Appointment)
+
+    quote = create_quote_record(db, appt, status="ACCEPTED")
+
+    response = client.post(
+        f"/api/v1/quotes/{quote.id}/accept",
+        headers=headers,
+    )
+    assert response.status_code == 409
+    assert "đã được duyệt trước đó" in response.json()["detail"]
+
+
+def test_accept_quotation_already_rejected_conflict(
+    client: TestClient, db: Session
+) -> None:
+    """Test trả về 409 Conflict khi báo giá đã bị từ chối trước đó."""
+    staff = create_role_user(db, "staff")
+    headers = get_token_headers(staff)
+    fix = setup_quote_fixture(db)
+    appt = fix["appointment"]
+    assert isinstance(appt, Appointment)
+
+    quote = create_quote_record(db, appt, status="REJECTED")
+
+    response = client.post(
+        f"/api/v1/quotes/{quote.id}/accept",
+        headers=headers,
+    )
+    assert response.status_code == 409
+    assert "đã bị từ chối, không thể duyệt" in response.json()["detail"]
+
+
+def test_accept_quotation_forbidden_other_customer(
+    client: TestClient, db: Session
+) -> None:
+    """Test khách hàng B không có quyền duyệt báo giá của khách hàng A (403 Forbidden)."""
+    # Khách hàng A (chủ sở hữu)
+    cust_a = create_role_user(db, "customer")
+    customer_record_a = Customer(
+        user_id=cust_a.id,
+        full_name="Khách Hàng A",
+        phone_number=f"095{uuid.uuid4().int % 10000000:07d}",
+    )
+    db.add(customer_record_a)
+    db.commit()
+
+    device_a = Device(customer_id=customer_record_a.id, brand="Apple", model="iPhone X")
+    db.add(device_a)
+    db.commit()
+
+    appt_a = Appointment(
+        appointment_number=f"APPT-20261024-{uuid.uuid4().hex[:4].upper()}",
+        appointment_date=datetime.now(UTC),
+        status=AppointmentStatus.IN_PROGRESS.value,
+        customer_id=customer_record_a.id,
+        device_id=device_a.id,
+    )
+    db.add(appt_a)
+    db.commit()
+
+    quote_a = create_quote_record(db, appt_a, status="DRAFT")
+
+    # Khách hàng B (người ngoài)
+    cust_b = create_role_user(db, "customer")
+    cust_b_headers = get_token_headers(cust_b)
+
+    # Khách hàng B cố gắng duyệt báo giá của khách hàng A -> 403
+    response = client.post(
+        f"/api/v1/quotes/{quote_a.id}/accept",
+        headers=cust_b_headers,
+    )
+    assert response.status_code == 403
+    assert "Bạn không có quyền duyệt báo giá" in response.json()["detail"]
+
+
+def test_accept_quotation_unauthorized_no_token(client: TestClient) -> None:
+    """Test gọi API duyệt báo giá không có token -> 401 Unauthorized."""
+    random_id = uuid.uuid4()
+    response = client.post(f"/api/v1/quotes/{random_id}/accept")
+    assert response.status_code == 401
+
+
+def test_accept_quotation_database_error_transaction_rollback(
+    client: TestClient, db: Session
+) -> None:
+    """Test xử lý lỗi ngoại lệ database khi duyệt: session được rollback an toàn và trả về 500."""
+    staff = create_role_user(db, "staff")
+    headers = get_token_headers(staff)
+    fix = setup_quote_fixture(db)
+    appt = fix["appointment"]
+    assert isinstance(appt, Appointment)
+
+    quote = create_quote_record(db, appt, status="DRAFT")
+
+    # Mock session.commit trong accept_quotation để ném lỗi Runtime bất ngờ
+    with patch(
+        "app.services.quote_service.Session.commit",
+        side_effect=RuntimeError(
+            "Simulated database failure during quotation approval"
+        ),
+    ):
+        response = client.post(
+            f"/api/v1/quotes/{quote.id}/accept",
+            headers=headers,
+        )
+        assert response.status_code == 500
+        assert (
+            "Đã xảy ra lỗi trong quá trình duyệt báo giá sửa chữa"
+            in (response.json()["detail"])
+        )
+
+    # Đảm bảo rollback sạch sẽ: trạng thái trong DB vẫn là DRAFT
+    db.expire_all()
+    db_quote = db.get(Quote, quote.id)
+    assert db_quote is not None
+    assert db_quote.status == "DRAFT"

@@ -16,6 +16,8 @@ from app.models import (
     QuotationItemDetail,
     Quote,
     QuoteItem,
+    QuoteStatus,
+    RepairStatusHistory,
     Service,
     User,
     get_datetime_utc,
@@ -36,6 +38,50 @@ class PreparedQuoteItem(TypedDict):
 def _round_money(val: float | Decimal) -> Decimal:
     """Làm tròn số tiền đến 2 chữ số thập phân chính xác bằng Decimal."""
     return Decimal(str(val)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _build_quotation_detail(session: Session, quote: Quote) -> QuotationDetail:
+    """Helper chuyển đổi thực thể Quote và các liên kết thành QuotationDetail."""
+    appointment = session.get(Appointment, quote.appointment_id)
+    customer = session.get(Customer, appointment.customer_id) if appointment else None
+    device = session.get(Device, appointment.device_id) if appointment else None
+
+    items_data = session.exec(
+        select(QuoteItem).where(QuoteItem.quote_id == quote.id)
+    ).all()
+
+    items_detail = [
+        QuotationItemDetail(
+            id=item.id,
+            service_id=item.service_id,
+            item_name=item.item_name,
+            unit_price=item.unit_price,
+            quantity=item.quantity,
+            total_price=item.total_price,
+            notes=item.notes,
+        )
+        for item in items_data
+    ]
+
+    device_info_str = f"{device.brand} {device.model}".strip() if device else "Không rõ"
+
+    return QuotationDetail(
+        id=quote.id,
+        quote_number=quote.quote_number,
+        appointment_id=quote.appointment_id,
+        appointment_number=(appointment.appointment_number if appointment else ""),
+        customer_id=appointment.customer_id if appointment else uuid.uuid4(),
+        customer_name=customer.full_name if customer else "Khách hàng",
+        customer_phone=customer.phone_number if customer else "",
+        device_info=device_info_str,
+        total_amount=quote.total_amount,
+        status=quote.status,
+        valid_until=quote.valid_until,
+        customer_notes=quote.customer_notes,
+        items=items_detail,
+        created_at=quote.created_at,
+        updated_at=quote.updated_at,
+    )
 
 
 def generate_quote_number(session: Session, appointment: Appointment) -> str:
@@ -120,10 +166,6 @@ def create_repair_quotation(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Phiếu sửa chữa {appointment.appointment_number} đã hoàn thành, không thể tạo báo giá mới",
             )
-
-        # Lấy thông tin khách hàng và thiết bị để trả về chi tiết báo giá
-        customer = session.get(Customer, appointment.customer_id)
-        device = session.get(Device, appointment.device_id)
 
         # 3. Duyệt và xác thực từng hạng mục báo giá (Items)
         prepared_items: list[PreparedQuoteItem] = []
@@ -210,7 +252,6 @@ def create_repair_quotation(
         session.flush()
 
         # 6. Khởi tạo và lưu từng QuoteItem
-        items_detail: list[QuotationItemDetail] = []
         for p_item in prepared_items:
             db_item = QuoteItem(
                 id=uuid.uuid4(),
@@ -223,17 +264,6 @@ def create_repair_quotation(
                 notes=p_item["notes"],
             )
             session.add(db_item)
-            items_detail.append(
-                QuotationItemDetail(
-                    id=db_item.id,
-                    service_id=db_item.service_id,
-                    item_name=db_item.item_name,
-                    unit_price=db_item.unit_price,
-                    quantity=db_item.quantity,
-                    total_price=db_item.total_price,
-                    notes=db_item.notes,
-                )
-            )
 
         session.commit()
         session.refresh(quote)
@@ -242,27 +272,7 @@ def create_repair_quotation(
             f"Tạo báo giá thành công: {quote.quote_number} cho lịch hẹn {appointment.appointment_number} với tổng tiền {quote.total_amount}"
         )
 
-        device_info_str = (
-            f"{device.brand} {device.model}".strip() if device else "Không rõ"
-        )
-
-        return QuotationDetail(
-            id=quote.id,
-            quote_number=quote.quote_number,
-            appointment_id=appointment.id,
-            appointment_number=appointment.appointment_number,
-            customer_id=appointment.customer_id,
-            customer_name=customer.full_name if customer else "Khách hàng",
-            customer_phone=customer.phone_number if customer else "",
-            device_info=device_info_str,
-            total_amount=quote.total_amount,
-            status=quote.status,
-            valid_until=quote.valid_until,
-            customer_notes=quote.customer_notes,
-            items=items_detail,
-            created_at=quote.created_at,
-            updated_at=quote.updated_at,
-        )
+        return _build_quotation_detail(session, quote)
 
     except HTTPException:
         session.rollback()
@@ -276,4 +286,146 @@ def create_repair_quotation(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Đã xảy ra lỗi trong quá trình tạo báo giá sửa chữa. Vui lòng thử lại sau.",
+        ) from exc
+
+
+def accept_quotation(
+    session: Session,
+    quote_id: uuid.UUID,
+    current_user: User,
+    note: str | None = None,
+) -> QuotationDetail:
+    """
+    Duyệt báo giá sửa chữa (Quotation Approval):
+    - Sử dụng with_for_update() khóa dòng để tránh race condition hoặc duyệt lặp đồng thời.
+    - Kiểm tra báo giá có tồn tại (404 nếu không tìm thấy).
+    - Kiểm tra trạng thái hiện tại (chỉ DRAFT hoặc SENT mới được duyệt; nếu đã ACCEPTED -> 409 Conflict; REJECTED -> 409 Conflict).
+    - Kiểm tra phân quyền:
+      + Staff / Technician / Manager / Admin: được duyệt.
+      + Customer: chỉ được duyệt báo giá thuộc phiếu sửa chữa của chính mình (403 nếu không phải chủ sở hữu).
+    - Cập nhật trạng thái báo giá sang ACCEPTED.
+    - Ghi nhận lịch sử kiểm toán vào RepairStatusHistory.
+    - Transaction an toàn, commit và trả về QuotationDetail.
+    """
+    logger.info(
+        f"Bắt đầu duyệt báo giá quote_id={quote_id} bởi user={current_user.id} ({current_user.email})"
+    )
+
+    now = get_datetime_utc()
+
+    try:
+        # 1. Tìm báo giá với khóa bi quan (with_for_update) để ngăn chặn race condition đồng thời
+        quote = session.exec(
+            select(Quote).where(Quote.id == quote_id).with_for_update()
+        ).first()
+
+        if not quote:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Không tìm thấy báo giá với ID: {quote_id}",
+            )
+
+        # 2. Lấy thông tin phiếu sửa chữa
+        appointment = session.get(Appointment, quote.appointment_id)
+        if not appointment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy phiếu sửa chữa liên quan đến báo giá này",
+            )
+
+        # 3. Kiểm tra trạng thái hiện tại của báo giá
+        if quote.status == QuoteStatus.ACCEPTED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Báo giá {quote.quote_number} đã được duyệt trước đó",
+            )
+        if quote.status == QuoteStatus.REJECTED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Báo giá {quote.quote_number} đã bị từ chối, không thể duyệt",
+            )
+        if quote.status not in (QuoteStatus.DRAFT.value, QuoteStatus.SENT.value):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Báo giá đang ở trạng thái '{quote.status}', không thể duyệt",
+            )
+
+        # 4. Kiểm tra phân quyền: Nhân viên hoặc Khách hàng sở hữu
+        is_staff_or_admin = current_user.is_superuser or (
+            (current_user.role or "").lower()
+            in ["admin", "manager", "staff", "technician"]
+        )
+
+        if not is_staff_or_admin:
+            # Người dùng là customer, chỉ được duyệt báo giá của chính mình
+            customer = session.get(Customer, appointment.customer_id)
+            is_owner = False
+            if customer:
+                if customer.user_id and customer.user_id == current_user.id:
+                    is_owner = True
+                elif (
+                    customer.email
+                    and customer.email.strip().lower()
+                    == current_user.email.strip().lower()
+                ):
+                    is_owner = True
+
+            if not is_owner:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Bạn không có quyền duyệt báo giá của khách hàng khác",
+                )
+
+        # 5. Cập nhật trạng thái báo giá sang ACCEPTED
+        quote.status = QuoteStatus.ACCEPTED.value
+        quote.updated_at = now
+        if note and note.strip():
+            note_str = note.strip()
+            if quote.customer_notes:
+                quote.customer_notes = (
+                    f"{quote.customer_notes}\n[Ghi chú duyệt]: {note_str}"
+                )
+            else:
+                quote.customer_notes = f"[Ghi chú duyệt]: {note_str}"
+
+        session.add(quote)
+
+        # 6. Ghi nhận nhật ký audit trail vào RepairStatusHistory (không làm đổi trạng thái sửa chữa của Appointment)
+        approver_display = current_user.full_name or current_user.email
+        audit_note_parts = [
+            f"Báo giá {quote.quote_number} (tổng tiền: {quote.total_amount:,.0f} đ) đã được duyệt bởi {approver_display}"
+        ]
+        if note and note.strip():
+            audit_note_parts.append(f"Ghi chú: {note.strip()}")
+
+        status_history = RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status=appointment.status,
+            new_status=appointment.status,
+            note=". ".join(audit_note_parts),
+            changed_by_user_id=current_user.id,
+        )
+        session.add(status_history)
+
+        session.commit()
+        session.refresh(quote)
+
+        logger.info(
+            f"Duyệt báo giá thành công: {quote.quote_number} (ID: {quote.id}) sang trạng thái ACCEPTED"
+        )
+
+        return _build_quotation_detail(session, quote)
+
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
+        session.rollback()
+        logger.error(
+            f"Lỗi không xác định khi duyệt báo giá sửa chữa: {exc}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Đã xảy ra lỗi trong quá trình duyệt báo giá sửa chữa. Vui lòng thử lại sau.",
         ) from exc
