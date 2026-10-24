@@ -1477,3 +1477,120 @@ class DeviceIntakeResponse(SQLModel):
     success: bool = True
     message: str
     data: DeviceIntakeDetail
+
+
+# ============================================================================
+# FIXPHONE REPAIR QUOTATION SCHEMAS
+# ============================================================================
+
+
+class QuoteStatus(StrEnum):
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+
+
+class QuotationItemCreate(SQLModel):
+    service_id: uuid.UUID | None = Field(
+        default=None, description="ID dịch vụ từ danh mục (nếu có)"
+    )
+    item_name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Tên hạng mục sửa chữa hoặc linh kiện (nếu không có service_id thì bắt buộc)",
+    )
+    unit_price: float | None = Field(
+        default=None,
+        ge=0,
+        description="Đơn giá hạng mục (nếu không truyền sẽ lấy theo giá gốc dịch vụ)",
+    )
+    quantity: int = Field(
+        default=1,
+        gt=0,
+        description="Số lượng (phải lớn hơn 0)",
+    )
+    notes: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú chi tiết cho hạng mục này",
+    )
+
+    @field_validator("item_name")
+    @classmethod
+    def validate_item_name(cls, v: str | None) -> str | None:
+        if v is not None and not v.strip():
+            raise ValueError("Tên hạng mục không được là khoảng trắng")
+        return v.strip() if v else None
+
+
+class QuotationCreate(SQLModel):
+    appointment_id: uuid.UUID | None = Field(
+        default=None, description="UUID của phiếu sửa chữa"
+    )
+    appointment_number: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Mã phiếu sửa chữa (ví dụ: APPT-20261024-XXXX)",
+    )
+    items: list[QuotationItemCreate] = Field(
+        min_length=1,
+        description="Danh sách các hạng mục báo giá (ít nhất 1 hạng mục)",
+    )
+    valid_until: datetime | None = Field(
+        default=None,
+        description="Thời hạn hiệu lực của báo giá (nếu có)",
+    )
+    customer_notes: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Ghi chú gửi cho khách hàng",
+    )
+    status: QuoteStatus = Field(
+        default=QuoteStatus.DRAFT,
+        description="Trạng thái ban đầu của báo giá (mặc định DRAFT)",
+    )
+
+    @model_validator(mode="after")
+    def validate_appointment_reference(self) -> Self:
+        if not self.appointment_id and (
+            not self.appointment_number or not self.appointment_number.strip()
+        ):
+            raise ValueError(
+                "Cần cung cấp ít nhất một định danh: appointment_id hoặc appointment_number"
+            )
+        return self
+
+
+class QuotationItemDetail(SQLModel):
+    id: uuid.UUID
+    service_id: uuid.UUID | None = None
+    item_name: str
+    unit_price: float
+    quantity: int
+    total_price: float
+    notes: str | None = None
+
+
+class QuotationDetail(SQLModel):
+    id: uuid.UUID
+    quote_number: str
+    appointment_id: uuid.UUID
+    appointment_number: str
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str
+    device_info: str
+    total_amount: float
+    status: str
+    valid_until: datetime | None = None
+    customer_notes: str | None = None
+    items: list[QuotationItemDetail] = Field(default_factory=list)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class QuotationResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: QuotationDetail

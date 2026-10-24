@@ -8,6 +8,7 @@ from app.api.routes import (
     login,
     private,
     queue,
+    quotes,
     slots,
     technicians,
     users,
@@ -29,6 +30,7 @@ api_router.include_router(technicians.router)
 api_router.include_router(work_schedules.router)
 api_router.include_router(queue.router)
 api_router.include_router(intake.router)
+api_router.include_router(quotes.router)
 
 
 if settings.FASTAPI_ENV == "development":
