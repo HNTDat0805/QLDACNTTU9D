@@ -52,6 +52,10 @@ $RECYCLE.BIN/
 # ==========================================
 # Environment Variables & Secrets
 # ==========================================
+/.env
+/.env.*
+!/.env.example
+!/.env.*.example
 .env.local
 .env.*.local
 .env.prod
