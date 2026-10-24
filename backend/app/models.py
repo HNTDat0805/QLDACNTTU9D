@@ -1602,3 +1602,79 @@ class QuotationAcceptRequest(SQLModel):
         max_length=1000,
         description="Ghi chú thêm khi duyệt báo giá sửa chữa (tùy chọn)",
     )
+
+
+# ============================================================================
+# FIXPHONE DEVICE & REPAIR ORDER MANAGEMENT SCHEMAS
+# ============================================================================
+
+
+class DeviceResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: DevicePublic
+
+
+class RepairStatusUpdateRequest(SQLModel):
+    status: AppointmentStatus = Field(
+        description="Trạng thái sửa chữa mới (PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED)"
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Ghi chú chi tiết về việc chuyển trạng thái sửa chữa",
+    )
+    technician_diagnosis: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Chẩn đoán kỹ thuật bổ sung (tùy chọn)",
+    )
+    cancellation_reason: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Lý do hủy (nếu chuyển sang trạng thái CANCELLED)",
+    )
+
+
+class RepairStatusUpdateData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    previous_status: str
+    current_status: str
+    note: str | None = None
+    technician_diagnosis: str | None = None
+    actual_completion_date: datetime | None = None
+    updated_at: datetime | None = None
+    history_id: uuid.UUID | None = None
+
+
+class RepairStatusUpdateResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: RepairStatusUpdateData
+
+
+class AssignTechnicianRequest(SQLModel):
+    technician_id: uuid.UUID = Field(description="ID của kỹ thuật viên được phân công")
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú phân công công việc (tùy chọn)",
+    )
+
+
+class AssignTechnicianData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    technician_id: uuid.UUID
+    technician_name: str
+    technician_phone: str
+    specialization: str | None = None
+    status: str
+    assigned_at: datetime | None = None
+
+
+class AssignTechnicianResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AssignTechnicianData
