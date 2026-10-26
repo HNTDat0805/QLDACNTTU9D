@@ -8,6 +8,9 @@ from sqlmodel import Session, col, select
 from app.core.logging import get_logger
 from app.models import (
     Appointment,
+    AppointmentAssignTechnicianData,
+    AppointmentAssignTechnicianRequest,
+    AppointmentAssignTechnicianResponse,
     AppointmentBookingCreate,
     AppointmentBookingResponse,
     AppointmentBookingUpdate,
@@ -1114,4 +1117,294 @@ def cancel_appointment(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Lỗi hệ thống khi hủy lịch hẹn",
+        ) from e
+
+
+def check_technician_specialization_match(
+    tech_spec: str | None, services: list[Service]
+) -> tuple[bool, str | None]:
+    """Kiểm tra chuyên môn của kỹ thuật viên có phù hợp với các dịch vụ của lịch hẹn không."""
+    if not tech_spec or not tech_spec.strip():
+        # Kỹ thuật viên không khai báo chuyên môn hẹp -> Được xem là kỹ thuật viên tổng hợp
+        return True, None
+
+    spec_lower = tech_spec.lower().strip()
+    if any(
+        general in spec_lower
+        for general in ["tổng hợp", "đa năng", "tất cả", "chung", "toàn diện"]
+    ):
+        return True, None
+
+    if not services:
+        # Không có dịch vụ cụ thể ràng buộc
+        return True, None
+
+    # Tách các từ khóa chuyên môn (theo dấu phẩy, &, /, +, gạch nối)
+    spec_delimiters = [",", "&", "/", "+", "-", "–", "và"]
+    cleaned_spec = spec_lower
+    for d in spec_delimiters:
+        cleaned_spec = cleaned_spec.replace(d, " ")
+    spec_keywords = [k.strip() for k in cleaned_spec.split() if len(k.strip()) >= 2]
+
+    # Kiểm tra so khớp với dịch vụ
+    for svc in services:
+        svc_name_lower = svc.name.lower()
+        svc_desc_lower = (svc.description or "").lower()
+        combined = f"{svc_name_lower} {svc_desc_lower}"
+
+        # Các dịch vụ cơ bản mà mọi kỹ thuật viên đều có thể xử lý
+        if any(
+            basic in svc_name_lower
+            for basic in ["vệ sinh", "bảo dưỡng", "kiểm tra", "dán kính", "dán màn"]
+        ):
+            return True, None
+
+        # Khớp toàn bộ cụm chuyên môn
+        if spec_lower in combined:
+            return True, None
+
+        # Khớp từng từ khóa chuyên môn cốt lõi
+        for kw in spec_keywords:
+            if kw in [
+                "màn",
+                "hình",
+                "kính",
+                "ép",
+                "pin",
+                "nguồn",
+                "sạc",
+                "main",
+                "mainboard",
+                "mạch",
+                "cứng",
+                "mềm",
+                "camera",
+                "loa",
+                "mic",
+                "vỏ",
+                "lưng",
+            ]:
+                if kw in combined:
+                    return True, None
+            elif kw in combined:
+                return True, None
+
+    svc_names = ", ".join(s.name for s in services)
+    return (
+        False,
+        f"Chuyên môn '{tech_spec}' không phù hợp với các dịch vụ yêu cầu: {svc_names}",
+    )
+
+
+def assign_technician_to_appointment(
+    session: Session,
+    appointment_id: uuid.UUID,
+    data: AppointmentAssignTechnicianRequest,
+    current_user: User,
+) -> AppointmentAssignTechnicianResponse:
+    """API: Phân công một kỹ thuật viên vào lịch hẹn sửa chữa điện thoại.
+
+    Quy trình kiểm tra nghiệp vụ:
+    1. Row-level locking (with_for_update) chống xung đột đồng thời.
+    2. Kiểm tra lịch hẹn tồn tại (404 Not Found) và chưa kết thúc (409 Conflict nếu COMPLETED/CANCELLED).
+    3. Kiểm tra kỹ thuật viên tồn tại (404 Not Found) và đang hoạt động (400 Bad Request nếu is_active=False).
+    4. Kiểm tra kỹ thuật viên đã được phân công cho chính lịch hẹn này chưa (400 Bad Request nếu trùng).
+    5. Kiểm tra chuyên môn của kỹ thuật viên phù hợp với các dịch vụ của lịch hẹn (400 Bad Request).
+    6. Kiểm tra lịch làm việc:
+       - Nếu có lịch nghỉ phép (status == 'OFF') trong ngày hẹn -> 400 Bad Request.
+       - Nếu có ca trực (status == 'AVAILABLE') trong ngày hẹn -> phải bao hàm khung giờ [appt_start, appt_end] (400 Bad Request).
+    7. Kiểm tra xung đột lịch: Kỹ thuật viên không bị trùng lịch với bất kỳ lịch hẹn nào khác trong khung giờ (409 Conflict).
+    8. Cập nhật technician_id, updated_at và ghi nhận lịch sử vào RepairStatusHistory trong cùng một transaction.
+    """
+    now = get_datetime_utc()
+    try:
+        # 1. Khóa và lấy thông tin lịch hẹn
+        appointment = session.exec(
+            select(Appointment)
+            .where(Appointment.id == appointment_id)
+            .with_for_update()
+        ).first()
+
+        if not appointment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Không tìm thấy lịch hẹn với ID: {appointment_id}",
+            )
+
+        # 2. Kiểm tra trạng thái lịch hẹn
+        current_status = (appointment.status or "").upper()
+        if current_status in (
+            AppointmentStatus.COMPLETED.value,
+            AppointmentStatus.CANCELLED.value,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Không thể phân công kỹ thuật viên cho lịch hẹn đã kết thúc (trạng thái: {current_status})",
+            )
+
+        # 3. Khóa và kiểm tra kỹ thuật viên
+        tech = session.exec(
+            select(Technician)
+            .where(Technician.id == data.technician_id)
+            .with_for_update()
+        ).first()
+
+        if not tech:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Không tìm thấy kỹ thuật viên với ID: {data.technician_id}",
+            )
+
+        if not tech.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Kỹ thuật viên '{tech.full_name}' hiện không hoạt động hoặc đã nghỉ việc",
+            )
+
+        # 4. Kiểm tra nếu đã được phân công kỹ thuật viên này từ trước
+        if appointment.technician_id == tech.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Kỹ thuật viên '{tech.full_name}' đã được phân công cho lịch hẹn này từ trước",
+            )
+
+        # 5. Kiểm tra chuyên môn phù hợp với các dịch vụ của lịch hẹn
+        linked_services = list(
+            session.exec(
+                select(Service)
+                .join(AppointmentService)
+                .where(AppointmentService.appointment_id == appointment.id)
+            ).all()
+        )
+        is_spec_match, spec_err = check_technician_specialization_match(
+            tech.specialization, linked_services
+        )
+        if not is_spec_match:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Kỹ thuật viên không đủ điều kiện chuyên môn: {spec_err}",
+            )
+
+        # 6. Xác định khung thời gian thực hiện lịch hẹn
+        appt_start = appointment.appointment_date
+        if appt_start.tzinfo is None:
+            appt_start = appt_start.replace(tzinfo=UTC)
+        appt_date = appt_start.date()
+        appt_time = appt_start.time()
+
+        duration = get_appointment_duration(session, appointment.id)
+        appt_end = appt_start + timedelta(minutes=duration)
+        appt_end_time = appt_end.time()
+
+        # 7. Kiểm tra lịch làm việc (TechnicianSchedule)
+        # Kiểm tra xem KTV có đăng ký nghỉ phép (OFF) trong ngày không
+        schedule_off = session.exec(
+            select(TechnicianSchedule).where(
+                TechnicianSchedule.technician_id == tech.id,
+                TechnicianSchedule.work_date == appt_date,
+                TechnicianSchedule.status == "OFF",
+            )
+        ).first()
+        if schedule_off:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Kỹ thuật viên '{tech.full_name}' đã đăng ký nghỉ (OFF) trong ngày {appt_date.strftime('%d/%m/%Y')}, không thể nhận lịch",
+            )
+
+        # Kiểm tra ca làm việc AVAILABLE có bao quát khung giờ hẹn không nếu KTV có đăng ký ca
+        available_schedules = list(
+            session.exec(
+                select(TechnicianSchedule).where(
+                    TechnicianSchedule.technician_id == tech.id,
+                    TechnicianSchedule.work_date == appt_date,
+                    TechnicianSchedule.status == "AVAILABLE",
+                )
+            ).all()
+        )
+        if available_schedules:
+            shift_matches = any(
+                sch.start_time <= appt_time and sch.end_time >= appt_end_time
+                for sch in available_schedules
+            )
+            if not shift_matches:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Kỹ thuật viên '{tech.full_name}' không có ca làm việc phù hợp trong khung giờ {appt_time.strftime('%H:%M')} - {appt_end_time.strftime('%H:%M')} ngày {appt_date.strftime('%d/%m/%Y')}",
+                )
+
+        # 8. Kiểm tra xung đột lịch với các lịch hẹn khác của kỹ thuật viên
+        if check_overlap(
+            session,
+            tech.id,
+            appt_start,
+            appt_end,
+            exclude_appt_id=appointment.id,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Kỹ thuật viên '{tech.full_name}' đã bị trùng lịch với lịch hẹn khác trong khung giờ {appt_start.strftime('%H:%M')} - {appt_end.strftime('%H:%M')}",
+            )
+
+        # 9. Thực hiện gán kỹ thuật viên và ghi audit log
+        old_tech_id = appointment.technician_id
+        old_tech = session.get(Technician, old_tech_id) if old_tech_id else None
+
+        appointment.technician_id = tech.id
+        appointment.updated_at = now
+        session.add(appointment)
+
+        if old_tech:
+            audit_note = f"Thay đổi kỹ thuật viên phụ trách từ {old_tech.full_name} sang {tech.full_name}"
+        else:
+            audit_note = f"Phân công kỹ thuật viên {tech.full_name} phụ trách lịch hẹn"
+
+        if data.note and data.note.strip():
+            audit_note += f". Ghi chú: {data.note.strip()}"
+
+        history = RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status=appointment.status,
+            new_status=appointment.status,
+            note=audit_note,
+            changed_by_user_id=current_user.id,
+            created_at=now,
+        )
+        session.add(history)
+
+        session.commit()
+        session.refresh(appointment)
+        session.refresh(tech)
+
+        logger.info(
+            f"Phân công thành công kỹ thuật viên {tech.full_name} cho lịch hẹn {appointment.appointment_number}"
+        )
+
+        return AppointmentAssignTechnicianResponse(
+            success=True,
+            message=f"Phân công kỹ thuật viên {tech.full_name} cho lịch hẹn {appointment.appointment_number} thành công",
+            data=AppointmentAssignTechnicianData(
+                appointment_id=appointment.id,
+                appointment_number=appointment.appointment_number,
+                appointment_date=appointment.appointment_date,
+                technician_id=tech.id,
+                technician_name=tech.full_name,
+                technician_phone=tech.phone_number,
+                technician_specialization=tech.specialization,
+                status=appointment.status,
+                assigned_at=now,
+                note=data.note,
+            ),
+        )
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as e:
+        session.rollback()
+        logger.error(
+            f"Lỗi hệ thống khi phân công kỹ thuật viên cho lịch hẹn {appointment_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Đã xảy ra lỗi trong quá trình phân công kỹ thuật viên. Vui lòng thử lại sau.",
         ) from e

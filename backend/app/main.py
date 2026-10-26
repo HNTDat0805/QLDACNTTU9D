@@ -9,7 +9,16 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
 from app.api.routes import appointments as appointments_route
+from app.api.routes import customers as customers_route
+from app.api.routes import devices as devices_route
+from app.api.routes import intake as intake_route
+from app.api.routes import login as login_route
+from app.api.routes import queue as queue_route
+from app.api.routes import quotes as quotes_route
+from app.api.routes import repair_orders as repair_orders_route
 from app.api.routes import slots as slots_route
+from app.api.routes import technicians as technicians_route
+from app.api.routes import work_schedules as work_schedules_route
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 from app.core.middleware import RequestLoggingMiddleware
@@ -63,5 +72,14 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(slots_route.router, prefix="/api")
 app.include_router(appointments_route.router, prefix="/api")
 app.include_router(appointments_route.bookings_router, prefix="/api")
+app.include_router(customers_route.router, prefix="/api")
+app.include_router(technicians_route.router, prefix="/api")
+app.include_router(work_schedules_route.router, prefix="/api")
+app.include_router(queue_route.router, prefix="/api")
+app.include_router(intake_route.router, prefix="/api")
+app.include_router(quotes_route.router, prefix="/api")
+app.include_router(devices_route.router, prefix="/api")
+app.include_router(repair_orders_route.router, prefix="/api")
+app.include_router(login_route.router, prefix="/api")
 if FRONTEND_DIR.exists():
     app.frontend("/", directory=FRONTEND_DIR)

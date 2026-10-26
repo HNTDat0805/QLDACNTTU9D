@@ -81,6 +81,9 @@ class User(UserBase, table=True):
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)  # noqa: UP037
     customer_profile: Optional["Customer"] = Relationship(back_populates="user")  # noqa: UP037, UP045
     technician_profile: Optional["Technician"] = Relationship(back_populates="user")  # noqa: UP037, UP045
+    refresh_tokens: list["RefreshToken"] = Relationship(  # noqa: UP037
+        back_populates="user", cascade_delete=True
+    )
 
 
 class UserPublic(UserBase):
@@ -1071,6 +1074,42 @@ class TokenPayload(SQLModel):
     type: str | None = None
     role: str | None = None
     email: str | None = None
+    jti: str | None = None
+
+
+# ============================================================================
+# FIXPHONE ENTITY: REFRESH TOKEN (SERVER-SIDE TRACKING & REVOCATION)
+# ============================================================================
+
+
+class RefreshTokenBase(SQLModel):
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", ondelete="CASCADE", nullable=False, index=True
+    )
+    token_hash: str = Field(unique=True, index=True, max_length=64)
+    jti: str = Field(unique=True, index=True, max_length=64)
+    expires_at: datetime = Field(
+        sa_type=DateTime(timezone=True),
+        index=True,  # type: ignore
+    )
+    is_revoked: bool = Field(default=False, index=True)
+    revoked_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    replaced_by_jti: str | None = Field(default=None, max_length=64)
+
+
+class RefreshToken(RefreshTokenBase, table=True):
+    __tablename__ = "refresh_token"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+    user: User = Relationship(back_populates="refresh_tokens")
 
 
 class NewPassword(SQLModel):
@@ -1224,3 +1263,492 @@ class AppointmentCancelResponse(SQLModel):
     success: bool = True
     message: str
     data: AppointmentCancelData
+
+
+# ============================================================================
+# FIXPHONE MANAGEMENT & QUEUE & HISTORY API SCHEMAS
+# ============================================================================
+
+
+class CustomersPublic(SQLModel):
+    data: list[CustomerPublic]
+    count: int
+
+
+class TechniciansPublic(SQLModel):
+    data: list[TechnicianPublic]
+    count: int
+
+
+class TechnicianStatusUpdate(SQLModel):
+    is_active: bool
+
+
+class TechnicianSchedulesPublic(SQLModel):
+    data: list[TechnicianSchedulePublic]
+    count: int
+
+
+class TechnicianScheduleStatusUpdate(SQLModel):
+    status: str = Field(max_length=50)
+    notes: str | None = Field(default=None, max_length=500)
+
+
+class QueueItemPublic(SQLModel):
+    appointment_id: uuid.UUID
+    appointment_number: str
+    status: str
+    appointment_date: datetime
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str
+    device_id: uuid.UUID
+    device_info: str
+    technician_id: uuid.UUID | None = None
+    technician_name: str | None = None
+    service_names: list[str] = Field(default_factory=list)
+    total_amount: float = 0.0
+    estimated_duration_minutes: int = 30
+    queue_position: int = 1
+    technician_diagnosis: str | None = None
+    customer_notes: str | None = None
+    created_at: datetime | None = None
+
+
+class QueueListResponse(SQLModel):
+    data: list[QueueItemPublic]
+    count: int
+    date: date | None = None
+
+
+class QueueStatusUpdate(SQLModel):
+    status: str = Field(
+        max_length=50,
+        description="Trạng thái mới: CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED",
+    )
+    technician_id: uuid.UUID | None = None
+    technician_diagnosis: str | None = Field(default=None, max_length=1000)
+    note: str | None = Field(default=None, max_length=1000)
+
+
+class AppointmentServiceItemDetail(SQLModel):
+    service_id: uuid.UUID
+    service_name: str
+    price_at_booking: float
+    quantity: int = 1
+    notes: str | None = None
+
+
+class AppointmentHistoryDetail(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    appointment_date: datetime
+    status: str
+    cancellation_reason: str | None = None
+    customer_notes: str | None = None
+    technician_diagnosis: str | None = None
+    estimated_completion_date: datetime | None = None
+    actual_completion_date: datetime | None = None
+    total_amount: float = 0.0
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    customer: CustomerPublic | None = None
+    device: DevicePublic | None = None
+    technician: TechnicianPublic | None = None
+    services: list[AppointmentServiceItemDetail] = Field(default_factory=list)
+    status_history: list[RepairStatusHistoryPublic] = Field(default_factory=list)
+
+
+class AppointmentsHistoryPublic(SQLModel):
+    data: list[AppointmentHistoryDetail]
+    count: int
+
+
+# ============================================================================
+# FIXPHONE REPAIR ORDER / DEVICE INTAKE SCHEMAS
+# ============================================================================
+
+
+class DeviceIntakeCreate(SQLModel):
+    appointment_id: uuid.UUID | None = Field(
+        default=None, description="ID lịch hẹn có sẵn nếu khách đã đặt lịch hẹn trước"
+    )
+
+    customer_id: uuid.UUID | None = Field(
+        default=None, description="ID khách hàng nếu đã có trong hệ thống"
+    )
+    customer_name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Họ và tên khách hàng (bắt buộc nếu không có customer_id và appointment_id)",
+    )
+    customer_phone: str | None = Field(
+        default=None,
+        max_length=20,
+        description="Số điện thoại khách hàng (bắt buộc nếu không có customer_id và appointment_id)",
+    )
+    customer_email: str | None = Field(default=None, max_length=255)
+    customer_address: str | None = Field(default=None, max_length=500)
+
+    device_id: uuid.UUID | None = Field(
+        default=None, description="ID thiết bị nếu đã có trong hệ thống"
+    )
+    brand: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Hãng sản xuất thiết bị (Apple, Samsung, Xiaomi...)",
+    )
+    model: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Dòng máy (iPhone 13, Galaxy S23...)",
+    )
+    device_type: str = Field(default="Smartphone", max_length=50)
+    serial_number: str | None = Field(default=None, max_length=100)
+    imei: str | None = Field(default=None, max_length=50)
+    color: str | None = Field(default=None, max_length=50)
+
+    physical_condition: str = Field(
+        min_length=1,
+        max_length=1000,
+        description="Tình trạng ngoại quan máy khi tiếp nhận (vỡ màn hình, cấn móp, trầy xước...)",
+    )
+    fault_description: str = Field(
+        min_length=1,
+        max_length=1000,
+        description="Mô tả lỗi hoặc triệu chứng hỏng hóc từ khách hàng",
+    )
+    accessories_received: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Phụ kiện khách bàn giao (sạc, cáp, que SIM, ốp lưng, hộp...)",
+    )
+
+    technician_id: uuid.UUID | None = Field(
+        default=None, description="Kỹ thuật viên phụ trách tiếp nhận/sửa chữa (nếu có)"
+    )
+    service_ids: list[uuid.UUID] | None = Field(
+        default=None, description="Danh sách ID dịch vụ sửa chữa dự kiến"
+    )
+    estimated_completion_date: datetime | None = Field(
+        default=None, description="Thời gian dự kiến hoàn thành"
+    )
+    initial_status: AppointmentStatus = Field(
+        default=AppointmentStatus.CONFIRMED,
+        description="Trạng thái ban đầu của phiếu: CONFIRMED hoặc IN_PROGRESS",
+    )
+
+    @field_validator("physical_condition")
+    @classmethod
+    def validate_physical_condition(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Tình trạng ngoại quan thiết bị không được để trống")
+        return v.strip()
+
+    @field_validator("fault_description")
+    @classmethod
+    def validate_fault_description(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Mô tả lỗi thiết bị không được để trống")
+        return v.strip()
+
+    @field_validator("initial_status")
+    @classmethod
+    def validate_initial_status(cls, v: AppointmentStatus) -> AppointmentStatus:
+        if v not in (AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS):
+            raise ValueError(
+                "Trạng thái ban đầu của phiếu tiếp nhận chỉ có thể là CONFIRMED hoặc IN_PROGRESS"
+            )
+        return v
+
+    @model_validator(mode="after")
+    def validate_intake_payload(self) -> Self:
+        # Nếu không có appointment_id (tiếp nhận walk-in trực tiếp)
+        if not self.appointment_id:
+            # Phải có customer_id hoặc (customer_name và customer_phone)
+            if not self.customer_id:
+                if not self.customer_name or not self.customer_name.strip():
+                    raise ValueError(
+                        "Cần cung cấp tên khách hàng (customer_name) hoặc customer_id"
+                    )
+                if not self.customer_phone or not self.customer_phone.strip():
+                    raise ValueError(
+                        "Cần cung cấp số điện thoại khách hàng (customer_phone) hoặc customer_id"
+                    )
+            # Phải có device_id hoặc (brand và model)
+            if not self.device_id:
+                if not self.brand or not self.brand.strip():
+                    raise ValueError(
+                        "Cần cung cấp hãng thiết bị (brand) hoặc device_id"
+                    )
+                if not self.model or not self.model.strip():
+                    raise ValueError(
+                        "Cần cung cấp dòng máy thiết bị (model) hoặc device_id"
+                    )
+        return self
+
+
+class DeviceIntakeDetail(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    status: str
+    appointment_date: datetime
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str
+    device_id: uuid.UUID
+    device_brand: str
+    device_model: str
+    device_imei: str | None = None
+    device_color: str | None = None
+    physical_condition: str
+    fault_description: str
+    accessories_received: str | None = None
+    technician_id: uuid.UUID | None = None
+    technician_name: str | None = None
+    estimated_completion_date: datetime | None = None
+    total_amount: float = 0.0
+    services: list[AppointmentServiceItemDetail] = Field(default_factory=list)
+    created_at: datetime | None = None
+
+
+class DeviceIntakeResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: DeviceIntakeDetail
+
+
+# ============================================================================
+# FIXPHONE REPAIR QUOTATION SCHEMAS
+# ============================================================================
+
+
+class QuoteStatus(StrEnum):
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+
+
+class QuotationItemCreate(SQLModel):
+    service_id: uuid.UUID | None = Field(
+        default=None, description="ID dịch vụ từ danh mục (nếu có)"
+    )
+    item_name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Tên hạng mục sửa chữa hoặc linh kiện (nếu không có service_id thì bắt buộc)",
+    )
+    unit_price: float | None = Field(
+        default=None,
+        ge=0,
+        description="Đơn giá hạng mục (nếu không truyền sẽ lấy theo giá gốc dịch vụ)",
+    )
+    quantity: int = Field(
+        default=1,
+        gt=0,
+        description="Số lượng (phải lớn hơn 0)",
+    )
+    notes: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú chi tiết cho hạng mục này",
+    )
+
+    @field_validator("item_name")
+    @classmethod
+    def validate_item_name(cls, v: str | None) -> str | None:
+        if v is not None and not v.strip():
+            raise ValueError("Tên hạng mục không được là khoảng trắng")
+        return v.strip() if v else None
+
+
+class QuotationCreate(SQLModel):
+    appointment_id: uuid.UUID | None = Field(
+        default=None, description="UUID của phiếu sửa chữa"
+    )
+    appointment_number: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Mã phiếu sửa chữa (ví dụ: APPT-20261024-XXXX)",
+    )
+    items: list[QuotationItemCreate] = Field(
+        min_length=1,
+        description="Danh sách các hạng mục báo giá (ít nhất 1 hạng mục)",
+    )
+    valid_until: datetime | None = Field(
+        default=None,
+        description="Thời hạn hiệu lực của báo giá (nếu có)",
+    )
+    customer_notes: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Ghi chú gửi cho khách hàng",
+    )
+    status: QuoteStatus = Field(
+        default=QuoteStatus.DRAFT,
+        description="Trạng thái ban đầu của báo giá (mặc định DRAFT)",
+    )
+
+    @model_validator(mode="after")
+    def validate_appointment_reference(self) -> Self:
+        if not self.appointment_id and (
+            not self.appointment_number or not self.appointment_number.strip()
+        ):
+            raise ValueError(
+                "Cần cung cấp ít nhất một định danh: appointment_id hoặc appointment_number"
+            )
+        return self
+
+
+class QuotationItemDetail(SQLModel):
+    id: uuid.UUID
+    service_id: uuid.UUID | None = None
+    item_name: str
+    unit_price: float
+    quantity: int
+    total_price: float
+    notes: str | None = None
+
+
+class QuotationDetail(SQLModel):
+    id: uuid.UUID
+    quote_number: str
+    appointment_id: uuid.UUID
+    appointment_number: str
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str
+    device_info: str
+    total_amount: float
+    status: str
+    valid_until: datetime | None = None
+    customer_notes: str | None = None
+    items: list[QuotationItemDetail] = Field(default_factory=list)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class QuotationResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: QuotationDetail
+
+
+class QuotationAcceptRequest(SQLModel):
+    note: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Ghi chú thêm khi duyệt báo giá sửa chữa (tùy chọn)",
+    )
+
+
+# ============================================================================
+# FIXPHONE DEVICE & REPAIR ORDER MANAGEMENT SCHEMAS
+# ============================================================================
+
+
+class DeviceResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: DevicePublic
+
+
+class RepairStatusUpdateRequest(SQLModel):
+    status: AppointmentStatus = Field(
+        description="Trạng thái sửa chữa mới (PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED)"
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Ghi chú chi tiết về việc chuyển trạng thái sửa chữa",
+    )
+    technician_diagnosis: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Chẩn đoán kỹ thuật bổ sung (tùy chọn)",
+    )
+    cancellation_reason: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Lý do hủy (nếu chuyển sang trạng thái CANCELLED)",
+    )
+
+
+class RepairStatusUpdateData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    previous_status: str
+    current_status: str
+    note: str | None = None
+    technician_diagnosis: str | None = None
+    actual_completion_date: datetime | None = None
+    updated_at: datetime | None = None
+    history_id: uuid.UUID | None = None
+
+
+class RepairStatusUpdateResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: RepairStatusUpdateData
+
+
+class AssignTechnicianRequest(SQLModel):
+    technician_id: uuid.UUID = Field(description="ID của kỹ thuật viên được phân công")
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú phân công công việc (tùy chọn)",
+    )
+
+
+class AssignTechnicianData(SQLModel):
+    id: uuid.UUID
+    appointment_number: str
+    technician_id: uuid.UUID
+    technician_name: str
+    technician_phone: str
+    specialization: str | None = None
+    status: str
+    assigned_at: datetime | None = None
+
+
+class AssignTechnicianResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AssignTechnicianData
+
+
+# ============================================================================
+# FIXPHONE APPOINTMENT TECHNICIAN ASSIGNMENT SCHEMAS
+# ============================================================================
+
+
+class AppointmentAssignTechnicianRequest(SQLModel):
+    technician_id: uuid.UUID = Field(
+        description="Mã UUID của kỹ thuật viên cần phân công"
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú phân công công việc (tùy chọn)",
+    )
+
+
+class AppointmentAssignTechnicianData(SQLModel):
+    appointment_id: uuid.UUID
+    appointment_number: str
+    appointment_date: datetime
+    technician_id: uuid.UUID
+    technician_name: str
+    technician_phone: str | None = None
+    technician_specialization: str | None = None
+    status: str
+    assigned_at: datetime
+    note: str | None = None
+
+
+class AppointmentAssignTechnicianResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: AppointmentAssignTechnicianData
