@@ -13,6 +13,7 @@ from app.api.routes import (
     queue,
     quotes,
     repair_orders,
+    services,
     slots,
     technicians,
     users,
@@ -26,6 +27,7 @@ api_router.include_router(login.router)
 api_router.include_router(users.router)
 api_router.include_router(utils.router)
 api_router.include_router(items.router)
+api_router.include_router(services.router)
 api_router.include_router(slots.router)
 api_router.include_router(appointments.router)
 api_router.include_router(appointments.bookings_router)

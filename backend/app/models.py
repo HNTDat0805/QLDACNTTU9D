@@ -271,23 +271,118 @@ class DevicePublic(DeviceBase):
 
 
 class ServiceBase(SQLModel):
-    name: str = Field(unique=True, index=True, max_length=255)
+    code: str | None = Field(
+        default=None,
+        unique=True,
+        index=True,
+        max_length=50,
+        description="Mã định danh dịch vụ duy nhất (ví dụ: SVC-SCREEN-01)",
+    )
+    name: str = Field(
+        unique=True,
+        index=True,
+        max_length=255,
+        description="Tên dịch vụ sửa chữa",
+    )
+    description: str | None = Field(
+        default=None, max_length=1000, description="Mô tả chi tiết dịch vụ"
+    )
+    base_price: float = Field(
+        default=0.0, ge=0.0, description="Giá dịch vụ khởi điểm (VNĐ, >= 0)"
+    )
+    estimated_duration_minutes: int = Field(
+        default=30,
+        gt=0,
+        description="Thời gian sửa chữa ước tính (phút, > 0)",
+    )
+    is_active: bool = Field(
+        default=True,
+        index=True,
+        description="Trạng thái dịch vụ đang kinh doanh (ẩn/hiện)",
+    )
+
+
+class ServiceCreate(SQLModel):
+    code: str = Field(
+        min_length=1,
+        max_length=50,
+        description="Mã dịch vụ duy nhất (bắt buộc, không được trùng)",
+    )
+    name: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Tên dịch vụ sửa chữa (bắt buộc, không để trống)",
+    )
     description: str | None = Field(default=None, max_length=1000)
-    base_price: float = Field(default=0.0)
-    estimated_duration_minutes: int = Field(default=30)
-    is_active: bool = Field(default=True, index=True)
+    base_price: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Giá dịch vụ khởi điểm (phải >= 0)",
+    )
+    estimated_duration_minutes: int = Field(
+        default=30,
+        gt=0,
+        description="Thời gian sửa chữa dự kiến (phút, phải > 0)",
+    )
+    is_active: bool = Field(default=True)
 
+    @field_validator("name")
+    @classmethod
+    def validate_name_not_empty(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError(
+                "Tên dịch vụ không được để trống hoặc chỉ chứa khoảng trắng"
+            )
+        return cleaned
 
-class ServiceCreate(ServiceBase):
-    pass
+    @field_validator("code")
+    @classmethod
+    def validate_code_not_empty(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError(
+                "Mã dịch vụ không được để trống hoặc chỉ chứa khoảng trắng"
+            )
+        return cleaned.upper()
 
 
 class ServiceUpdate(SQLModel):
-    name: str | None = Field(default=None, max_length=255)
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+        description="Tên dịch vụ mới",
+    )
     description: str | None = Field(default=None, max_length=1000)
-    base_price: float | None = None
-    estimated_duration_minutes: int | None = None
-    is_active: bool | None = None
+    base_price: float | None = Field(
+        default=None, ge=0.0, description="Giá dịch vụ mới (>= 0)"
+    )
+    estimated_duration_minutes: int | None = Field(
+        default=None,
+        gt=0,
+        description="Thời gian sửa chữa dự kiến mới (phút, > 0)",
+    )
+    is_active: bool | None = Field(
+        default=None, description="Trạng thái hiển thị dịch vụ"
+    )
+    code: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Mã định danh không được phép sửa đổi",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_update_name(cls, v: str | None) -> str | None:
+        if v is not None:
+            cleaned = v.strip()
+            if not cleaned:
+                raise ValueError(
+                    "Tên dịch vụ không được để trống hoặc chỉ chứa khoảng trắng"
+                )
+            return cleaned
+        return v
 
 
 class Service(ServiceBase, table=True):
@@ -319,6 +414,18 @@ class Service(ServiceBase, table=True):
 class ServicePublic(ServiceBase):
     id: uuid.UUID
     created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ServicesPublic(SQLModel):
+    data: list[ServicePublic]
+    count: int
+
+
+class ServiceResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: ServicePublic
 
 
 # ============================================================================
