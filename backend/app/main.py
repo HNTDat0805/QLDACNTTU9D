@@ -20,6 +20,7 @@ from app.api.routes import quotes as quotes_route
 from app.api.routes import repair_orders as repair_orders_route
 from app.api.routes import slots as slots_route
 from app.api.routes import technicians as technicians_route
+from app.api.routes import users as users_route
 from app.api.routes import work_schedules as work_schedules_route
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
@@ -85,5 +86,6 @@ app.include_router(repair_orders_route.router, prefix="/api")
 app.include_router(invoices_route.router, prefix="/api")
 app.include_router(payments_route.router, prefix="/api")
 app.include_router(login_route.router, prefix="/api")
+app.include_router(users_route.router, prefix="/api")
 if FRONTEND_DIR.exists():
     app.frontend("/", directory=FRONTEND_DIR)

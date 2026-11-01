@@ -14,10 +14,14 @@ from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
 from app.core.config import settings
 from app.models import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     Message,
     NewPassword,
     RefreshToken,
     RefreshTokenInput,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     Token,
     TokenPayload,
     User,
@@ -26,8 +30,11 @@ from app.models import (
     UserRegister,
     UserRole,
     UserUpdate,
+    VerifyResetTokenRequest,
+    VerifyResetTokenResponse,
     get_datetime_utc,
 )
+from app.services import password_reset_service
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
@@ -372,4 +379,86 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
 
     return HTMLResponse(
         content=email_data.html_content, headers={"subject:": email_data.subject}
+    )
+
+
+# ============================================================================
+# TASK 322: FORGOT PASSWORD & RESET PASSWORD ENDPOINTS
+# ============================================================================
+
+
+@router.post(
+    "/login/forgot-password",
+    response_model=ForgotPasswordResponse,
+)
+def forgot_password(
+    session: SessionDep,
+    body: ForgotPasswordRequest,
+) -> ForgotPasswordResponse:
+    """
+    Yêu cầu quên mật khẩu (Task 322):
+    - Người dùng gửi thông tin định danh tài khoản (email).
+    - Tạo mã đặt lại mật khẩu ngẫu nhiên bảo mật 32 bytes (URL-safe).
+    - Lưu băm SHA-256 mã token vào database cùng thời hạn hết hạn.
+    - Gửi liên kết đặt lại mật khẩu qua email nếu tài khoản tồn tại và đang hoạt động.
+    - Luôn trả về thông báo chung, không tiết lộ tài khoản có tồn tại trong hệ thống hay không (chống Enumeration Attack).
+    """
+    msg = password_reset_service.request_password_reset(
+        session=session, email=body.email
+    )
+    return ForgotPasswordResponse(success=True, message=msg)
+
+
+@router.post(
+    "/login/verify-reset-token",
+    response_model=VerifyResetTokenResponse,
+)
+def verify_reset_token(
+    session: SessionDep,
+    body: VerifyResetTokenRequest,
+) -> VerifyResetTokenResponse:
+    """
+    Xác thực mã đặt lại mật khẩu (Task 322):
+    - Kiểm tra token có tồn tại trong hệ thống không.
+    - Kiểm tra token đã hết hạn chưa.
+    - Kiểm tra token đã từng được sử dụng chưa (chặn reuse).
+    - Kiểm tra tài khoản người dùng có đang hoạt động không.
+    """
+    result = password_reset_service.verify_reset_token(
+        session=session, token=body.token
+    )
+    return VerifyResetTokenResponse(
+        success=True,
+        valid=True,
+        email=result.get("email"),
+        message=result.get("message", "Mã xác thực hợp lệ"),
+    )
+
+
+@router.post(
+    "/login/reset-password",
+    response_model=ResetPasswordResponse,
+)
+def reset_password_with_token(
+    session: SessionDep,
+    body: ResetPasswordRequest,
+) -> ResetPasswordResponse:
+    """
+    Đặt lại mật khẩu mới (Task 322):
+    - Xác thực token chưa hết hạn và chưa được sử dụng.
+    - Khóa bản ghi token để ngăn chặn Race Condition.
+    - Kiểm tra mật khẩu mới không trùng với mật khẩu hiện tại.
+    - Mã hóa mật khẩu mới (Argon2 / Bcrypt) trước khi lưu vào PostgreSQL.
+    - Đánh dấu token đã được sử dụng (is_used=True, used_at=now).
+    - Không cho phép sử dụng lại token sau khi đặt lại mật khẩu thành công.
+    - Thu hồi toàn bộ Refresh Tokens còn hiệu lực để bảo vệ tài khoản.
+    """
+    password_reset_service.reset_password_with_token(
+        session=session,
+        token=body.token,
+        new_password=body.new_password,
+    )
+    return ResetPasswordResponse(
+        success=True,
+        message="Đặt lại mật khẩu thành công. Vui lòng đăng nhập với mật khẩu mới.",
     )

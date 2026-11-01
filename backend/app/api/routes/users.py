@@ -1,12 +1,13 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import col, delete, func, select
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlmodel import col, delete
 
 from app import crud
 from app.api.deps import (
     CurrentUser,
+    RequireManager,
     SessionDep,
     get_current_active_superuser,
 )
@@ -18,13 +19,17 @@ from app.models import (
     UpdatePassword,
     User,
     UserCreate,
+    UserLockRequest,
+    UserLockResponse,
     UserPublic,
     UserRegister,
     UserRole,
     UsersPublic,
+    UserUnlockResponse,
     UserUpdate,
     UserUpdateMe,
 )
+from app.services import user_management_service
 from app.utils import generate_new_account_email, send_email
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -32,23 +37,36 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get(
     "/",
-    dependencies=[Depends(get_current_active_superuser)],
     response_model=UsersPublic,
 )
-def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
+def read_users(
+    session: SessionDep,
+    _current_user: RequireManager,
+    skip: int = 0,
+    limit: int = 100,
+    role: str | None = Query(
+        None,
+        description="Lọc theo vai trò: customer, technician, staff, manager, admin",
+    ),
+    is_active: bool | None = Query(
+        None, description="Lọc theo trạng thái hoạt động (True/False)"
+    ),
+    q: str | None = Query(None, description="Tìm kiếm từ khóa theo email hoặc họ tên"),
+) -> Any:
     """
-    Retrieve users.
+    Lấy danh sách tài khoản (Task 321):
+    - Hỗ trợ phân trang (skip, limit).
+    - Lọc theo vai trò, trạng thái hoạt động và từ khóa tìm kiếm.
+    - Yêu cầu quyền quản lý (Admin, Manager, Superuser).
     """
-
-    count_statement = select(func.count()).select_from(User)
-    count = session.exec(count_statement).one()
-
-    statement = (
-        select(User).order_by(col(User.created_at).desc()).offset(skip).limit(limit)
+    users_public, count = user_management_service.list_users(
+        session=session,
+        skip=skip,
+        limit=limit,
+        role=role,
+        is_active=is_active,
+        q=q,
     )
-    users = session.exec(statement).all()
-
-    users_public = [UserPublic.model_validate(user) for user in users]
     return UsersPublic(data=users_public, count=count)
 
 
@@ -182,24 +200,18 @@ def read_user_by_id(
     user_id: uuid.UUID, session: SessionDep, current_user: CurrentUser
 ) -> Any:
     """
-    Get a specific user by id.
+    Xem thông tin chi tiết tài khoản (Task 321):
+    - Cho phép chính người dùng xem thông tin của mình.
+    - Cho phép quản lý (Admin, Manager, Superuser) xem bất kỳ tài khoản nào.
+    - Chặn các tài khoản không có quyền xem thông tin người khác (403 Forbidden).
     """
-    user = session.get(User, user_id)
-    if user == current_user:
-        return user
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403,
-            detail="The user doesn't have enough privileges",
-        )
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return user_management_service.get_user_detail(
+        session=session, user_id=user_id, current_user=current_user
+    )
 
 
 @router.patch(
     "/{user_id}",
-    dependencies=[Depends(get_current_active_superuser)],
     response_model=UserPublic,
 )
 def update_user(
@@ -207,26 +219,81 @@ def update_user(
     session: SessionDep,
     user_id: uuid.UUID,
     user_in: UserUpdate,
+    current_user: RequireManager,
 ) -> Any:
     """
-    Update a user.
+    Cập nhật thông tin tài khoản (Task 321):
+    - Yêu cầu quyền quản lý (Admin, Manager, Superuser).
+    - Cập nhật thông tin theo cấu trúc dữ liệu hiện có (họ tên, email, vai trò, trạng thái, mật khẩu).
     """
+    return user_management_service.update_user(
+        session=session,
+        user_id=user_id,
+        user_in=user_in,
+        current_user=current_user,
+    )
 
-    db_user = session.get(User, user_id)
-    if not db_user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this id does not exist in the system",
-        )
-    if user_in.email:
-        existing_user = crud.get_user_by_email(session=session, email=user_in.email)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
-            )
 
-    db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
-    return db_user
+@router.post(
+    "/{user_id}/lock",
+    response_model=UserLockResponse,
+)
+def lock_user(
+    *,
+    session: SessionDep,
+    user_id: uuid.UUID,
+    current_user: RequireManager,
+    lock_data: UserLockRequest | None = None,
+) -> Any:
+    """
+    Khóa tài khoản người dùng (Task 321):
+    - Yêu cầu quyền quản lý (Admin, Manager, Superuser).
+    - Chặn tự khóa chính mình (400 Bad Request).
+    - Chặn khóa tài khoản Superuser (403 Forbidden).
+    - Cập nhật is_active = False.
+    - Thu hồi tất cả refresh token còn hiệu lực để ngắt phiên đăng nhập lập tức.
+    - Tài khoản bị khóa sẽ không thể tiếp tục thực hiện các chức năng yêu cầu xác thực.
+    """
+    reason = lock_data.reason if lock_data else None
+    user_public = user_management_service.lock_user(
+        session=session,
+        user_id=user_id,
+        current_user=current_user,
+        reason=reason,
+    )
+    return UserLockResponse(
+        success=True,
+        message=f"Đã khóa tài khoản {user_public.email} thành công",
+        data=user_public,
+    )
+
+
+@router.post(
+    "/{user_id}/unlock",
+    response_model=UserUnlockResponse,
+)
+def unlock_user(
+    *,
+    session: SessionDep,
+    user_id: uuid.UUID,
+    current_user: RequireManager,
+) -> Any:
+    """
+    Mở khóa tài khoản người dùng (Task 321):
+    - Yêu cầu quyền quản lý (Admin, Manager, Superuser).
+    - Cập nhật is_active = True.
+    - Cho phép tài khoản hoạt động và đăng nhập bình thường trở lại.
+    """
+    user_public = user_management_service.unlock_user(
+        session=session,
+        user_id=user_id,
+        current_user=current_user,
+    )
+    return UserUnlockResponse(
+        success=True,
+        message=f"Đã mở khóa tài khoản {user_public.email} thành công",
+        data=user_public,
+    )
 
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])

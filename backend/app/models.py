@@ -84,6 +84,9 @@ class User(UserBase, table=True):
     refresh_tokens: list["RefreshToken"] = Relationship(  # noqa: UP037
         back_populates="user", cascade_delete=True
     )
+    password_reset_tokens: list["PasswordResetToken"] = Relationship(  # noqa: UP037
+        back_populates="user", cascade_delete=True
+    )
 
 
 class UserPublic(UserBase):
@@ -1112,6 +1115,39 @@ class RefreshToken(RefreshTokenBase, table=True):
     user: User = Relationship(back_populates="refresh_tokens")
 
 
+# ============================================================================
+# FIXPHONE ENTITY: PASSWORD RESET TOKEN (DATABASE-BACKED & SINGLE-USE)
+# ============================================================================
+
+
+class PasswordResetTokenBase(SQLModel):
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", ondelete="CASCADE", nullable=False, index=True
+    )
+    token_hash: str = Field(unique=True, index=True, max_length=64)
+    expires_at: datetime = Field(
+        sa_type=DateTime(timezone=True),
+        index=True,  # type: ignore
+    )
+    is_used: bool = Field(default=False, index=True)
+    used_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class PasswordResetToken(PasswordResetTokenBase, table=True):
+    __tablename__ = "password_reset_token"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+    user: User = Relationship(back_populates="password_reset_tokens")
+
+
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
@@ -1883,3 +1919,67 @@ class PaymentResponse(SQLModel):
 class PaymentsPublic(SQLModel):
     data: list[PaymentDetail]
     count: int
+
+
+# ============================================================================
+# TASK 321 & 322: ACCOUNT MANAGEMENT & PASSWORD RESET SCHEMAS
+# ============================================================================
+
+
+class UserLockRequest(SQLModel):
+    reason: str | None = Field(
+        default=None, max_length=500, description="Lý do khóa tài khoản (tùy chọn)"
+    )
+
+
+class UserLockResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: UserPublic
+
+
+class UserUnlockResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: UserPublic
+
+
+class ForgotPasswordRequest(SQLModel):
+    email: EmailStr = Field(
+        description="Email đăng ký của tài khoản cần đặt lại mật khẩu"
+    )
+
+
+class ForgotPasswordResponse(SQLModel):
+    success: bool = True
+    message: str
+
+
+class VerifyResetTokenRequest(SQLModel):
+    token: str = Field(
+        min_length=1, description="Mã token đặt lại mật khẩu cần xác thực"
+    )
+
+
+class VerifyResetTokenResponse(SQLModel):
+    success: bool = True
+    valid: bool = True
+    email: str | None = None
+    message: str
+
+
+class ResetPasswordRequest(SQLModel):
+    token: str = Field(min_length=1, description="Mã token đặt lại mật khẩu")
+    new_password: str = Field(min_length=8, max_length=128, description="Mật khẩu mới")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Mật khẩu không được để trống hoặc chỉ có khoảng trắng")
+        return v
+
+
+class ResetPasswordResponse(SQLModel):
+    success: bool = True
+    message: str
