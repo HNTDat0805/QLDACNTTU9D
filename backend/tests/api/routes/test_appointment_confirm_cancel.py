@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -84,7 +84,7 @@ def appointment_test_env(db: Session) -> dict[str, object]:
     db.flush()
 
     # Schedule
-    test_d = date(2026, 10, 28)
+    test_d = date.today() + timedelta(days=7)
     sched = TechnicianSchedule(
         technician_id=tech.id,
         work_date=test_d,

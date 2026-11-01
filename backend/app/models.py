@@ -1752,3 +1752,134 @@ class AppointmentAssignTechnicianResponse(SQLModel):
     success: bool = True
     message: str
     data: AppointmentAssignTechnicianData
+
+
+# ============================================================================
+# TASK 315 & 319: INVOICE & PAYMENT API SCHEMAS
+# ============================================================================
+
+
+class InvoiceStatus(StrEnum):
+    UNPAID = "unpaid"
+    PARTIALLY_PAID = "partially_paid"
+    PAID = "paid"
+    CANCELLED = "cancelled"
+
+
+class PaymentMethod(StrEnum):
+    CASH = "cash"
+    COD = "cod"
+    BANK_TRANSFER = "bank_transfer"
+    CARD = "card"
+    E_WALLET = "e_wallet"
+
+
+class PaymentStatus(StrEnum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    REFUNDED = "refunded"
+
+
+class InvoiceCreateRequest(SQLModel):
+    repair_order_id: uuid.UUID | str | int = Field(
+        description="ID hoặc mã đơn sửa chữa (UUID, mã số hoặc chuỗi định danh)"
+    )
+    notes: str | None = Field(
+        default=None, max_length=1000, description="Ghi chú hóa đơn"
+    )
+
+
+class InvoiceItemDetail(SQLModel):
+    id: uuid.UUID
+    item_name: str
+    quantity: int
+    unit_price: float
+    total_price: float
+
+
+class InvoiceDetail(SQLModel):
+    id: uuid.UUID
+    invoice_code: str
+    invoice_number: str
+    repair_order_id: uuid.UUID
+    appointment_number: str
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str | None = None
+    subtotal: float
+    discount_amount: float = 0.0
+    tax_amount: float = 0.0
+    total_amount: float
+    paid_amount: float = 0.0
+    remaining_amount: float = 0.0
+    status: str
+    items: list[InvoiceItemDetail] = Field(default_factory=list)
+    created_at: datetime | None = None
+    notes: str | None = None
+
+
+class InvoiceResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: InvoiceDetail
+
+
+class InvoicesPublic(SQLModel):
+    data: list[InvoiceDetail]
+    count: int
+
+
+class PaymentCreateRequest(SQLModel):
+    invoice_id: uuid.UUID | str | int = Field(
+        description="ID hoặc mã số của hóa đơn cần thanh toán"
+    )
+    amount: float = Field(
+        gt=0,
+        description="Số tiền thanh toán (phải lớn hơn 0)",
+    )
+    payment_method: str = Field(
+        default="cash",
+        description="Phương thức thanh toán: cash (tiền mặt), cod (khi nhận máy), bank_transfer (chuyển khoản/QR), card (thẻ ATM/Visa), e_wallet (ví điện tử)",
+    )
+    transaction_code: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Mã giao dịch / mã tham chiếu từ ngân hàng hoặc cổng thanh toán (nếu có)",
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú giao dịch thanh toán",
+    )
+
+
+class PaymentDetail(SQLModel):
+    id: uuid.UUID
+    payment_code: str
+    payment_number: str
+    invoice_id: uuid.UUID
+    invoice_code: str
+    amount: float
+    payment_method: str
+    status: str
+    paid_at: datetime
+    transaction_code: str | None = None
+    transaction_reference: str | None = None
+    recorded_by: str | None = None
+    recorded_by_user_id: uuid.UUID | None = None
+    note: str | None = None
+    created_at: datetime | None = None
+    invoice_status_after_payment: str | None = None
+    invoice_remaining_amount: float | None = None
+
+
+class PaymentResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: PaymentDetail
+
+
+class PaymentsPublic(SQLModel):
+    data: list[PaymentDetail]
+    count: int
