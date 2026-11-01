@@ -1007,14 +1007,30 @@ class PaymentPublic(PaymentBase):
 
 
 class ReviewBase(SQLModel):
-    rating: int = Field(nullable=False)  # 1 to 5
-    comment: str | None = Field(default=None, max_length=1000)
+    rating: int = Field(
+        nullable=False, ge=1, le=5, description="Điểm đánh giá từ 1 đến 5 sao"
+    )
+    comment: str | None = Field(
+        default=None, max_length=1000, description="Nội dung nhận xét"
+    )
 
 
 class ReviewCreate(ReviewBase):
     appointment_id: uuid.UUID
-    customer_id: uuid.UUID
+    customer_id: uuid.UUID | None = None
     technician_id: uuid.UUID | None = None
+
+
+class ReviewCreateRequest(SQLModel):
+    appointment_id: uuid.UUID
+    rating: int = Field(ge=1, le=5, description="Điểm đánh giá từ 1 đến 5 sao")
+    comment: str | None = Field(
+        default=None, max_length=1000, description="Nội dung nhận xét"
+    )
+    customer_id: uuid.UUID | None = Field(
+        default=None,
+        description="ID khách hàng (tùy chọn, tự động xác định từ lịch hẹn)",
+    )
 
 
 class Review(ReviewBase, table=True):
@@ -1060,6 +1076,21 @@ class ReviewPublic(ReviewBase):
     customer_id: uuid.UUID
     technician_id: uuid.UUID | None = None
     created_at: datetime | None = None
+    customer_name: str | None = None
+    technician_name: str | None = None
+    appointment_number: str | None = None
+
+
+class ReviewsPublic(SQLModel):
+    data: list[ReviewPublic]
+    count: int
+    average_rating: float | None = None
+
+
+class ReviewResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: ReviewPublic
 
 
 # ============================================================================
@@ -1068,8 +1099,8 @@ class ReviewPublic(ReviewBase):
 
 
 class NotificationBase(SQLModel):
-    title: str = Field(max_length=255)
-    message: str = Field(max_length=1000)
+    title: str = Field(min_length=1, max_length=255)
+    message: str = Field(min_length=1, max_length=1000)
     notification_type: str = Field(
         default="STATUS_UPDATE", max_length=50
     )  # APPOINTMENT_REMINDER, STATUS_UPDATE, PAYMENT_CONFIRMATION, PROMOTION
@@ -1115,6 +1146,21 @@ class NotificationPublic(NotificationBase):
     customer_id: uuid.UUID | None = None
     user_id: uuid.UUID | None = None
     created_at: datetime | None = None
+
+
+class NotificationsPublic(SQLModel):
+    data: list[NotificationPublic]
+    count: int
+    unread_count: int
+
+
+class UnreadNotificationCount(SQLModel):
+    unread_count: int
+
+
+class MarkAllReadResponse(SQLModel):
+    message: str = "Đã đánh dấu tất cả thông báo là đã đọc"
+    updated_count: int
 
 
 # ============================================================================

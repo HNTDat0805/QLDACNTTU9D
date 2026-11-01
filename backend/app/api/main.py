@@ -8,11 +8,13 @@ from app.api.routes import (
     invoices,
     items,
     login,
+    notifications,
     payments,
     private,
     queue,
     quotes,
     repair_orders,
+    reviews,
     services,
     slots,
     technicians,
@@ -41,6 +43,8 @@ api_router.include_router(devices.router)
 api_router.include_router(repair_orders.router)
 api_router.include_router(invoices.router)
 api_router.include_router(payments.router)
+api_router.include_router(reviews.router)
+api_router.include_router(notifications.router)
 
 
 if settings.FASTAPI_ENV == "development":
