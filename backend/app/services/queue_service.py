@@ -186,9 +186,12 @@ def get_queue_item(
 def add_to_queue(
     session: Session,
     data: AppointmentBookingCreate,
+    current_user: User | None = None,
 ) -> AppointmentBookingResponse:
     """Thêm lịch hẹn vào hàng chờ bằng cách tạo mới lịch hẹn tiếp nhận qua slot_service."""
-    return slot_service.create_booking_appointment(session=session, data=data)
+    return slot_service.create_booking_appointment(
+        session=session, data=data, current_user=current_user
+    )
 
 
 def update_queue_status(

@@ -1,10 +1,12 @@
 import uuid
+from collections.abc import Generator
 from datetime import date, time, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
+from app.core.security import create_access_token
 from app.models import (
     Appointment,
     Customer,
@@ -100,6 +102,24 @@ def setup_test_data(db: Session) -> dict[str, object]:
 # ============================================================================
 # 1. REQUEST HỢP LỆ VÀ KIỂM TRA ĐẦU RA API 1
 # ============================================================================
+
+
+@pytest.fixture(autouse=True)
+def authenticated_customer_for_slot_tests(
+    client: TestClient, setup_test_data: dict[str, object]
+) -> Generator[None]:
+    """These slot/overlap cases use an existing profile, so authenticate its owner."""
+    customer = setup_test_data["customer"]
+    assert isinstance(customer, Customer)
+    previous = client.headers.get("Authorization")
+    client.headers["Authorization"] = f"Bearer {create_access_token(customer.user_id)}"
+    try:
+        yield
+    finally:
+        if previous is not None:
+            client.headers["Authorization"] = previous
+        else:
+            del client.headers["Authorization"]
 
 
 def test_get_available_slots_valid(

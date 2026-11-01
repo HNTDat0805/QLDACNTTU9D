@@ -9,6 +9,7 @@ from app.models import (
     AppointmentStatus,
     AssignTechnicianData,
     AssignTechnicianRequest,
+    Notification,
     RepairStatusHistory,
     RepairStatusUpdateData,
     RepairStatusUpdateRequest,
@@ -58,6 +59,9 @@ def update_repair_status(
             )
 
         old_status = (appointment.status or "").upper()
+        from app.services.access_service import check_appointment_access
+
+        check_appointment_access(session, current_user, appointment)
         new_status = data.status.value.upper()
 
         # Không cho phép cập nhật phiếu đã kết thúc
@@ -111,6 +115,13 @@ def update_repair_status(
         )
         session.add(history)
 
+        session.add(
+            Notification(
+                customer_id=appointment.customer_id,
+                title="Cập nhật sửa chữa",
+                message=f"Phiếu {appointment.appointment_number} chuyển sang {new_status}.",
+            )
+        )
         appointment.status = new_status
         appointment.updated_at = now
         session.add(appointment)
@@ -185,6 +196,13 @@ def assign_technician_to_repair(
                 detail=f"Không tìm thấy phiếu sửa chữa với ID: {repair_order_id}",
             )
 
+        from app.services.access_service import is_reception
+
+        if not is_reception(current_user):
+            raise HTTPException(
+                status_code=403,
+                detail="Chỉ nhân viên tiếp nhận hoặc quản lý được phân công",
+            )
         if appointment.status in ("COMPLETED", "CANCELLED"):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -258,7 +276,7 @@ def assign_technician_to_repair(
             appointment_number=appointment.appointment_number,
             technician_id=tech.id,
             technician_name=tech.full_name,
-            technician_phone=tech.phone_number,
+            technician_phone=tech.phone_number or "",
             specialization=tech.specialization,
             status=appointment.status,
             assigned_at=now,

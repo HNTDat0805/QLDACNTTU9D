@@ -83,18 +83,20 @@ def create_service(
     - Kiểm tra giá dịch vụ >= 0 và thời gian dự kiến > 0.
     - Lưu vào PostgreSQL và ghi nhật ký kiểm toán SystemLog.
     """
-    normalized_code = data.code.strip().upper()
+    if data.code:
+        normalized_code = data.code.strip().upper()
+        # Kiểm tra mã dịch vụ duy nhất
+        existing_code = session.exec(
+            select(Service).where(col(Service.code) == normalized_code)
+        ).first()
+        if existing_code:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Mã dịch vụ '{normalized_code}' đã tồn tại trong hệ thống",
+            )
+    else:
+        normalized_code = f"SVC-{uuid.uuid4().hex[:8].upper()}"
     normalized_name = data.name.strip()
-
-    # Kiểm tra mã dịch vụ duy nhất
-    existing_code = session.exec(
-        select(Service).where(col(Service.code) == normalized_code)
-    ).first()
-    if existing_code:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Mã dịch vụ '{normalized_code}' đã tồn tại trong hệ thống",
-        )
 
     # Kiểm tra tên dịch vụ duy nhất
     existing_name = session.exec(

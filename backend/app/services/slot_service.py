@@ -357,18 +357,38 @@ def check_can_update(user: User, appointment: Appointment, session: Session) -> 
 
 
 def create_booking_appointment(
-    session: Session, data: AppointmentBookingCreate
+    session: Session, data: AppointmentBookingCreate, current_user: User | None = None
 ) -> AppointmentBookingResponse:
     """API 1: Create a new repair appointment with atomic concurrency locking."""
     try:
         # 1. Resolve or create customer
         customer: Customer | None = None
+        if (
+            current_user
+            and current_user.role == "customer"
+            and not current_user.is_superuser
+        ):
+            linked = session.exec(
+                select(Customer).where(Customer.user_id == current_user.id)
+            ).first()
+            if linked:
+                data = data.model_copy(update={"customer_id": linked.id})
         if data.customer_id:
+            if current_user is None:
+                raise HTTPException(
+                    status_code=401, detail="Cần đăng nhập để dùng hồ sơ khách hàng"
+                )
             customer = session.get(Customer, data.customer_id)
             if not customer:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Không tìm thấy khách hàng",
+                )
+            from app.services.access_service import is_reception
+
+            if not is_reception(current_user) and customer.user_id != current_user.id:
+                raise HTTPException(
+                    status_code=403, detail="Không có quyền dùng hồ sơ khách hàng này"
                 )
         elif data.customer_phone and data.customer_phone.strip():
             phone = data.customer_phone.strip()
@@ -377,6 +397,9 @@ def create_booking_appointment(
             ).first()
             if not customer:
                 customer = Customer(
+                    user_id=current_user.id
+                    if current_user and current_user.role == "customer"
+                    else None,
                     full_name=data.customer_name or "Khách hàng",
                     phone_number=phone,
                     email=data.customer_email,
@@ -384,7 +407,11 @@ def create_booking_appointment(
                 )
                 session.add(customer)
                 session.flush()
-            else:
+            elif current_user and (
+                current_user.is_superuser
+                or current_user.role in ("admin", "manager", "staff")
+                or customer.user_id == current_user.id
+            ):
                 if data.customer_name:
                     customer.full_name = data.customer_name
                 if data.customer_email:
@@ -393,6 +420,11 @@ def create_booking_appointment(
                     customer.address = data.customer_address
                 session.add(customer)
                 session.flush()
+            elif current_user:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Số điện thoại đã thuộc hồ sơ khác. Vui lòng liên hệ cửa hàng để xác minh.",
+                )
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -649,6 +681,9 @@ def update_booking_appointment(
             check_can_update(
                 user=current_user, appointment=appointment, session=session
             )
+            from app.services.access_service import check_appointment_access
+
+            check_appointment_access(session, current_user, appointment)
 
         # Status check: HTTP 409 Conflict if already cancelled, completed, or in progress
         current_status = (appointment.status or "").upper()
@@ -937,6 +972,9 @@ def confirm_appointment(
 
         # 2. Check authorization
         check_can_confirm(current_user)
+        from app.services.access_service import check_appointment_access
+
+        check_appointment_access(session, current_user, appointment)
 
         # 3. Status checks
         current_status = (appointment.status or "").upper()

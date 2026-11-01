@@ -164,9 +164,11 @@ def test_lookup_appointments_by_number_and_phone(
     appt = data["appointment"]
     cust = data["customer"]
 
-    # Tra cứu bằng appointment_number (công khai / khách tra cứu)
+    # Tra cứu thông tin riêng tư cần token của chủ sở hữu.
+    headers = get_token_headers(data["customer_user"])
     resp_code = client.get(
         f"{settings.API_V1_STR}/appointments/history/lookup?appointment_number={appt.appointment_number}",
+        headers=headers,
     )
     assert resp_code.status_code == 200
     items = resp_code.json()
@@ -176,6 +178,7 @@ def test_lookup_appointments_by_number_and_phone(
     # Tra cứu bằng phone_number
     resp_phone = client.get(
         f"{settings.API_V1_STR}/appointments/history/lookup?phone_number={cust.phone_number}",
+        headers=headers,
     )
     assert resp_phone.status_code == 200
     assert len(resp_phone.json()) >= 1
@@ -183,6 +186,7 @@ def test_lookup_appointments_by_number_and_phone(
     # Thiếu cả 2 param
     resp_empty = client.get(
         f"{settings.API_V1_STR}/appointments/history/lookup",
+        headers=headers,
     )
     assert resp_empty.status_code == 400
 

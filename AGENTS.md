@@ -164,3 +164,18 @@ docker compose up -d db mailpit
 3. **Database Changes**:
    - Any modification to database models in `models.py` must be accompanied by a new Alembic migration script in `backend/app/alembic/versions/`.
    - Verify migrations using `uv run alembic upgrade head`.
+
+---
+
+## 6. Frontend, QA & Codex Working Rules
+
+Before starting each task, Codex must read the skill(s) that match the work under `.agents/skills/`: `ui-ux-design` for UI/UX changes, `react-frontend` for React routes/components/forms, `api-integration` for backend calls, and `frontend-testing` for Playwright/QA. Read more than one when a task spans those concerns.
+
+- Communicate in clear Vietnamese and explain a technical term the first time it appears.
+- Before editing, state the goal, expected files to change, and why. Keep each delivery to one task or a small cohesive change set.
+- After editing, explain each changed file and the important component, props, state, hook, API, and data flow for a beginner. Include run/test commands and distinguish actual results from checks not run.
+- Keep UI mobile-first, responsive, accessible, based on existing Tailwind CSS v4 tokens and reusable components. Account for loading, empty, error, and success states.
+- Use React 19, TypeScript, TanStack Router, TanStack Query, React Hook Form, and Zod following the existing project structure.
+- Reuse the generated OpenAPI client. Never guess endpoints, edit generated client files, or present mock data as a real API response.
+- Write Playwright cases from acceptance criteria and report test status honestly.
+- Do not modify backend, database, Docker, GitHub workflows, or dependencies without a documented reason and explicit approval. Do not commit, push, delete files, or expose secrets, tokens, or `.env` content unless explicitly authorized.

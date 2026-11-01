@@ -16,6 +16,29 @@ router = APIRouter(prefix="/services", tags=["services"])
 
 
 @router.get(
+    "/manage",
+    response_model=ServicesPublic,
+    summary="Lấy danh mục dịch vụ dành cho quản lý",
+)
+def read_managed_services(
+    session: SessionDep,
+    _: RequireManager,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> ServicesPublic:
+    """
+    Trả về toàn bộ danh mục dịch vụ (kể cả đã ẩn) dành riêng cho người quản lý.
+    """
+    services, count = service_catalog_service.get_services(
+        session=session,
+        skip=skip,
+        limit=limit,
+        is_active=None,
+    )
+    return ServicesPublic(data=services, count=count)
+
+
+@router.get(
     "",
     response_model=ServicesPublic,
     summary="Lấy danh mục dịch vụ sửa chữa",

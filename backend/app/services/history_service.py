@@ -209,6 +209,18 @@ def lookup_appointments(
                 return []
             query = query.where(Appointment.customer_id == user_cust.id)
 
+    if (
+        current_user
+        and current_user.role == "technician"
+        and not current_user.is_superuser
+    ):
+        technician = session.exec(
+            select(Technician).where(Technician.user_id == current_user.id)
+        ).first()
+        if not technician:
+            return []
+        query = query.where(Appointment.technician_id == technician.id)
+
     appts = session.exec(
         query.order_by(col(Appointment.appointment_date).desc()).limit(20)
     ).all()
@@ -228,6 +240,12 @@ def get_appointment_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy lịch hẹn",
         )
+
+    from app.services.access_service import check_appointment_access
+
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Cần đăng nhập")
+    check_appointment_access(session, current_user, appointment)
 
     # Phân quyền: customer chỉ được xem lịch hẹn của mình
     if current_user and not current_user.is_superuser:
@@ -291,4 +309,25 @@ def get_customer_appointment_history(
     return AppointmentsHistoryPublic(
         data=[build_appointment_history_detail(session, a) for a in appts],
         count=total_count,
+    )
+
+
+def get_current_user_appointment_history(
+    session: Session,
+    current_user: User,
+    skip: int = 0,
+    limit: int = 20,
+) -> AppointmentsHistoryPublic:
+    """Trả về lịch hẹn của Customer được liên kết với tài khoản đang đăng nhập."""
+    customer = session.exec(
+        select(Customer).where(Customer.user_id == current_user.id)
+    ).first()
+    if not customer:
+        return AppointmentsHistoryPublic(data=[], count=0)
+    return get_customer_appointment_history(
+        session=session,
+        customer_id=customer.id,
+        skip=skip,
+        limit=limit,
+        current_user=current_user,
     )

@@ -11,6 +11,7 @@ from app.models import (
     Appointment,
     Customer,
     Device,
+    Notification,
     QuotationCreate,
     QuotationDetail,
     QuotationItemDetail,
@@ -22,6 +23,7 @@ from app.models import (
     User,
     get_datetime_utc,
 )
+from app.services.access_service import check_appointment_access
 
 logger = get_logger("app.services.quote_service")
 
@@ -234,6 +236,7 @@ def create_repair_quotation(
         # 4. Sinh mã báo giá
         quote_number = generate_quote_number(session, appointment)
 
+        check_appointment_access(session, current_user, appointment)
         # 5. Khởi tạo đối tượng Quote
         quote = Quote(
             id=uuid.uuid4(),
@@ -251,6 +254,13 @@ def create_repair_quotation(
         session.add(quote)
         session.flush()
 
+        session.add(
+            Notification(
+                customer_id=appointment.customer_id,
+                title="Báo giá sửa chữa mới",
+                message=f"Báo giá {quote.quote_number} đã được tạo. Vui lòng xem và xác nhận trong mục Báo giá.",
+            )
+        )
         # 6. Khởi tạo và lưu từng QuoteItem
         for p_item in prepared_items:
             db_item = QuoteItem(
@@ -350,6 +360,7 @@ def accept_quotation(
                 detail=f"Báo giá đang ở trạng thái '{quote.status}', không thể duyệt",
             )
 
+        check_appointment_access(session, current_user, appointment)
         # 4. Kiểm tra phân quyền: Nhân viên hoặc Khách hàng sở hữu
         is_staff_or_admin = current_user.is_superuser or (
             (current_user.role or "").lower()

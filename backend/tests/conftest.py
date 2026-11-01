@@ -1,3 +1,4 @@
+import os
 from collections.abc import Generator
 
 import pytest
@@ -17,6 +18,12 @@ from tests.utils.utils import get_superuser_token_headers
 
 
 def _init_test_engine():
+    if os.environ.get("FIXCARE_TEST_SQLITE") == "1":
+        isolated_engine = create_engine(
+            "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+        )
+        SQLModel.metadata.create_all(isolated_engine)
+        return isolated_engine
     try:
         pg_engine = create_engine(
             str(settings.DATABASE_URL),

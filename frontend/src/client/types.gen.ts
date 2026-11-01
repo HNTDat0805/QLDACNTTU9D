@@ -5,6 +5,572 @@ export type ClientOptions = {
 };
 
 /**
+ * AppointmentAssignTechnicianData
+ */
+export type AppointmentAssignTechnicianData = {
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Technician Id
+     */
+    technician_id: string;
+    /**
+     * Technician Name
+     */
+    technician_name: string;
+    /**
+     * Technician Phone
+     */
+    technician_phone?: string | null;
+    /**
+     * Technician Specialization
+     */
+    technician_specialization?: string | null;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Assigned At
+     */
+    assigned_at: string;
+    /**
+     * Note
+     */
+    note?: string | null;
+};
+
+/**
+ * AppointmentAssignTechnicianRequest
+ */
+export type AppointmentAssignTechnicianRequest = {
+    /**
+     * Technician Id
+     *
+     * Mã UUID của kỹ thuật viên cần phân công
+     */
+    technician_id: string;
+    /**
+     * Note
+     *
+     * Ghi chú phân công công việc (tùy chọn)
+     */
+    note?: string | null;
+};
+
+/**
+ * AppointmentAssignTechnicianResponse
+ */
+export type AppointmentAssignTechnicianResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: AppointmentAssignTechnicianData;
+};
+
+/**
+ * AppointmentBookingCreate
+ */
+export type AppointmentBookingCreate = {
+    /**
+     * Customer Id
+     */
+    customer_id?: string | null;
+    /**
+     * Customer Name
+     */
+    customer_name?: string | null;
+    /**
+     * Customer Phone
+     */
+    customer_phone?: string | null;
+    /**
+     * Customer Email
+     */
+    customer_email?: string | null;
+    /**
+     * Customer Address
+     */
+    customer_address?: string | null;
+    /**
+     * Service Id
+     */
+    service_id?: string | null;
+    /**
+     * Service Ids
+     */
+    service_ids?: Array<string> | null;
+    /**
+     * Device Id
+     */
+    device_id?: string | null;
+    /**
+     * Device Type
+     */
+    device_type?: string | null;
+    /**
+     * Device Brand
+     */
+    device_brand?: string | null;
+    /**
+     * Device Model
+     */
+    device_model?: string | null;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Start Time
+     */
+    start_time: string;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
+
+/**
+ * AppointmentBookingResponse
+ */
+export type AppointmentBookingResponse = {
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Appointment Code
+     */
+    appointment_code: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Start Time
+     */
+    start_time: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * End Time
+     */
+    end_time?: string | null;
+    /**
+     * Customer Id
+     */
+    customer_id?: string | null;
+    /**
+     * Device Id
+     */
+    device_id?: string | null;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Total Amount
+     */
+    total_amount?: number | null;
+    /**
+     * Service Names
+     */
+    service_names?: Array<string> | null;
+};
+
+/**
+ * AppointmentBookingUpdate
+ */
+export type AppointmentBookingUpdate = {
+    /**
+     * Appointment Date
+     */
+    appointment_date?: string | null;
+    /**
+     * Start Time
+     */
+    start_time?: string | null;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Reschedule Reason
+     */
+    reschedule_reason?: string | null;
+    /**
+     * Contact Name
+     */
+    contact_name?: string | null;
+    /**
+     * Contact Phone
+     */
+    contact_phone?: string | null;
+    /**
+     * Device Brand
+     */
+    device_brand?: string | null;
+    /**
+     * Device Model
+     */
+    device_model?: string | null;
+};
+
+/**
+ * AppointmentCancelData
+ */
+export type AppointmentCancelData = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Cancellation Reason
+     */
+    cancellation_reason?: string | null;
+    /**
+     * Customer Notes
+     */
+    customer_notes?: string | null;
+};
+
+/**
+ * AppointmentCancelRequest
+ */
+export type AppointmentCancelRequest = {
+    /**
+     * Reason
+     *
+     * Lý do hủy lịch hẹn
+     */
+    reason: string;
+    /**
+     * Note
+     *
+     * Ghi chú thêm khi hủy
+     */
+    note?: string | null;
+};
+
+/**
+ * AppointmentCancelResponse
+ */
+export type AppointmentCancelResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: AppointmentCancelData;
+};
+
+/**
+ * AppointmentConfirmData
+ */
+export type AppointmentConfirmData = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+};
+
+/**
+ * AppointmentConfirmResponse
+ */
+export type AppointmentConfirmResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: AppointmentConfirmData;
+};
+
+/**
+ * AppointmentHistoryDetail
+ */
+export type AppointmentHistoryDetail = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Cancellation Reason
+     */
+    cancellation_reason?: string | null;
+    /**
+     * Customer Notes
+     */
+    customer_notes?: string | null;
+    /**
+     * Technician Diagnosis
+     */
+    technician_diagnosis?: string | null;
+    /**
+     * Estimated Completion Date
+     */
+    estimated_completion_date?: string | null;
+    /**
+     * Actual Completion Date
+     */
+    actual_completion_date?: string | null;
+    /**
+     * Total Amount
+     */
+    total_amount?: number;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    customer?: CustomerPublic | null;
+    device?: DevicePublic | null;
+    technician?: TechnicianPublic | null;
+    /**
+     * Services
+     */
+    services?: Array<AppointmentServiceItemDetail>;
+    /**
+     * Status History
+     */
+    status_history?: Array<RepairStatusHistoryPublic>;
+};
+
+/**
+ * AppointmentServiceItemDetail
+ */
+export type AppointmentServiceItemDetail = {
+    /**
+     * Service Id
+     */
+    service_id: string;
+    /**
+     * Service Name
+     */
+    service_name: string;
+    /**
+     * Price At Booking
+     */
+    price_at_booking: number;
+    /**
+     * Quantity
+     */
+    quantity?: number;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
+ * AppointmentStatus
+ */
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+/**
+ * AppointmentsHistoryPublic
+ */
+export type AppointmentsHistoryPublic = {
+    /**
+     * Data
+     */
+    data: Array<AppointmentHistoryDetail>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * AssignTechnicianData
+ */
+export type AssignTechnicianData = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Technician Id
+     */
+    technician_id: string;
+    /**
+     * Technician Name
+     */
+    technician_name: string;
+    /**
+     * Technician Phone
+     */
+    technician_phone: string;
+    /**
+     * Specialization
+     */
+    specialization?: string | null;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Assigned At
+     */
+    assigned_at?: string | null;
+};
+
+/**
+ * AssignTechnicianRequest
+ */
+export type AssignTechnicianRequest = {
+    /**
+     * Technician Id
+     *
+     * ID của kỹ thuật viên được phân công
+     */
+    technician_id: string;
+    /**
+     * Note
+     *
+     * Ghi chú phân công công việc (tùy chọn)
+     */
+    note?: string | null;
+};
+
+/**
+ * AssignTechnicianResponse
+ */
+export type AssignTechnicianResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: AssignTechnicianData;
+};
+
+/**
+ * AvailableSlotItem
+ */
+export type AvailableSlotItem = {
+    /**
+     * Start Time
+     */
+    start_time: string;
+    /**
+     * End Time
+     */
+    end_time: string;
+    /**
+     * Available
+     */
+    available?: boolean;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+};
+
+/**
+ * AvailableSlotsResponse
+ */
+export type AvailableSlotsResponse = {
+    /**
+     * Date
+     */
+    date: string;
+    /**
+     * Service Id
+     */
+    service_id: string;
+    /**
+     * Available Slots
+     */
+    available_slots: Array<AvailableSlotItem>;
+};
+
+/**
  * Body_login-login_access_token
  */
 export type Body_login_login_access_token = {
@@ -35,6 +601,432 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * BookingTechnician
+ */
+export type BookingTechnician = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Full Name
+     */
+    full_name: string;
+    /**
+     * Specialization
+     */
+    specialization?: string | null;
+};
+
+/**
+ * CustomerCreate
+ */
+export type CustomerCreate = {
+    /**
+     * Full Name
+     */
+    full_name: string;
+    /**
+     * Phone Number
+     */
+    phone_number: string;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Address
+     */
+    address?: string | null;
+    /**
+     * User Id
+     */
+    user_id?: string | null;
+};
+
+/**
+ * CustomerPublic
+ */
+export type CustomerPublic = {
+    /**
+     * Full Name
+     */
+    full_name: string;
+    /**
+     * Phone Number
+     */
+    phone_number: string;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Address
+     */
+    address?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * User Id
+     */
+    user_id?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * CustomerUpdate
+ */
+export type CustomerUpdate = {
+    /**
+     * Full Name
+     */
+    full_name?: string | null;
+    /**
+     * Phone Number
+     */
+    phone_number?: string | null;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Address
+     */
+    address?: string | null;
+};
+
+/**
+ * CustomersPublic
+ */
+export type CustomersPublic = {
+    /**
+     * Data
+     */
+    data: Array<CustomerPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * DeviceIntakeCreate
+ */
+export type DeviceIntakeCreate = {
+    /**
+     * Appointment Id
+     *
+     * ID lịch hẹn có sẵn nếu khách đã đặt lịch hẹn trước
+     */
+    appointment_id?: string | null;
+    /**
+     * Customer Id
+     *
+     * ID khách hàng nếu đã có trong hệ thống
+     */
+    customer_id?: string | null;
+    /**
+     * Customer Name
+     *
+     * Họ và tên khách hàng (bắt buộc nếu không có customer_id và appointment_id)
+     */
+    customer_name?: string | null;
+    /**
+     * Customer Phone
+     *
+     * Số điện thoại khách hàng (bắt buộc nếu không có customer_id và appointment_id)
+     */
+    customer_phone?: string | null;
+    /**
+     * Customer Email
+     */
+    customer_email?: string | null;
+    /**
+     * Customer Address
+     */
+    customer_address?: string | null;
+    /**
+     * Device Id
+     *
+     * ID thiết bị nếu đã có trong hệ thống
+     */
+    device_id?: string | null;
+    /**
+     * Brand
+     *
+     * Hãng sản xuất thiết bị (Apple, Samsung, Xiaomi...)
+     */
+    brand?: string | null;
+    /**
+     * Model
+     *
+     * Dòng máy (iPhone 13, Galaxy S23...)
+     */
+    model?: string | null;
+    /**
+     * Device Type
+     */
+    device_type?: string;
+    /**
+     * Serial Number
+     */
+    serial_number?: string | null;
+    /**
+     * Imei
+     */
+    imei?: string | null;
+    /**
+     * Color
+     */
+    color?: string | null;
+    /**
+     * Physical Condition
+     *
+     * Tình trạng ngoại quan máy khi tiếp nhận (vỡ màn hình, cấn móp, trầy xước...)
+     */
+    physical_condition: string;
+    /**
+     * Fault Description
+     *
+     * Mô tả lỗi hoặc triệu chứng hỏng hóc từ khách hàng
+     */
+    fault_description: string;
+    /**
+     * Accessories Received
+     *
+     * Phụ kiện khách bàn giao (sạc, cáp, que SIM, ốp lưng, hộp...)
+     */
+    accessories_received?: string | null;
+    /**
+     * Technician Id
+     *
+     * Kỹ thuật viên phụ trách tiếp nhận/sửa chữa (nếu có)
+     */
+    technician_id?: string | null;
+    /**
+     * Service Ids
+     *
+     * Danh sách ID dịch vụ sửa chữa dự kiến
+     */
+    service_ids?: Array<string> | null;
+    /**
+     * Estimated Completion Date
+     *
+     * Thời gian dự kiến hoàn thành
+     */
+    estimated_completion_date?: string | null;
+    /**
+     * Trạng thái ban đầu của phiếu: CONFIRMED hoặc IN_PROGRESS
+     */
+    initial_status?: AppointmentStatus;
+};
+
+/**
+ * DeviceIntakeDetail
+ */
+export type DeviceIntakeDetail = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Customer Name
+     */
+    customer_name: string;
+    /**
+     * Customer Phone
+     */
+    customer_phone: string;
+    /**
+     * Device Id
+     */
+    device_id: string;
+    /**
+     * Device Brand
+     */
+    device_brand: string;
+    /**
+     * Device Model
+     */
+    device_model: string;
+    /**
+     * Device Imei
+     */
+    device_imei?: string | null;
+    /**
+     * Device Color
+     */
+    device_color?: string | null;
+    /**
+     * Physical Condition
+     */
+    physical_condition: string;
+    /**
+     * Fault Description
+     */
+    fault_description: string;
+    /**
+     * Accessories Received
+     */
+    accessories_received?: string | null;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Technician Name
+     */
+    technician_name?: string | null;
+    /**
+     * Estimated Completion Date
+     */
+    estimated_completion_date?: string | null;
+    /**
+     * Total Amount
+     */
+    total_amount?: number;
+    /**
+     * Services
+     */
+    services?: Array<AppointmentServiceItemDetail>;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * DeviceIntakeResponse
+ */
+export type DeviceIntakeResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: DeviceIntakeDetail;
+};
+
+/**
+ * DevicePublic
+ */
+export type DevicePublic = {
+    /**
+     * Device Type
+     */
+    device_type?: string;
+    /**
+     * Brand
+     */
+    brand: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Serial Number
+     */
+    serial_number?: string | null;
+    /**
+     * Imei
+     */
+    imei?: string | null;
+    /**
+     * Color
+     */
+    color?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * DeviceResponse
+ */
+export type DeviceResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: DevicePublic;
+};
+
+/**
+ * DeviceUpdate
+ */
+export type DeviceUpdate = {
+    /**
+     * Device Type
+     */
+    device_type?: string | null;
+    /**
+     * Brand
+     */
+    brand?: string | null;
+    /**
+     * Model
+     */
+    model?: string | null;
+    /**
+     * Serial Number
+     */
+    serial_number?: string | null;
+    /**
+     * Imei
+     */
+    imei?: string | null;
+    /**
+     * Color
+     */
+    color?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
  * HTTPValidationError
  */
 export type HTTPValidationError = {
@@ -42,6 +1034,134 @@ export type HTTPValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * InvoiceDetail
+ */
+export type InvoiceDetail = {
+    /**
+     * Invoice Number
+     */
+    invoice_number: string;
+    /**
+     * Subtotal
+     */
+    subtotal?: number;
+    /**
+     * Discount Amount
+     */
+    discount_amount?: number;
+    /**
+     * Tax Amount
+     */
+    tax_amount?: number;
+    /**
+     * Total Amount
+     */
+    total_amount?: number;
+    /**
+     * Status
+     */
+    status?: string;
+    /**
+     * Issue Date
+     */
+    issue_date?: string;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Items
+     */
+    items: Array<InvoiceItemPublic>;
+    /**
+     * Payments
+     */
+    payments: Array<PaymentPublic>;
+    /**
+     * Paid Amount
+     */
+    paid_amount: number;
+    /**
+     * Balance
+     */
+    balance: number;
+};
+
+/**
+ * InvoiceIssue
+ */
+export type InvoiceIssue = {
+    /**
+     * Quote Id
+     */
+    quote_id: string;
+};
+
+/**
+ * InvoiceItemPublic
+ */
+export type InvoiceItemPublic = {
+    /**
+     * Item Name
+     */
+    item_name: string;
+    /**
+     * Unit Price
+     */
+    unit_price?: number;
+    /**
+     * Quantity
+     */
+    quantity?: number;
+    /**
+     * Total Price
+     */
+    total_price?: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Invoice Id
+     */
+    invoice_id: string;
+};
+
+/**
+ * InvoicesPage
+ */
+export type InvoicesPage = {
+    /**
+     * Data
+     */
+    data: Array<InvoiceDetail>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -123,6 +1243,20 @@ export type Message = {
 };
 
 /**
+ * MonthRevenue
+ */
+export type MonthRevenue = {
+    /**
+     * Month
+     */
+    month: string;
+    /**
+     * Amount
+     */
+    amount: number;
+};
+
+/**
  * NewPassword
  */
 export type NewPassword = {
@@ -134,6 +1268,130 @@ export type NewPassword = {
      * New Password
      */
     new_password: string;
+};
+
+/**
+ * NotificationPublic
+ */
+export type NotificationPublic = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Notification Type
+     */
+    notification_type?: string;
+    /**
+     * Is Read
+     */
+    is_read?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Customer Id
+     */
+    customer_id?: string | null;
+    /**
+     * User Id
+     */
+    user_id?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * NotificationsPage
+ */
+export type NotificationsPage = {
+    /**
+     * Data
+     */
+    data: Array<NotificationPublic>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Unread Count
+     */
+    unread_count: number;
+};
+
+/**
+ * PaymentPublic
+ */
+export type PaymentPublic = {
+    /**
+     * Payment Number
+     */
+    payment_number: string;
+    /**
+     * Amount
+     */
+    amount: number;
+    /**
+     * Payment Method
+     */
+    payment_method: string;
+    /**
+     * Payment Status
+     */
+    payment_status?: string;
+    /**
+     * Transaction Reference
+     */
+    transaction_reference?: string | null;
+    /**
+     * Paid At
+     */
+    paid_at?: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Invoice Id
+     */
+    invoice_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * PaymentRecord
+ */
+export type PaymentRecord = {
+    /**
+     * Amount
+     */
+    amount: number | string;
+    /**
+     * Payment Method
+     */
+    payment_method: 'CASH' | 'BANK_TRANSFER';
+    /**
+     * Request Id
+     */
+    request_id: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
 };
 
 /**
@@ -159,6 +1417,957 @@ export type PrivateUserCreate = {
 };
 
 /**
+ * QueueItemPublic
+ */
+export type QueueItemPublic = {
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Customer Name
+     */
+    customer_name: string;
+    /**
+     * Customer Phone
+     */
+    customer_phone: string;
+    /**
+     * Device Id
+     */
+    device_id: string;
+    /**
+     * Device Info
+     */
+    device_info: string;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Technician Name
+     */
+    technician_name?: string | null;
+    /**
+     * Service Names
+     */
+    service_names?: Array<string>;
+    /**
+     * Total Amount
+     */
+    total_amount?: number;
+    /**
+     * Estimated Duration Minutes
+     */
+    estimated_duration_minutes?: number;
+    /**
+     * Queue Position
+     */
+    queue_position?: number;
+    /**
+     * Technician Diagnosis
+     */
+    technician_diagnosis?: string | null;
+    /**
+     * Customer Notes
+     */
+    customer_notes?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * QueueListResponse
+ */
+export type QueueListResponse = {
+    /**
+     * Data
+     */
+    data: Array<QueueItemPublic>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Date
+     */
+    date?: string | null;
+};
+
+/**
+ * QueueStatusUpdate
+ */
+export type QueueStatusUpdate = {
+    /**
+     * Status
+     *
+     * Trạng thái mới: CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED
+     */
+    status: string;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Technician Diagnosis
+     */
+    technician_diagnosis?: string | null;
+    /**
+     * Note
+     */
+    note?: string | null;
+};
+
+/**
+ * QuotationAcceptRequest
+ */
+export type QuotationAcceptRequest = {
+    /**
+     * Note
+     *
+     * Ghi chú thêm khi duyệt báo giá sửa chữa (tùy chọn)
+     */
+    note?: string | null;
+};
+
+/**
+ * QuotationCreate
+ */
+export type QuotationCreate = {
+    /**
+     * Appointment Id
+     *
+     * UUID của phiếu sửa chữa
+     */
+    appointment_id?: string | null;
+    /**
+     * Appointment Number
+     *
+     * Mã phiếu sửa chữa (ví dụ: APPT-20261024-XXXX)
+     */
+    appointment_number?: string | null;
+    /**
+     * Items
+     *
+     * Danh sách các hạng mục báo giá (ít nhất 1 hạng mục)
+     */
+    items: Array<QuotationItemCreate>;
+    /**
+     * Valid Until
+     *
+     * Thời hạn hiệu lực của báo giá (nếu có)
+     */
+    valid_until?: string | null;
+    /**
+     * Customer Notes
+     *
+     * Ghi chú gửi cho khách hàng
+     */
+    customer_notes?: string | null;
+    /**
+     * Trạng thái ban đầu của báo giá (mặc định DRAFT)
+     */
+    status?: QuoteStatus;
+};
+
+/**
+ * QuotationDetail
+ */
+export type QuotationDetail = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Quote Number
+     */
+    quote_number: string;
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Customer Name
+     */
+    customer_name: string;
+    /**
+     * Customer Phone
+     */
+    customer_phone: string;
+    /**
+     * Device Info
+     */
+    device_info: string;
+    /**
+     * Total Amount
+     */
+    total_amount: number;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Valid Until
+     */
+    valid_until?: string | null;
+    /**
+     * Customer Notes
+     */
+    customer_notes?: string | null;
+    /**
+     * Items
+     */
+    items?: Array<QuotationItemDetail>;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * QuotationItemCreate
+ */
+export type QuotationItemCreate = {
+    /**
+     * Service Id
+     *
+     * ID dịch vụ từ danh mục (nếu có)
+     */
+    service_id?: string | null;
+    /**
+     * Item Name
+     *
+     * Tên hạng mục sửa chữa hoặc linh kiện (nếu không có service_id thì bắt buộc)
+     */
+    item_name?: string | null;
+    /**
+     * Unit Price
+     *
+     * Đơn giá hạng mục (nếu không truyền sẽ lấy theo giá gốc dịch vụ)
+     */
+    unit_price?: number | null;
+    /**
+     * Quantity
+     *
+     * Số lượng (phải lớn hơn 0)
+     */
+    quantity?: number;
+    /**
+     * Notes
+     *
+     * Ghi chú chi tiết cho hạng mục này
+     */
+    notes?: string | null;
+};
+
+/**
+ * QuotationItemDetail
+ */
+export type QuotationItemDetail = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Service Id
+     */
+    service_id?: string | null;
+    /**
+     * Item Name
+     */
+    item_name: string;
+    /**
+     * Unit Price
+     */
+    unit_price: number;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Total Price
+     */
+    total_price: number;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
+ * QuotationResponse
+ */
+export type QuotationResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: QuotationDetail;
+};
+
+/**
+ * QuotationsPublic
+ */
+export type QuotationsPublic = {
+    /**
+     * Data
+     */
+    data: Array<QuotationDetail>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * QuoteStatus
+ */
+export type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED';
+
+/**
+ * RefreshTokenInput
+ */
+export type RefreshTokenInput = {
+    /**
+     * Refresh Token
+     */
+    refresh_token: string;
+};
+
+/**
+ * RepairStatusHistoryPublic
+ */
+export type RepairStatusHistoryPublic = {
+    /**
+     * Previous Status
+     */
+    previous_status?: string | null;
+    /**
+     * New Status
+     */
+    new_status: string;
+    /**
+     * Note
+     */
+    note?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Changed By User Id
+     */
+    changed_by_user_id?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * RepairStatusUpdateData
+ */
+export type RepairStatusUpdateData = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Number
+     */
+    appointment_number: string;
+    /**
+     * Previous Status
+     */
+    previous_status: string;
+    /**
+     * Current Status
+     */
+    current_status: string;
+    /**
+     * Note
+     */
+    note?: string | null;
+    /**
+     * Technician Diagnosis
+     */
+    technician_diagnosis?: string | null;
+    /**
+     * Actual Completion Date
+     */
+    actual_completion_date?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    /**
+     * History Id
+     */
+    history_id?: string | null;
+};
+
+/**
+ * RepairStatusUpdateRequest
+ */
+export type RepairStatusUpdateRequest = {
+    /**
+     * Trạng thái sửa chữa mới (PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED)
+     */
+    status: AppointmentStatus;
+    /**
+     * Note
+     *
+     * Ghi chú chi tiết về việc chuyển trạng thái sửa chữa
+     */
+    note?: string | null;
+    /**
+     * Technician Diagnosis
+     *
+     * Chẩn đoán kỹ thuật bổ sung (tùy chọn)
+     */
+    technician_diagnosis?: string | null;
+    /**
+     * Cancellation Reason
+     *
+     * Lý do hủy (nếu chuyển sang trạng thái CANCELLED)
+     */
+    cancellation_reason?: string | null;
+};
+
+/**
+ * RepairStatusUpdateResponse
+ */
+export type RepairStatusUpdateResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    data: RepairStatusUpdateData;
+};
+
+/**
+ * ReviewPublic
+ */
+export type ReviewPublic = {
+    /**
+     * Rating
+     */
+    rating: number;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Customer Id
+     */
+    customer_id: string;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * ReviewSubmit
+ */
+export type ReviewSubmit = {
+    /**
+     * Appointment Id
+     */
+    appointment_id: string;
+    /**
+     * Rating
+     */
+    rating: number;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+};
+
+/**
+ * ReviewsPage
+ */
+export type ReviewsPage = {
+    /**
+     * Data
+     */
+    data: Array<ReviewPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * ServiceInput
+ */
+export type ServiceInput = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Base Price
+     */
+    base_price: number;
+    /**
+     * Estimated Duration Minutes
+     */
+    estimated_duration_minutes: number;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+};
+
+/**
+ * ServicePublic
+ */
+export type ServicePublic = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Base Price
+     */
+    base_price?: number;
+    /**
+     * Estimated Duration Minutes
+     */
+    estimated_duration_minutes?: number;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * ServicesPublic
+ */
+export type ServicesPublic = {
+    /**
+     * Data
+     */
+    data: Array<ServicePublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * SlotCheckRequest
+ */
+export type SlotCheckRequest = {
+    /**
+     * Service Id
+     */
+    service_id: string;
+    /**
+     * Appointment Date
+     */
+    appointment_date: string;
+    /**
+     * Start Time
+     */
+    start_time: string;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+    /**
+     * Exclude Appointment Id
+     */
+    exclude_appointment_id?: string | null;
+};
+
+/**
+ * SlotCheckResponse
+ */
+export type SlotCheckResponse = {
+    /**
+     * Available
+     */
+    available: boolean;
+    /**
+     * Reason
+     */
+    reason?: string | null;
+    /**
+     * Message
+     */
+    message?: string | null;
+    /**
+     * Start Time
+     */
+    start_time?: string | null;
+    /**
+     * End Time
+     */
+    end_time?: string | null;
+    /**
+     * Technician Id
+     */
+    technician_id?: string | null;
+};
+
+/**
+ * StatisticsResponse
+ */
+export type StatisticsResponse = {
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Receipts Total
+     */
+    receipts_total: number;
+    /**
+     * Outstanding Total
+     */
+    outstanding_total: number;
+    /**
+     * Appointment Count
+     */
+    appointment_count: number;
+    /**
+     * Completed Count
+     */
+    completed_count: number;
+    /**
+     * Customer Count
+     */
+    customer_count: number;
+    /**
+     * Monthly Revenue
+     */
+    monthly_revenue: Array<MonthRevenue>;
+};
+
+/**
+ * TechnicianAccountChoice
+ */
+export type TechnicianAccountChoice = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Full Name
+     */
+    full_name: string | null;
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
+ * TechnicianCreate
+ */
+export type TechnicianCreate = {
+    /**
+     * Full Name
+     */
+    full_name: string;
+    /**
+     * Phone Number
+     */
+    phone_number?: string | null;
+    /**
+     * Specialization
+     */
+    specialization?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * User Id
+     */
+    user_id?: string | null;
+};
+
+/**
+ * TechnicianPublic
+ */
+export type TechnicianPublic = {
+    /**
+     * Full Name
+     */
+    full_name: string;
+    /**
+     * Phone Number
+     */
+    phone_number?: string | null;
+    /**
+     * Specialization
+     */
+    specialization?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * User Id
+     */
+    user_id?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * TechnicianScheduleCreate
+ */
+export type TechnicianScheduleCreate = {
+    /**
+     * Work Date
+     */
+    work_date: string;
+    /**
+     * Start Time
+     */
+    start_time: string;
+    /**
+     * End Time
+     */
+    end_time: string;
+    /**
+     * Status
+     */
+    status?: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Technician Id
+     */
+    technician_id: string;
+};
+
+/**
+ * TechnicianSchedulePublic
+ */
+export type TechnicianSchedulePublic = {
+    /**
+     * Work Date
+     */
+    work_date: string;
+    /**
+     * Start Time
+     */
+    start_time: string;
+    /**
+     * End Time
+     */
+    end_time: string;
+    /**
+     * Status
+     */
+    status?: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Technician Id
+     */
+    technician_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * TechnicianScheduleStatusUpdate
+ */
+export type TechnicianScheduleStatusUpdate = {
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
+ * TechnicianScheduleUpdate
+ */
+export type TechnicianScheduleUpdate = {
+    /**
+     * Work Date
+     */
+    work_date?: string | null;
+    /**
+     * Start Time
+     */
+    start_time?: string | null;
+    /**
+     * End Time
+     */
+    end_time?: string | null;
+    /**
+     * Status
+     */
+    status?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
+ * TechnicianSchedulesPublic
+ */
+export type TechnicianSchedulesPublic = {
+    /**
+     * Data
+     */
+    data: Array<TechnicianSchedulePublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * TechnicianStatusUpdate
+ */
+export type TechnicianStatusUpdate = {
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+};
+
+/**
+ * TechnicianUpdate
+ */
+export type TechnicianUpdate = {
+    /**
+     * Full Name
+     */
+    full_name?: string | null;
+    /**
+     * Phone Number
+     */
+    phone_number?: string | null;
+    /**
+     * Specialization
+     */
+    specialization?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+};
+
+/**
+ * TechniciansPublic
+ */
+export type TechniciansPublic = {
+    /**
+     * Data
+     */
+    data: Array<TechnicianPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * Token
  */
 export type Token = {
@@ -166,6 +2375,10 @@ export type Token = {
      * Access Token
      */
     access_token: string;
+    /**
+     * Refresh Token
+     */
+    refresh_token?: string | null;
     /**
      * Token Type
      */
@@ -207,6 +2420,10 @@ export type UserCreate = {
      */
     full_name?: string | null;
     /**
+     * Role
+     */
+    role?: string;
+    /**
      * Password
      */
     password: string;
@@ -232,6 +2449,10 @@ export type UserPublic = {
      * Full Name
      */
     full_name?: string | null;
+    /**
+     * Role
+     */
+    role?: string;
     /**
      * Id
      */
@@ -284,6 +2505,10 @@ export type UserUpdate = {
      * Password
      */
     password?: string | null;
+    /**
+     * Role
+     */
+    role?: string | null;
 };
 
 /**
@@ -366,6 +2591,81 @@ export type loginLoginAccessTokenResponses = {
 };
 
 export type loginLoginAccessTokenResponse = loginLoginAccessTokenResponses[keyof loginLoginAccessTokenResponses];
+
+export type loginRefreshAccessTokenData = {
+    body: RefreshTokenInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/refresh-token';
+};
+
+export type loginRefreshAccessTokenErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginRefreshAccessTokenError = loginRefreshAccessTokenErrors[keyof loginRefreshAccessTokenErrors];
+
+export type loginRefreshAccessTokenResponses = {
+    /**
+     * Successful Response
+     */
+    200: Token;
+};
+
+export type loginRefreshAccessTokenResponse = loginRefreshAccessTokenResponses[keyof loginRefreshAccessTokenResponses];
+
+export type loginRevokeRefreshTokenData = {
+    body: RefreshTokenInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/revoke-token';
+};
+
+export type loginRevokeRefreshTokenErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginRevokeRefreshTokenError = loginRevokeRefreshTokenErrors[keyof loginRevokeRefreshTokenErrors];
+
+export type loginRevokeRefreshTokenResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type loginRevokeRefreshTokenResponse = loginRevokeRefreshTokenResponses[keyof loginRevokeRefreshTokenResponses];
+
+export type loginRegisterUserData = {
+    body: UserRegister;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/register';
+};
+
+export type loginRegisterUserErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginRegisterUserError = loginRegisterUserErrors[keyof loginRegisterUserErrors];
+
+export type loginRegisterUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPublic;
+};
+
+export type loginRegisterUserResponse = loginRegisterUserResponses[keyof loginRegisterUserResponses];
 
 export type loginTestTokenData = {
     body?: never;
@@ -920,6 +3220,2229 @@ export type itemsUpdateItemResponses = {
 };
 
 export type itemsUpdateItemResponse = itemsUpdateItemResponses[keyof itemsUpdateItemResponses];
+
+export type slotsReadBookingTechniciansData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Service Id
+         */
+        service_id: string;
+        /**
+         * Slot Date
+         */
+        slot_date: string;
+    };
+    url: '/api/v1/slots/technicians';
+};
+
+export type slotsReadBookingTechniciansErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type slotsReadBookingTechniciansError = slotsReadBookingTechniciansErrors[keyof slotsReadBookingTechniciansErrors];
+
+export type slotsReadBookingTechniciansResponses = {
+    /**
+     * Response Slots-Read Booking Technicians
+     *
+     * Successful Response
+     */
+    200: Array<BookingTechnician>;
+};
+
+export type slotsReadBookingTechniciansResponse = slotsReadBookingTechniciansResponses[keyof slotsReadBookingTechniciansResponses];
+
+export type slotsGetAvailableSlotsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Date
+         *
+         * Ngày cần kiểm tra (YYYY-MM-DD)
+         */
+        date: string;
+        /**
+         * Service Id
+         *
+         * Mã dịch vụ sửa chữa
+         */
+        service_id: string;
+        /**
+         * Technician Id
+         *
+         * Mã kỹ thuật viên (tùy chọn)
+         */
+        technician_id?: string | null;
+        /**
+         * Slot Duration
+         *
+         * Thời lượng slot tùy chọn tính bằng phút
+         */
+        slot_duration?: number | null;
+    };
+    url: '/api/v1/slots/available';
+};
+
+export type slotsGetAvailableSlotsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type slotsGetAvailableSlotsError = slotsGetAvailableSlotsErrors[keyof slotsGetAvailableSlotsErrors];
+
+export type slotsGetAvailableSlotsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AvailableSlotsResponse;
+};
+
+export type slotsGetAvailableSlotsResponse = slotsGetAvailableSlotsResponses[keyof slotsGetAvailableSlotsResponses];
+
+export type slotsCheckSlotData = {
+    body: SlotCheckRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/slots/check';
+};
+
+export type slotsCheckSlotErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type slotsCheckSlotError = slotsCheckSlotErrors[keyof slotsCheckSlotErrors];
+
+export type slotsCheckSlotResponses = {
+    /**
+     * Successful Response
+     */
+    200: SlotCheckResponse;
+};
+
+export type slotsCheckSlotResponse = slotsCheckSlotResponses[keyof slotsCheckSlotResponses];
+
+export type appointmentsReadAppointmentsHistoryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Customer Id
+         *
+         * Lọc theo khách hàng
+         */
+        customer_id?: string | null;
+        /**
+         * Technician Id
+         *
+         * Lọc theo kỹ thuật viên
+         */
+        technician_id?: string | null;
+        /**
+         * Status
+         *
+         * Lọc theo trạng thái (có thể phân tách bằng dấu phẩy, ví dụ: COMPLETED,CANCELLED)
+         */
+        status?: string | null;
+        /**
+         * Start Date
+         *
+         * Lọc từ ngày hẹn
+         */
+        start_date?: string | null;
+        /**
+         * End Date
+         *
+         * Lọc đến ngày hẹn
+         */
+        end_date?: string | null;
+        /**
+         * Q
+         *
+         * Tìm kiếm theo mã lịch hẹn, số điện thoại hoặc tên khách hàng
+         */
+        q?: string | null;
+    };
+    url: '/api/v1/appointments/history';
+};
+
+export type appointmentsReadAppointmentsHistoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsReadAppointmentsHistoryError = appointmentsReadAppointmentsHistoryErrors[keyof appointmentsReadAppointmentsHistoryErrors];
+
+export type appointmentsReadAppointmentsHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentsHistoryPublic;
+};
+
+export type appointmentsReadAppointmentsHistoryResponse = appointmentsReadAppointmentsHistoryResponses[keyof appointmentsReadAppointmentsHistoryResponses];
+
+export type appointmentsLookupAppointmentData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Appointment Number
+         *
+         * Mã lịch hẹn (ví dụ: APPT-20261015-A1B2)
+         */
+        appointment_number?: string | null;
+        /**
+         * Phone Number
+         *
+         * Số điện thoại khách hàng
+         */
+        phone_number?: string | null;
+    };
+    url: '/api/v1/appointments/history/lookup';
+};
+
+export type appointmentsLookupAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsLookupAppointmentError = appointmentsLookupAppointmentErrors[keyof appointmentsLookupAppointmentErrors];
+
+export type appointmentsLookupAppointmentResponses = {
+    /**
+     * Response Appointments-Lookup Appointment
+     *
+     * Successful Response
+     */
+    200: Array<AppointmentHistoryDetail>;
+};
+
+export type appointmentsLookupAppointmentResponse = appointmentsLookupAppointmentResponses[keyof appointmentsLookupAppointmentResponses];
+
+export type appointmentsReadMyAppointmentsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/appointments/me';
+};
+
+export type appointmentsReadMyAppointmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsReadMyAppointmentsError = appointmentsReadMyAppointmentsErrors[keyof appointmentsReadMyAppointmentsErrors];
+
+export type appointmentsReadMyAppointmentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentsHistoryPublic;
+};
+
+export type appointmentsReadMyAppointmentsResponse = appointmentsReadMyAppointmentsResponses[keyof appointmentsReadMyAppointmentsResponses];
+
+export type appointmentsReadAppointmentDetailData = {
+    body?: never;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/appointments/{appointment_id}/detail';
+};
+
+export type appointmentsReadAppointmentDetailErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsReadAppointmentDetailError = appointmentsReadAppointmentDetailErrors[keyof appointmentsReadAppointmentDetailErrors];
+
+export type appointmentsReadAppointmentDetailResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentHistoryDetail;
+};
+
+export type appointmentsReadAppointmentDetailResponse = appointmentsReadAppointmentDetailResponses[keyof appointmentsReadAppointmentDetailResponses];
+
+export type appointmentsCreateAppointmentData = {
+    body: AppointmentBookingCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/appointments';
+};
+
+export type appointmentsCreateAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsCreateAppointmentError = appointmentsCreateAppointmentErrors[keyof appointmentsCreateAppointmentErrors];
+
+export type appointmentsCreateAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    201: AppointmentBookingResponse;
+};
+
+export type appointmentsCreateAppointmentResponse = appointmentsCreateAppointmentResponses[keyof appointmentsCreateAppointmentResponses];
+
+export type appointmentsUpdateAppointmentData = {
+    body: AppointmentBookingUpdate;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/appointments/{appointment_id}';
+};
+
+export type appointmentsUpdateAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsUpdateAppointmentError = appointmentsUpdateAppointmentErrors[keyof appointmentsUpdateAppointmentErrors];
+
+export type appointmentsUpdateAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentBookingResponse;
+};
+
+export type appointmentsUpdateAppointmentResponse = appointmentsUpdateAppointmentResponses[keyof appointmentsUpdateAppointmentResponses];
+
+export type appointmentsConfirmAppointmentData = {
+    body?: never;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/appointments/{appointment_id}/confirm';
+};
+
+export type appointmentsConfirmAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsConfirmAppointmentError = appointmentsConfirmAppointmentErrors[keyof appointmentsConfirmAppointmentErrors];
+
+export type appointmentsConfirmAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentConfirmResponse;
+};
+
+export type appointmentsConfirmAppointmentResponse = appointmentsConfirmAppointmentResponses[keyof appointmentsConfirmAppointmentResponses];
+
+export type appointmentsCancelAppointmentData = {
+    body: AppointmentCancelRequest;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/appointments/{appointment_id}/cancel';
+};
+
+export type appointmentsCancelAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsCancelAppointmentError = appointmentsCancelAppointmentErrors[keyof appointmentsCancelAppointmentErrors];
+
+export type appointmentsCancelAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentCancelResponse;
+};
+
+export type appointmentsCancelAppointmentResponse = appointmentsCancelAppointmentResponses[keyof appointmentsCancelAppointmentResponses];
+
+export type appointmentsAssignTechnicianToAppointmentData = {
+    body: AppointmentAssignTechnicianRequest;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/appointments/{appointment_id}/assign-technician';
+};
+
+export type appointmentsAssignTechnicianToAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type appointmentsAssignTechnicianToAppointmentError = appointmentsAssignTechnicianToAppointmentErrors[keyof appointmentsAssignTechnicianToAppointmentErrors];
+
+export type appointmentsAssignTechnicianToAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentAssignTechnicianResponse;
+};
+
+export type appointmentsAssignTechnicianToAppointmentResponse = appointmentsAssignTechnicianToAppointmentResponses[keyof appointmentsAssignTechnicianToAppointmentResponses];
+
+export type bookingsCreateAppointmentData = {
+    body: AppointmentBookingCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/bookings';
+};
+
+export type bookingsCreateAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type bookingsCreateAppointmentError = bookingsCreateAppointmentErrors[keyof bookingsCreateAppointmentErrors];
+
+export type bookingsCreateAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    201: AppointmentBookingResponse;
+};
+
+export type bookingsCreateAppointmentResponse = bookingsCreateAppointmentResponses[keyof bookingsCreateAppointmentResponses];
+
+export type bookingsUpdateAppointmentData = {
+    body: AppointmentBookingUpdate;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/bookings/{appointment_id}';
+};
+
+export type bookingsUpdateAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type bookingsUpdateAppointmentError = bookingsUpdateAppointmentErrors[keyof bookingsUpdateAppointmentErrors];
+
+export type bookingsUpdateAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentBookingResponse;
+};
+
+export type bookingsUpdateAppointmentResponse = bookingsUpdateAppointmentResponses[keyof bookingsUpdateAppointmentResponses];
+
+export type bookingsCancelAppointmentData = {
+    body: AppointmentCancelRequest;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/bookings/{appointment_id}/cancel';
+};
+
+export type bookingsCancelAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type bookingsCancelAppointmentError = bookingsCancelAppointmentErrors[keyof bookingsCancelAppointmentErrors];
+
+export type bookingsCancelAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentCancelResponse;
+};
+
+export type bookingsCancelAppointmentResponse = bookingsCancelAppointmentResponses[keyof bookingsCancelAppointmentResponses];
+
+export type bookingsConfirmAppointmentData = {
+    body?: never;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/bookings/{appointment_id}/confirm';
+};
+
+export type bookingsConfirmAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type bookingsConfirmAppointmentError = bookingsConfirmAppointmentErrors[keyof bookingsConfirmAppointmentErrors];
+
+export type bookingsConfirmAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentConfirmResponse;
+};
+
+export type bookingsConfirmAppointmentResponse = bookingsConfirmAppointmentResponses[keyof bookingsConfirmAppointmentResponses];
+
+export type bookingsAssignTechnicianToAppointmentData = {
+    body: AppointmentAssignTechnicianRequest;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/bookings/{appointment_id}/assign-technician';
+};
+
+export type bookingsAssignTechnicianToAppointmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type bookingsAssignTechnicianToAppointmentError = bookingsAssignTechnicianToAppointmentErrors[keyof bookingsAssignTechnicianToAppointmentErrors];
+
+export type bookingsAssignTechnicianToAppointmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentAssignTechnicianResponse;
+};
+
+export type bookingsAssignTechnicianToAppointmentResponse = bookingsAssignTechnicianToAppointmentResponses[keyof bookingsAssignTechnicianToAppointmentResponses];
+
+export type customersReadCustomersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         *
+         * Số lượng bản ghi bỏ qua
+         */
+        skip?: number;
+        /**
+         * Limit
+         *
+         * Số lượng bản ghi tối đa
+         */
+        limit?: number;
+        /**
+         * Q
+         *
+         * Tìm kiếm theo tên, số điện thoại hoặc email
+         */
+        q?: string | null;
+    };
+    url: '/api/v1/customers';
+};
+
+export type customersReadCustomersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type customersReadCustomersError = customersReadCustomersErrors[keyof customersReadCustomersErrors];
+
+export type customersReadCustomersResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomersPublic;
+};
+
+export type customersReadCustomersResponse = customersReadCustomersResponses[keyof customersReadCustomersResponses];
+
+export type customersCreateCustomerData = {
+    body: CustomerCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/customers';
+};
+
+export type customersCreateCustomerErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type customersCreateCustomerError = customersCreateCustomerErrors[keyof customersCreateCustomerErrors];
+
+export type customersCreateCustomerResponses = {
+    /**
+     * Successful Response
+     */
+    201: CustomerPublic;
+};
+
+export type customersCreateCustomerResponse = customersCreateCustomerResponses[keyof customersCreateCustomerResponses];
+
+export type customersDeleteCustomerData = {
+    body?: never;
+    path: {
+        /**
+         * Customer Id
+         *
+         * Mã ID của khách hàng
+         */
+        customer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/customers/{customer_id}';
+};
+
+export type customersDeleteCustomerErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type customersDeleteCustomerError = customersDeleteCustomerErrors[keyof customersDeleteCustomerErrors];
+
+export type customersDeleteCustomerResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type customersDeleteCustomerResponse = customersDeleteCustomerResponses[keyof customersDeleteCustomerResponses];
+
+export type customersReadCustomerByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Customer Id
+         *
+         * Mã ID của khách hàng
+         */
+        customer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/customers/{customer_id}';
+};
+
+export type customersReadCustomerByIdErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type customersReadCustomerByIdError = customersReadCustomerByIdErrors[keyof customersReadCustomerByIdErrors];
+
+export type customersReadCustomerByIdResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerPublic;
+};
+
+export type customersReadCustomerByIdResponse = customersReadCustomerByIdResponses[keyof customersReadCustomerByIdResponses];
+
+export type customersUpdateCustomerData = {
+    body: CustomerUpdate;
+    path: {
+        /**
+         * Customer Id
+         *
+         * Mã ID của khách hàng
+         */
+        customer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/customers/{customer_id}';
+};
+
+export type customersUpdateCustomerErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type customersUpdateCustomerError = customersUpdateCustomerErrors[keyof customersUpdateCustomerErrors];
+
+export type customersUpdateCustomerResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerPublic;
+};
+
+export type customersUpdateCustomerResponse = customersUpdateCustomerResponses[keyof customersUpdateCustomerResponses];
+
+export type customersReadCustomerAppointmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Customer Id
+         *
+         * Mã ID của khách hàng
+         */
+        customer_id: string;
+    };
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Status
+         *
+         * Lọc theo trạng thái
+         */
+        status?: string | null;
+    };
+    url: '/api/v1/customers/{customer_id}/appointments';
+};
+
+export type customersReadCustomerAppointmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type customersReadCustomerAppointmentsError = customersReadCustomerAppointmentsErrors[keyof customersReadCustomerAppointmentsErrors];
+
+export type customersReadCustomerAppointmentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentsHistoryPublic;
+};
+
+export type customersReadCustomerAppointmentsResponse = customersReadCustomerAppointmentsResponses[keyof customersReadCustomerAppointmentsResponses];
+
+export type techniciansReadTechnicianAccountsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/technicians/accounts';
+};
+
+export type techniciansReadTechnicianAccountsResponses = {
+    /**
+     * Response Technicians-Read Technician Accounts
+     *
+     * Successful Response
+     */
+    200: Array<TechnicianAccountChoice>;
+};
+
+export type techniciansReadTechnicianAccountsResponse = techniciansReadTechnicianAccountsResponses[keyof techniciansReadTechnicianAccountsResponses];
+
+export type techniciansReadTechniciansData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Is Active
+         *
+         * Lọc theo trạng thái hoạt động
+         */
+        is_active?: boolean | null;
+        /**
+         * Specialization
+         *
+         * Lọc theo chuyên môn
+         */
+        specialization?: string | null;
+        /**
+         * Q
+         *
+         * Tìm kiếm theo tên, số điện thoại hoặc chuyên môn
+         */
+        q?: string | null;
+    };
+    url: '/api/v1/technicians';
+};
+
+export type techniciansReadTechniciansErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type techniciansReadTechniciansError = techniciansReadTechniciansErrors[keyof techniciansReadTechniciansErrors];
+
+export type techniciansReadTechniciansResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechniciansPublic;
+};
+
+export type techniciansReadTechniciansResponse = techniciansReadTechniciansResponses[keyof techniciansReadTechniciansResponses];
+
+export type techniciansCreateTechnicianData = {
+    body: TechnicianCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/technicians';
+};
+
+export type techniciansCreateTechnicianErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type techniciansCreateTechnicianError = techniciansCreateTechnicianErrors[keyof techniciansCreateTechnicianErrors];
+
+export type techniciansCreateTechnicianResponses = {
+    /**
+     * Successful Response
+     */
+    201: TechnicianPublic;
+};
+
+export type techniciansCreateTechnicianResponse = techniciansCreateTechnicianResponses[keyof techniciansCreateTechnicianResponses];
+
+export type techniciansDeleteTechnicianData = {
+    body?: never;
+    path: {
+        /**
+         * Technician Id
+         *
+         * Mã ID của kỹ thuật viên
+         */
+        technician_id: string;
+    };
+    query?: never;
+    url: '/api/v1/technicians/{technician_id}';
+};
+
+export type techniciansDeleteTechnicianErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type techniciansDeleteTechnicianError = techniciansDeleteTechnicianErrors[keyof techniciansDeleteTechnicianErrors];
+
+export type techniciansDeleteTechnicianResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type techniciansDeleteTechnicianResponse = techniciansDeleteTechnicianResponses[keyof techniciansDeleteTechnicianResponses];
+
+export type techniciansReadTechnicianByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Technician Id
+         *
+         * Mã ID của kỹ thuật viên
+         */
+        technician_id: string;
+    };
+    query?: never;
+    url: '/api/v1/technicians/{technician_id}';
+};
+
+export type techniciansReadTechnicianByIdErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type techniciansReadTechnicianByIdError = techniciansReadTechnicianByIdErrors[keyof techniciansReadTechnicianByIdErrors];
+
+export type techniciansReadTechnicianByIdResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianPublic;
+};
+
+export type techniciansReadTechnicianByIdResponse = techniciansReadTechnicianByIdResponses[keyof techniciansReadTechnicianByIdResponses];
+
+export type techniciansUpdateTechnicianData = {
+    body: TechnicianUpdate;
+    path: {
+        /**
+         * Technician Id
+         *
+         * Mã ID của kỹ thuật viên
+         */
+        technician_id: string;
+    };
+    query?: never;
+    url: '/api/v1/technicians/{technician_id}';
+};
+
+export type techniciansUpdateTechnicianErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type techniciansUpdateTechnicianError = techniciansUpdateTechnicianErrors[keyof techniciansUpdateTechnicianErrors];
+
+export type techniciansUpdateTechnicianResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianPublic;
+};
+
+export type techniciansUpdateTechnicianResponse = techniciansUpdateTechnicianResponses[keyof techniciansUpdateTechnicianResponses];
+
+export type techniciansUpdateTechnicianStatusData = {
+    body: TechnicianStatusUpdate;
+    path: {
+        /**
+         * Technician Id
+         *
+         * Mã ID của kỹ thuật viên
+         */
+        technician_id: string;
+    };
+    query?: never;
+    url: '/api/v1/technicians/{technician_id}/status';
+};
+
+export type techniciansUpdateTechnicianStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type techniciansUpdateTechnicianStatusError = techniciansUpdateTechnicianStatusErrors[keyof techniciansUpdateTechnicianStatusErrors];
+
+export type techniciansUpdateTechnicianStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianPublic;
+};
+
+export type techniciansUpdateTechnicianStatusResponse = techniciansUpdateTechnicianStatusResponses[keyof techniciansUpdateTechnicianStatusResponses];
+
+export type workSchedulesReadWorkSchedulesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Technician Id
+         *
+         * Lọc theo kỹ thuật viên
+         */
+        technician_id?: string | null;
+        /**
+         * Work Date
+         *
+         * Lọc theo ngày cụ thể
+         */
+        work_date?: string | null;
+        /**
+         * Start Date
+         *
+         * Lọc từ ngày
+         */
+        start_date?: string | null;
+        /**
+         * End Date
+         *
+         * Lọc đến ngày
+         */
+        end_date?: string | null;
+        /**
+         * Status
+         *
+         * Lọc theo trạng thái ca: AVAILABLE, BUSY, OFF
+         */
+        status?: string | null;
+    };
+    url: '/api/v1/work-schedules';
+};
+
+export type workSchedulesReadWorkSchedulesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type workSchedulesReadWorkSchedulesError = workSchedulesReadWorkSchedulesErrors[keyof workSchedulesReadWorkSchedulesErrors];
+
+export type workSchedulesReadWorkSchedulesResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianSchedulesPublic;
+};
+
+export type workSchedulesReadWorkSchedulesResponse = workSchedulesReadWorkSchedulesResponses[keyof workSchedulesReadWorkSchedulesResponses];
+
+export type workSchedulesCreateWorkScheduleData = {
+    body: TechnicianScheduleCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/work-schedules';
+};
+
+export type workSchedulesCreateWorkScheduleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type workSchedulesCreateWorkScheduleError = workSchedulesCreateWorkScheduleErrors[keyof workSchedulesCreateWorkScheduleErrors];
+
+export type workSchedulesCreateWorkScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    201: TechnicianSchedulePublic;
+};
+
+export type workSchedulesCreateWorkScheduleResponse = workSchedulesCreateWorkScheduleResponses[keyof workSchedulesCreateWorkScheduleResponses];
+
+export type workSchedulesDeleteWorkScheduleData = {
+    body?: never;
+    path: {
+        /**
+         * Schedule Id
+         *
+         * Mã ID của lịch làm việc
+         */
+        schedule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/work-schedules/{schedule_id}';
+};
+
+export type workSchedulesDeleteWorkScheduleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type workSchedulesDeleteWorkScheduleError = workSchedulesDeleteWorkScheduleErrors[keyof workSchedulesDeleteWorkScheduleErrors];
+
+export type workSchedulesDeleteWorkScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type workSchedulesDeleteWorkScheduleResponse = workSchedulesDeleteWorkScheduleResponses[keyof workSchedulesDeleteWorkScheduleResponses];
+
+export type workSchedulesReadWorkScheduleByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Schedule Id
+         *
+         * Mã ID của lịch làm việc
+         */
+        schedule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/work-schedules/{schedule_id}';
+};
+
+export type workSchedulesReadWorkScheduleByIdErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type workSchedulesReadWorkScheduleByIdError = workSchedulesReadWorkScheduleByIdErrors[keyof workSchedulesReadWorkScheduleByIdErrors];
+
+export type workSchedulesReadWorkScheduleByIdResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianSchedulePublic;
+};
+
+export type workSchedulesReadWorkScheduleByIdResponse = workSchedulesReadWorkScheduleByIdResponses[keyof workSchedulesReadWorkScheduleByIdResponses];
+
+export type workSchedulesUpdateWorkScheduleData = {
+    body: TechnicianScheduleUpdate;
+    path: {
+        /**
+         * Schedule Id
+         *
+         * Mã ID của lịch làm việc
+         */
+        schedule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/work-schedules/{schedule_id}';
+};
+
+export type workSchedulesUpdateWorkScheduleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type workSchedulesUpdateWorkScheduleError = workSchedulesUpdateWorkScheduleErrors[keyof workSchedulesUpdateWorkScheduleErrors];
+
+export type workSchedulesUpdateWorkScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianSchedulePublic;
+};
+
+export type workSchedulesUpdateWorkScheduleResponse = workSchedulesUpdateWorkScheduleResponses[keyof workSchedulesUpdateWorkScheduleResponses];
+
+export type workSchedulesUpdateWorkScheduleStatusData = {
+    body: TechnicianScheduleStatusUpdate;
+    path: {
+        /**
+         * Schedule Id
+         *
+         * Mã ID của lịch làm việc
+         */
+        schedule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/work-schedules/{schedule_id}/status';
+};
+
+export type workSchedulesUpdateWorkScheduleStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type workSchedulesUpdateWorkScheduleStatusError = workSchedulesUpdateWorkScheduleStatusErrors[keyof workSchedulesUpdateWorkScheduleStatusErrors];
+
+export type workSchedulesUpdateWorkScheduleStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: TechnicianSchedulePublic;
+};
+
+export type workSchedulesUpdateWorkScheduleStatusResponse = workSchedulesUpdateWorkScheduleStatusResponses[keyof workSchedulesUpdateWorkScheduleStatusResponses];
+
+export type queueReadQueueData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Date
+         *
+         * Lọc hàng chờ theo ngày
+         */
+        date?: string | null;
+        /**
+         * Status
+         *
+         * Lọc theo trạng thái trong hàng chờ (mặc định lấy PENDING, CONFIRMED, IN_PROGRESS)
+         */
+        status?: string | null;
+        /**
+         * Technician Id
+         *
+         * Lọc theo kỹ thuật viên
+         */
+        technician_id?: string | null;
+    };
+    url: '/api/v1/queue';
+};
+
+export type queueReadQueueErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type queueReadQueueError = queueReadQueueErrors[keyof queueReadQueueErrors];
+
+export type queueReadQueueResponses = {
+    /**
+     * Successful Response
+     */
+    200: QueueListResponse;
+};
+
+export type queueReadQueueResponse = queueReadQueueResponses[keyof queueReadQueueResponses];
+
+export type queueAddAppointmentToQueueData = {
+    body: AppointmentBookingCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/queue';
+};
+
+export type queueAddAppointmentToQueueErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type queueAddAppointmentToQueueError = queueAddAppointmentToQueueErrors[keyof queueAddAppointmentToQueueErrors];
+
+export type queueAddAppointmentToQueueResponses = {
+    /**
+     * Successful Response
+     */
+    201: AppointmentBookingResponse;
+};
+
+export type queueAddAppointmentToQueueResponse = queueAddAppointmentToQueueResponses[keyof queueAddAppointmentToQueueResponses];
+
+export type queueReadQueueItemData = {
+    body?: never;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/queue/{appointment_id}';
+};
+
+export type queueReadQueueItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type queueReadQueueItemError = queueReadQueueItemErrors[keyof queueReadQueueItemErrors];
+
+export type queueReadQueueItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: QueueItemPublic;
+};
+
+export type queueReadQueueItemResponse = queueReadQueueItemResponses[keyof queueReadQueueItemResponses];
+
+export type queueUpdateQueueStatusData = {
+    body: QueueStatusUpdate;
+    path: {
+        /**
+         * Appointment Id
+         *
+         * Mã ID của lịch hẹn
+         */
+        appointment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/queue/{appointment_id}/status';
+};
+
+export type queueUpdateQueueStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type queueUpdateQueueStatusError = queueUpdateQueueStatusErrors[keyof queueUpdateQueueStatusErrors];
+
+export type queueUpdateQueueStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: QueueItemPublic;
+};
+
+export type queueUpdateQueueStatusResponse = queueUpdateQueueStatusResponses[keyof queueUpdateQueueStatusResponses];
+
+export type intakeCreateDeviceIntakeData = {
+    body: DeviceIntakeCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/intake';
+};
+
+export type intakeCreateDeviceIntakeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type intakeCreateDeviceIntakeError = intakeCreateDeviceIntakeErrors[keyof intakeCreateDeviceIntakeErrors];
+
+export type intakeCreateDeviceIntakeResponses = {
+    /**
+     * Successful Response
+     */
+    201: DeviceIntakeResponse;
+};
+
+export type intakeCreateDeviceIntakeResponse = intakeCreateDeviceIntakeResponses[keyof intakeCreateDeviceIntakeResponses];
+
+export type quotesReadQuotationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Appointment Id
+         */
+        appointment_id?: string | null;
+    };
+    url: '/api/v1/quotes';
+};
+
+export type quotesReadQuotationsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type quotesReadQuotationsError = quotesReadQuotationsErrors[keyof quotesReadQuotationsErrors];
+
+export type quotesReadQuotationsResponses = {
+    /**
+     * Successful Response
+     */
+    200: QuotationsPublic;
+};
+
+export type quotesReadQuotationsResponse = quotesReadQuotationsResponses[keyof quotesReadQuotationsResponses];
+
+export type quotesCreateQuotationData = {
+    body: QuotationCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/quotes';
+};
+
+export type quotesCreateQuotationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type quotesCreateQuotationError = quotesCreateQuotationErrors[keyof quotesCreateQuotationErrors];
+
+export type quotesCreateQuotationResponses = {
+    /**
+     * Successful Response
+     */
+    201: QuotationResponse;
+};
+
+export type quotesCreateQuotationResponse = quotesCreateQuotationResponses[keyof quotesCreateQuotationResponses];
+
+export type quotesReadQuotationData = {
+    body?: never;
+    path: {
+        /**
+         * Quote Id
+         */
+        quote_id: string;
+    };
+    query?: never;
+    url: '/api/v1/quotes/{quote_id}';
+};
+
+export type quotesReadQuotationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type quotesReadQuotationError = quotesReadQuotationErrors[keyof quotesReadQuotationErrors];
+
+export type quotesReadQuotationResponses = {
+    /**
+     * Successful Response
+     */
+    200: QuotationResponse;
+};
+
+export type quotesReadQuotationResponse = quotesReadQuotationResponses[keyof quotesReadQuotationResponses];
+
+export type quotesRejectQuotationData = {
+    body: QuotationAcceptRequest;
+    path: {
+        /**
+         * Quote Id
+         */
+        quote_id: string;
+    };
+    query?: never;
+    url: '/api/v1/quotes/{quote_id}/reject';
+};
+
+export type quotesRejectQuotationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type quotesRejectQuotationError = quotesRejectQuotationErrors[keyof quotesRejectQuotationErrors];
+
+export type quotesRejectQuotationResponses = {
+    /**
+     * Successful Response
+     */
+    200: QuotationResponse;
+};
+
+export type quotesRejectQuotationResponse = quotesRejectQuotationResponses[keyof quotesRejectQuotationResponses];
+
+export type quotesAcceptQuotationData = {
+    /**
+     * Body
+     */
+    body?: QuotationAcceptRequest | null;
+    path: {
+        /**
+         * Quote Id
+         *
+         * ID của báo giá cần duyệt
+         */
+        quote_id: string;
+    };
+    query?: never;
+    url: '/api/v1/quotes/{quote_id}/accept';
+};
+
+export type quotesAcceptQuotationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type quotesAcceptQuotationError = quotesAcceptQuotationErrors[keyof quotesAcceptQuotationErrors];
+
+export type quotesAcceptQuotationResponses = {
+    /**
+     * Successful Response
+     */
+    200: QuotationResponse;
+};
+
+export type quotesAcceptQuotationResponse = quotesAcceptQuotationResponses[keyof quotesAcceptQuotationResponses];
+
+export type quotesApproveQuotationAliasData = {
+    /**
+     * Body
+     */
+    body?: QuotationAcceptRequest | null;
+    path: {
+        /**
+         * Quote Id
+         *
+         * ID của báo giá cần duyệt
+         */
+        quote_id: string;
+    };
+    query?: never;
+    url: '/api/v1/quotes/{quote_id}/approve';
+};
+
+export type quotesApproveQuotationAliasErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type quotesApproveQuotationAliasError = quotesApproveQuotationAliasErrors[keyof quotesApproveQuotationAliasErrors];
+
+export type quotesApproveQuotationAliasResponses = {
+    /**
+     * Successful Response
+     */
+    200: QuotationResponse;
+};
+
+export type quotesApproveQuotationAliasResponse = quotesApproveQuotationAliasResponses[keyof quotesApproveQuotationAliasResponses];
+
+export type devicesUpdateDeviceData = {
+    body?: DeviceUpdate;
+    path: {
+        /**
+         * Device Id
+         *
+         * ID của thiết bị cần cập nhật
+         */
+        device_id: string;
+    };
+    query?: never;
+    url: '/api/v1/devices/{device_id}';
+};
+
+export type devicesUpdateDeviceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type devicesUpdateDeviceError = devicesUpdateDeviceErrors[keyof devicesUpdateDeviceErrors];
+
+export type devicesUpdateDeviceResponses = {
+    /**
+     * Successful Response
+     */
+    200: DeviceResponse;
+};
+
+export type devicesUpdateDeviceResponse = devicesUpdateDeviceResponses[keyof devicesUpdateDeviceResponses];
+
+export type repairOrdersReadRepairOrdersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Status Filter
+         */
+        status_filter?: string | null;
+    };
+    url: '/api/v1/repair-orders';
+};
+
+export type repairOrdersReadRepairOrdersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type repairOrdersReadRepairOrdersError = repairOrdersReadRepairOrdersErrors[keyof repairOrdersReadRepairOrdersErrors];
+
+export type repairOrdersReadRepairOrdersResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentsHistoryPublic;
+};
+
+export type repairOrdersReadRepairOrdersResponse = repairOrdersReadRepairOrdersResponses[keyof repairOrdersReadRepairOrdersResponses];
+
+export type repairOrdersReadRepairOrderData = {
+    body?: never;
+    path: {
+        /**
+         * Repair Order Id
+         */
+        repair_order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/repair-orders/{repair_order_id}';
+};
+
+export type repairOrdersReadRepairOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type repairOrdersReadRepairOrderError = repairOrdersReadRepairOrderErrors[keyof repairOrdersReadRepairOrderErrors];
+
+export type repairOrdersReadRepairOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppointmentHistoryDetail;
+};
+
+export type repairOrdersReadRepairOrderResponse = repairOrdersReadRepairOrderResponses[keyof repairOrdersReadRepairOrderResponses];
+
+export type repairOrdersUpdateRepairStatusData = {
+    body: RepairStatusUpdateRequest;
+    path: {
+        /**
+         * Repair Order Id
+         */
+        repair_order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/repair-orders/{repair_order_id}/status';
+};
+
+export type repairOrdersUpdateRepairStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type repairOrdersUpdateRepairStatusError = repairOrdersUpdateRepairStatusErrors[keyof repairOrdersUpdateRepairStatusErrors];
+
+export type repairOrdersUpdateRepairStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: RepairStatusUpdateResponse;
+};
+
+export type repairOrdersUpdateRepairStatusResponse = repairOrdersUpdateRepairStatusResponses[keyof repairOrdersUpdateRepairStatusResponses];
+
+export type repairOrdersAssignTechnicianData = {
+    body: AssignTechnicianRequest;
+    path: {
+        /**
+         * Repair Order Id
+         */
+        repair_order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/repair-orders/{repair_order_id}/technician';
+};
+
+export type repairOrdersAssignTechnicianErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type repairOrdersAssignTechnicianError = repairOrdersAssignTechnicianErrors[keyof repairOrdersAssignTechnicianErrors];
+
+export type repairOrdersAssignTechnicianResponses = {
+    /**
+     * Successful Response
+     */
+    200: AssignTechnicianResponse;
+};
+
+export type repairOrdersAssignTechnicianResponse = repairOrdersAssignTechnicianResponses[keyof repairOrdersAssignTechnicianResponses];
+
+export type servicesReadManagedServicesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/services/manage';
+};
+
+export type servicesReadManagedServicesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type servicesReadManagedServicesError = servicesReadManagedServicesErrors[keyof servicesReadManagedServicesErrors];
+
+export type servicesReadManagedServicesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServicesPublic;
+};
+
+export type servicesReadManagedServicesResponse = servicesReadManagedServicesResponses[keyof servicesReadManagedServicesResponses];
+
+export type servicesReadPublicServicesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/services';
+};
+
+export type servicesReadPublicServicesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type servicesReadPublicServicesError = servicesReadPublicServicesErrors[keyof servicesReadPublicServicesErrors];
+
+export type servicesReadPublicServicesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServicesPublic;
+};
+
+export type servicesReadPublicServicesResponse = servicesReadPublicServicesResponses[keyof servicesReadPublicServicesResponses];
+
+export type servicesCreateServiceData = {
+    body: ServiceInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/services';
+};
+
+export type servicesCreateServiceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type servicesCreateServiceError = servicesCreateServiceErrors[keyof servicesCreateServiceErrors];
+
+export type servicesCreateServiceResponses = {
+    /**
+     * Successful Response
+     */
+    201: ServicePublic;
+};
+
+export type servicesCreateServiceResponse = servicesCreateServiceResponses[keyof servicesCreateServiceResponses];
+
+export type servicesReadPublicServiceData = {
+    body?: never;
+    path: {
+        /**
+         * Service Id
+         */
+        service_id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{service_id}';
+};
+
+export type servicesReadPublicServiceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type servicesReadPublicServiceError = servicesReadPublicServiceErrors[keyof servicesReadPublicServiceErrors];
+
+export type servicesReadPublicServiceResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServicePublic;
+};
+
+export type servicesReadPublicServiceResponse = servicesReadPublicServiceResponses[keyof servicesReadPublicServiceResponses];
+
+export type servicesUpdateServiceData = {
+    body: ServiceInput;
+    path: {
+        /**
+         * Service Id
+         */
+        service_id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{service_id}';
+};
+
+export type servicesUpdateServiceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type servicesUpdateServiceError = servicesUpdateServiceErrors[keyof servicesUpdateServiceErrors];
+
+export type servicesUpdateServiceResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServicePublic;
+};
+
+export type servicesUpdateServiceResponse = servicesUpdateServiceResponses[keyof servicesUpdateServiceResponses];
+
+export type commerceReadInvoicesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/invoices';
+};
+
+export type commerceReadInvoicesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceReadInvoicesError = commerceReadInvoicesErrors[keyof commerceReadInvoicesErrors];
+
+export type commerceReadInvoicesResponses = {
+    /**
+     * Successful Response
+     */
+    200: InvoicesPage;
+};
+
+export type commerceReadInvoicesResponse = commerceReadInvoicesResponses[keyof commerceReadInvoicesResponses];
+
+export type commerceIssueInvoiceData = {
+    body: InvoiceIssue;
+    path?: never;
+    query?: never;
+    url: '/api/v1/invoices';
+};
+
+export type commerceIssueInvoiceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceIssueInvoiceError = commerceIssueInvoiceErrors[keyof commerceIssueInvoiceErrors];
+
+export type commerceIssueInvoiceResponses = {
+    /**
+     * Successful Response
+     */
+    201: InvoiceDetail;
+};
+
+export type commerceIssueInvoiceResponse = commerceIssueInvoiceResponses[keyof commerceIssueInvoiceResponses];
+
+export type commerceReadInvoiceData = {
+    body?: never;
+    path: {
+        /**
+         * Invoice Id
+         */
+        invoice_id: string;
+    };
+    query?: never;
+    url: '/api/v1/invoices/{invoice_id}';
+};
+
+export type commerceReadInvoiceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceReadInvoiceError = commerceReadInvoiceErrors[keyof commerceReadInvoiceErrors];
+
+export type commerceReadInvoiceResponses = {
+    /**
+     * Successful Response
+     */
+    200: InvoiceDetail;
+};
+
+export type commerceReadInvoiceResponse = commerceReadInvoiceResponses[keyof commerceReadInvoiceResponses];
+
+export type commerceRecordPaymentData = {
+    body: PaymentRecord;
+    path: {
+        /**
+         * Invoice Id
+         */
+        invoice_id: string;
+    };
+    query?: never;
+    url: '/api/v1/invoices/{invoice_id}/payments';
+};
+
+export type commerceRecordPaymentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceRecordPaymentError = commerceRecordPaymentErrors[keyof commerceRecordPaymentErrors];
+
+export type commerceRecordPaymentResponses = {
+    /**
+     * Successful Response
+     */
+    200: InvoiceDetail;
+};
+
+export type commerceRecordPaymentResponse = commerceRecordPaymentResponses[keyof commerceRecordPaymentResponses];
+
+export type commerceHandoverDeviceData = {
+    body?: never;
+    path: {
+        /**
+         * Invoice Id
+         */
+        invoice_id: string;
+    };
+    query?: never;
+    url: '/api/v1/invoices/{invoice_id}/handover';
+};
+
+export type commerceHandoverDeviceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceHandoverDeviceError = commerceHandoverDeviceErrors[keyof commerceHandoverDeviceErrors];
+
+export type commerceHandoverDeviceResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type commerceHandoverDeviceResponse = commerceHandoverDeviceResponses[keyof commerceHandoverDeviceResponses];
+
+export type commerceReadStatisticsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Start Date
+         */
+        start_date?: string | null;
+        /**
+         * End Date
+         */
+        end_date?: string | null;
+    };
+    url: '/api/v1/statistics';
+};
+
+export type commerceReadStatisticsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceReadStatisticsError = commerceReadStatisticsErrors[keyof commerceReadStatisticsErrors];
+
+export type commerceReadStatisticsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StatisticsResponse;
+};
+
+export type commerceReadStatisticsResponse = commerceReadStatisticsResponses[keyof commerceReadStatisticsResponses];
+
+export type commerceReadMyReviewsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/reviews';
+};
+
+export type commerceReadMyReviewsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceReadMyReviewsError = commerceReadMyReviewsErrors[keyof commerceReadMyReviewsErrors];
+
+export type commerceReadMyReviewsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewsPage;
+};
+
+export type commerceReadMyReviewsResponse = commerceReadMyReviewsResponses[keyof commerceReadMyReviewsResponses];
+
+export type commerceSubmitReviewData = {
+    body: ReviewSubmit;
+    path?: never;
+    query?: never;
+    url: '/api/v1/reviews';
+};
+
+export type commerceSubmitReviewErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceSubmitReviewError = commerceSubmitReviewErrors[keyof commerceSubmitReviewErrors];
+
+export type commerceSubmitReviewResponses = {
+    /**
+     * Successful Response
+     */
+    201: ReviewPublic;
+};
+
+export type commerceSubmitReviewResponse = commerceSubmitReviewResponses[keyof commerceSubmitReviewResponses];
+
+export type commerceReadNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/notifications';
+};
+
+export type commerceReadNotificationsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceReadNotificationsError = commerceReadNotificationsErrors[keyof commerceReadNotificationsErrors];
+
+export type commerceReadNotificationsResponses = {
+    /**
+     * Successful Response
+     */
+    200: NotificationsPage;
+};
+
+export type commerceReadNotificationsResponse = commerceReadNotificationsResponses[keyof commerceReadNotificationsResponses];
+
+export type commerceMarkNotificationReadData = {
+    body?: never;
+    path: {
+        /**
+         * Notification Id
+         */
+        notification_id: string;
+    };
+    query?: never;
+    url: '/api/v1/notifications/{notification_id}/read';
+};
+
+export type commerceMarkNotificationReadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type commerceMarkNotificationReadError = commerceMarkNotificationReadErrors[keyof commerceMarkNotificationReadErrors];
+
+export type commerceMarkNotificationReadResponses = {
+    /**
+     * Successful Response
+     */
+    200: NotificationPublic;
+};
+
+export type commerceMarkNotificationReadResponse = commerceMarkNotificationReadResponses[keyof commerceMarkNotificationReadResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

@@ -23,14 +23,14 @@ export const Route = createFileRoute("/_layout/admin")({
     const { data: user } = await UsersService.readUserMe()
     if (!user.is_superuser) {
       throw redirect({
-        to: "/",
+        to: "/app",
       })
     }
   },
   head: () => ({
     meta: [
       {
-        title: "Admin - FastAPI Template",
+        title: "Quản trị tài khoản | FixCare",
       },
     ],
   }),
@@ -61,9 +61,11 @@ function Admin() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Quản trị tài khoản
+          </h1>
           <p className="text-muted-foreground">
-            Manage user accounts and permissions
+            Quản lý tài khoản, trạng thái hoạt động và vai trò trong FixCare
           </p>
         </div>
         <AddUser />

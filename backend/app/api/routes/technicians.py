@@ -2,19 +2,48 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, status
+from sqlmodel import SQLModel, col, select
 
 from app.api.deps import RequireAdmin, RequireManager, RequireStaff, SessionDep
 from app.models import (
     Message,
+    Technician,
     TechnicianCreate,
     TechnicianPublic,
     TechniciansPublic,
     TechnicianStatusUpdate,
     TechnicianUpdate,
+    User,
 )
 from app.services import technician_service
 
 router = APIRouter(prefix="/technicians", tags=["technicians"])
+
+
+class TechnicianAccountChoice(SQLModel):
+    id: uuid.UUID
+    full_name: str | None
+    email: str
+
+
+@router.get("/accounts", response_model=list[TechnicianAccountChoice])
+def read_technician_accounts(
+    session: SessionDep, _: RequireManager
+) -> list[TechnicianAccountChoice]:
+    linked_ids = select(Technician.user_id).where(col(Technician.user_id).is_not(None))
+    users = session.exec(
+        select(User)
+        .where(
+            User.role == "technician",
+            col(User.is_active).is_(True),
+            col(User.id).not_in(linked_ids),
+        )
+        .order_by(User.email)
+    ).all()
+    return [
+        TechnicianAccountChoice(id=user.id, full_name=user.full_name, email=user.email)
+        for user in users
+    ]
 
 
 @router.get(

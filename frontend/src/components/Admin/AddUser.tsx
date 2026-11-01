@@ -35,6 +35,7 @@ const formSchema = z
   .object({
     email: z.email({ message: "Invalid email address" }),
     full_name: z.string().optional(),
+    role: z.enum(["customer", "staff", "technician", "manager", "admin"]),
     password: z
       .string()
       .min(1, { message: "Password is required" })
@@ -64,6 +65,7 @@ const AddUser = () => {
     defaultValues: {
       email: "",
       full_name: "",
+      role: "customer",
       password: "",
       confirm_password: "",
       is_superuser: false,
@@ -196,6 +198,33 @@ const AddUser = () => {
                       />
                     </FormControl>
                     <FormLabel className="font-normal">Is superuser?</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vai trò</FormLabel>
+                    <FormControl>
+                      <select
+                        className="h-10 w-full rounded-md border bg-background px-3"
+                        {...field}
+                      >
+                        {[
+                          "customer",
+                          "staff",
+                          "technician",
+                          "manager",
+                          "admin",
+                        ].map((role) => (
+                          <option key={role}>{role}</option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

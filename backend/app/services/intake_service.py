@@ -18,6 +18,7 @@ from app.models import (
     get_datetime_utc,
 )
 from app.services import slot_service
+from app.services.access_service import check_appointment_access
 
 logger = get_logger("app.services.intake_service")
 
@@ -105,6 +106,8 @@ def _handle_existing_appointment_intake(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Không tìm thấy lịch hẹn với ID {intake_in.appointment_id}",
         )
+
+    check_appointment_access(session, current_user, appointment)
 
     # Kiểm tra trạng thái lịch hẹn hợp lệ để tiếp nhận
     if appointment.status == AppointmentStatus.CANCELLED.value:

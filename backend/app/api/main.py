@@ -2,19 +2,16 @@ from fastapi import APIRouter
 
 from app.api.routes import (
     appointments,
+    commerce,
     customers,
     devices,
     intake,
-    invoices,
     items,
     login,
-    notifications,
-    payments,
     private,
     queue,
     quotes,
     repair_orders,
-    reviews,
     services,
     slots,
     technicians,
@@ -29,7 +26,6 @@ api_router.include_router(login.router)
 api_router.include_router(users.router)
 api_router.include_router(utils.router)
 api_router.include_router(items.router)
-api_router.include_router(services.router)
 api_router.include_router(slots.router)
 api_router.include_router(appointments.router)
 api_router.include_router(appointments.bookings_router)
@@ -41,10 +37,8 @@ api_router.include_router(intake.router)
 api_router.include_router(quotes.router)
 api_router.include_router(devices.router)
 api_router.include_router(repair_orders.router)
-api_router.include_router(invoices.router)
-api_router.include_router(payments.router)
-api_router.include_router(reviews.router)
-api_router.include_router(notifications.router)
+api_router.include_router(services.router)
+api_router.include_router(commerce.router)
 
 
 if settings.FASTAPI_ENV == "development":

@@ -43,18 +43,31 @@ const useAuth = () => {
       body: data,
     })
     localStorage.setItem("access_token", response.data.access_token)
+    if (response.data.refresh_token) {
+      localStorage.setItem("refresh_token", response.data.refresh_token)
+    }
   }
 
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
-      navigate({ to: "/" })
+      navigate({ to: "/app" })
     },
     onError: handleError.bind(showErrorToast),
   })
 
   const logout = () => {
+    const refreshToken = localStorage.getItem("refresh_token")
     localStorage.removeItem("access_token")
+    localStorage.removeItem("refresh_token")
+    // Private query data must not survive into another account in the same tab.
+    void queryClient.cancelQueries()
+    queryClient.clear()
+    if (refreshToken) {
+      void LoginService.revokeRefreshToken({
+        body: { refresh_token: refreshToken },
+      }).catch(() => undefined)
+    }
     navigate({ to: "/login" })
   }
 

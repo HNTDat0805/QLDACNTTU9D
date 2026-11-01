@@ -32,6 +32,11 @@ class UserBase(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
     role: str = Field(default=UserRole.CUSTOMER.value, max_length=50, index=True)
 
+    @field_validator("role")
+    @classmethod
+    def validate_user_role(cls, value: str) -> str:
+        return UserRole(value).value
+
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
@@ -50,6 +55,11 @@ class UserUpdate(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
     password: str | None = Field(default=None, min_length=8, max_length=128)
     role: str | None = Field(default=None, max_length=50)
+
+    @field_validator("role")
+    @classmethod
+    def validate_user_role(cls, value: str | None) -> str | None:
+        return UserRole(value).value if value is not None else None
 
 
 class UserUpdateMe(SQLModel):
@@ -303,10 +313,10 @@ class ServiceBase(SQLModel):
 
 
 class ServiceCreate(SQLModel):
-    code: str = Field(
-        min_length=1,
+    code: str | None = Field(
+        default=None,
         max_length=50,
-        description="Mã dịch vụ duy nhất (bắt buộc, không được trùng)",
+        description="Mã dịch vụ duy nhất (nếu không cung cấp, hệ thống tự động sinh)",
     )
     name: str = Field(
         min_length=1,
@@ -338,7 +348,9 @@ class ServiceCreate(SQLModel):
 
     @field_validator("code")
     @classmethod
-    def validate_code_not_empty(cls, v: str) -> str:
+    def validate_code_not_empty(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
         cleaned = v.strip()
         if not cleaned:
             raise ValueError(
@@ -426,6 +438,11 @@ class ServiceResponse(SQLModel):
     success: bool = True
     message: str
     data: ServicePublic
+
+
+class ServicesPublic(SQLModel):
+    data: list[ServicePublic]
+    count: int
 
 
 # ============================================================================
@@ -1830,6 +1847,11 @@ class QuotationAcceptRequest(SQLModel):
         max_length=1000,
         description="Ghi chú thêm khi duyệt báo giá sửa chữa (tùy chọn)",
     )
+
+
+class QuotationsPublic(SQLModel):
+    data: list[QuotationDetail]
+    count: int
 
 
 # ============================================================================

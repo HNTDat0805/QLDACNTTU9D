@@ -575,6 +575,7 @@ def test_cancel_appointment_frees_slot_for_rebooking(
     # 5. Customer B can book this newly freed slot
     rebook_res = client.post(
         "/api/v1/appointments",
+        headers=superuser_token_headers,
         json={
             "customer_id": str(cust_b.id),
             "service_id": str(svc.id),

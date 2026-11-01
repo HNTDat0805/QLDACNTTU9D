@@ -23,38 +23,34 @@ test("Inputs are visible, empty and editable", async ({ page }) => {
   await verifyInput(page, "password-input")
 })
 
-test("Log In button is visible", async ({ page }) => {
+test("Nút đăng nhập hiển thị", async ({ page }) => {
   await page.goto("/login")
 
-  await expect(page.getByRole("button", { name: "Log In" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "Đăng nhập" })).toBeVisible()
 })
 
-test("Forgot Password link is visible", async ({ page }) => {
+test("Liên kết quên mật khẩu hiển thị", async ({ page }) => {
   await page.goto("/login")
 
-  await expect(
-    page.getByRole("link", { name: "Forgot your password?" }),
-  ).toBeVisible()
+  await expect(page.getByRole("link", { name: "Quên mật khẩu?" })).toBeVisible()
 })
 
 test("Log in with valid email and password ", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
-  await page.getByRole("button", { name: "Log In" }).click()
+  await page.getByRole("button", { name: "Đăng nhập" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/app")
 
-  await expect(
-    page.getByText("Welcome back, nice to see you again!"),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: /Xin chào,/ })).toBeVisible()
 })
 
 test("Log in with invalid email", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, "invalidemail", firstSuperuserPassword)
-  await page.getByRole("button", { name: "Log In" }).click()
+  await page.getByRole("button", { name: "Đăng nhập" }).click()
 
   await expect(page.getByText("Invalid email address")).toBeVisible()
 })
@@ -64,7 +60,7 @@ test("Log in with invalid password", async ({ page }) => {
 
   await page.goto("/login")
   await fillForm(page, firstSuperuser, password)
-  await page.getByRole("button", { name: "Log In" }).click()
+  await page.getByRole("button", { name: "Đăng nhập" }).click()
 
   await expect(page.getByText("Incorrect email or password")).toBeVisible()
 })
@@ -73,16 +69,14 @@ test("Successful log out", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
-  await page.getByRole("button", { name: "Log In" }).click()
+  await page.getByRole("button", { name: "Đăng nhập" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/app")
 
-  await expect(
-    page.getByText("Welcome back, nice to see you again!"),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: /Xin chào,/ })).toBeVisible()
 
   await page.getByTestId("user-menu").click()
-  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.getByRole("menuitem", { name: "Đăng xuất" }).click()
   await page.waitForURL("/login")
 })
 
@@ -90,16 +84,14 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
-  await page.getByRole("button", { name: "Log In" }).click()
+  await page.getByRole("button", { name: "Đăng nhập" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/app")
 
-  await expect(
-    page.getByText("Welcome back, nice to see you again!"),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: /Xin chào,/ })).toBeVisible()
 
   await page.getByTestId("user-menu").click()
-  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.getByRole("menuitem", { name: "Đăng xuất" }).click()
   await page.waitForURL("/login")
 
   await page.goto("/settings")

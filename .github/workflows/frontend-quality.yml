@@ -1,0 +1,41 @@
+name: FixCare frontend quality
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      FIRST_SUPERUSER: ci@example.test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+        working-directory: .
+      - name: Typecheck and build
+        run: bun run build
+      - name: Temporary test configuration
+        run: echo "FIRST_SUPERUSER_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+      - name: Booking and role workflow smoke tests (mock APIs)
+        run: |
+          bunx playwright install --with-deps chromium
+          bunx playwright test tests/booking.spec.ts tests/appointments.spec.ts tests/operations.spec.ts --project=chromium --no-deps --workers=1 --reporter=line --timeout=30000 --global-timeout=240000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fixcare-frontend-build
+          path: backend/app/frontend/
+          retention-days: 7

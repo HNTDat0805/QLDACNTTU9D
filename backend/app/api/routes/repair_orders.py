@@ -1,17 +1,61 @@
 import uuid
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
+from sqlmodel import col, func, select
 
 from app.api.deps import RequireStaff, SessionDep
 from app.models import (
+    Appointment,
+    AppointmentHistoryDetail,
+    AppointmentsHistoryPublic,
     AssignTechnicianRequest,
     AssignTechnicianResponse,
     RepairStatusUpdateRequest,
     RepairStatusUpdateResponse,
 )
-from app.services import repair_order_service
+from app.services import access_service, history_service, repair_order_service
 
 router = APIRouter(prefix="/repair-orders", tags=["repair-orders"])
+
+
+@router.get("", response_model=AppointmentsHistoryPublic)
+def read_repair_orders(
+    session: SessionDep,
+    current_user: RequireStaff,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    status_filter: str | None = None,
+) -> AppointmentsHistoryPublic:
+    ids = access_service.accessible_appointment_ids(session, current_user)
+    query = select(Appointment)
+    count = select(func.count()).select_from(Appointment)
+    if ids is not None:
+        query = query.where(col(Appointment.id).in_(ids))
+        count = count.where(col(Appointment.id).in_(ids))
+    if status_filter:
+        query = query.where(Appointment.status == status_filter)
+        count = count.where(Appointment.status == status_filter)
+    rows = session.exec(
+        query.order_by(col(Appointment.appointment_date).desc())
+        .offset(skip)
+        .limit(limit)
+    ).all()
+    return AppointmentsHistoryPublic(
+        data=[
+            history_service.build_appointment_history_detail(session, row)
+            for row in rows
+        ],
+        count=session.exec(count).one(),
+    )
+
+
+@router.get("/{repair_order_id}", response_model=AppointmentHistoryDetail)
+def read_repair_order(
+    session: SessionDep, current_user: RequireStaff, repair_order_id: uuid.UUID
+) -> AppointmentHistoryDetail:
+    return history_service.get_appointment_detail(
+        session, repair_order_id, current_user
+    )
 
 
 @router.patch(

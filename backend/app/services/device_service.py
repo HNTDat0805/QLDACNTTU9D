@@ -1,14 +1,16 @@
 import uuid
 
 from fastapi import HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.logging import get_logger
 from app.models import (
+    Appointment,
     Customer,
     Device,
     DevicePublic,
     DeviceUpdate,
+    Technician,
     User,
     get_datetime_utc,
 )
@@ -41,6 +43,19 @@ def update_device(
             detail=f"Không tìm thấy thiết bị với ID: {device_id}",
         )
 
+    if current_user.role == "technician" and not current_user.is_superuser:
+        assigned = session.exec(
+            select(Appointment)
+            .join(Technician)
+            .where(
+                Appointment.device_id == device.id,
+                Technician.user_id == current_user.id,
+            )
+        ).first()
+        if not assigned:
+            raise HTTPException(
+                status_code=403, detail="Thiết bị chưa được phân công cho bạn"
+            )
     # Kiểm tra phân quyền: Nhân viên cửa hàng hoặc Khách hàng chủ sở hữu thiết bị
     is_staff_or_admin = current_user.is_superuser or (
         (current_user.role or "").lower() in ["admin", "manager", "staff", "technician"]
@@ -51,11 +66,6 @@ def update_device(
         is_owner = False
         if customer:
             if customer.user_id and customer.user_id == current_user.id:
-                is_owner = True
-            elif (
-                customer.email
-                and customer.email.strip().lower() == current_user.email.strip().lower()
-            ):
                 is_owner = True
 
         if not is_owner:

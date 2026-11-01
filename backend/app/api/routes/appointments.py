@@ -3,6 +3,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, status
+from sqlmodel import select
 
 from app.api.deps import CurrentUser, CurrentUserOptional, RequireStaff, SessionDep
 from app.models import (
@@ -16,6 +17,7 @@ from app.models import (
     AppointmentConfirmResponse,
     AppointmentHistoryDetail,
     AppointmentsHistoryPublic,
+    Technician,
 )
 from app.services import history_service, slot_service
 
@@ -30,7 +32,7 @@ bookings_router = APIRouter(prefix="/bookings", tags=["bookings"])
 )
 def read_appointments_history(
     session: SessionDep,
-    _: RequireStaff,
+    current_user: RequireStaff,
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
     customer_id: uuid.UUID | None = Query(
@@ -51,6 +53,13 @@ def read_appointments_history(
     ),
 ) -> AppointmentsHistoryPublic:
     """API: Tra cứu và lọc lịch sử lịch hẹn và sửa chữa toàn hệ thống."""
+    if current_user.role == "technician" and not current_user.is_superuser:
+        technician = session.exec(
+            select(Technician).where(Technician.user_id == current_user.id)
+        ).first()
+        if not technician:
+            return AppointmentsHistoryPublic(data=[], count=0)
+        technician_id = technician.id
     return history_service.get_appointment_history_list(
         session=session,
         skip=skip,
@@ -71,7 +80,7 @@ def read_appointments_history(
 )
 def lookup_appointment(
     session: SessionDep,
-    current_user: CurrentUserOptional = None,
+    current_user: CurrentUser,
     appointment_number: str | None = Query(
         default=None, description="Mã lịch hẹn (ví dụ: APPT-20261015-A1B2)"
     ),
@@ -85,6 +94,23 @@ def lookup_appointment(
         appointment_number=appointment_number,
         phone_number=phone_number,
         current_user=current_user,
+    )
+
+
+@router.get(
+    "/me",
+    response_model=AppointmentsHistoryPublic,
+    summary="Lấy lịch hẹn của người dùng đang đăng nhập",
+)
+def read_my_appointments(
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> AppointmentsHistoryPublic:
+    """Không nhận customer_id để tránh truy cập lịch của khách hàng khác."""
+    return history_service.get_current_user_appointment_history(
+        session=session, current_user=current_user, skip=skip, limit=limit
     )
 
 
@@ -113,9 +139,12 @@ def read_appointment_detail(
 def create_appointment(
     session: SessionDep,
     body: AppointmentBookingCreate,
+    current_user: CurrentUserOptional = None,
 ) -> AppointmentBookingResponse:
     """API 1: Tạo mới lịch đặt chỗ sửa chữa khi slot được chọn còn trống."""
-    return slot_service.create_booking_appointment(session=session, data=body)
+    return slot_service.create_booking_appointment(
+        session=session, data=body, current_user=current_user
+    )
 
 
 @router.patch(
@@ -125,9 +154,9 @@ def create_appointment(
 )
 def update_appointment(
     session: SessionDep,
+    current_user: CurrentUser,
     appointment_id: Annotated[uuid.UUID, Path(description="Mã ID của lịch hẹn")],
     body: AppointmentBookingUpdate,
-    current_user: CurrentUserOptional = None,
 ) -> AppointmentBookingResponse:
     """API 2: Cập nhật thông tin đặt chỗ (đổi ngày giờ, kỹ thuật viên, liên hệ hoặc ghi chú)."""
     return slot_service.update_booking_appointment(

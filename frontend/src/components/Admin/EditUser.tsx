@@ -35,6 +35,7 @@ const formSchema = z
   .object({
     email: z.email({ message: "Invalid email address" }),
     full_name: z.string().optional(),
+    role: z.enum(["customer", "staff", "technician", "manager", "admin"]),
     password: z
       .string()
       .min(8, { message: "Password must be at least 8 characters" })
@@ -67,6 +68,16 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     criteriaMode: "all",
     defaultValues: {
       email: user.email,
+      role: (["customer", "staff", "technician", "manager", "admin"].includes(
+        user.role ?? "",
+      )
+        ? user.role
+        : "customer") as
+        | "customer"
+        | "staff"
+        | "technician"
+        | "manager"
+        | "admin",
       full_name: user.full_name ?? undefined,
       is_superuser: user.is_superuser,
       is_active: user.is_active,
@@ -198,6 +209,33 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                       />
                     </FormControl>
                     <FormLabel className="font-normal">Is superuser?</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vai trò</FormLabel>
+                    <FormControl>
+                      <select
+                        className="h-10 w-full rounded-md border bg-background px-3"
+                        {...field}
+                      >
+                        {[
+                          "customer",
+                          "staff",
+                          "technician",
+                          "manager",
+                          "admin",
+                        ].map((role) => (
+                          <option key={role}>{role}</option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

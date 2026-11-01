@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { appointmentsAssignTechnicianToAppointmentData, appointmentsAssignTechnicianToAppointmentErrors, appointmentsAssignTechnicianToAppointmentResponses, appointmentsCancelAppointmentData, appointmentsCancelAppointmentErrors, appointmentsCancelAppointmentResponses, appointmentsConfirmAppointmentData, appointmentsConfirmAppointmentErrors, appointmentsConfirmAppointmentResponses, appointmentsCreateAppointmentData, appointmentsCreateAppointmentErrors, appointmentsCreateAppointmentResponses, appointmentsLookupAppointmentData, appointmentsLookupAppointmentErrors, appointmentsLookupAppointmentResponses, appointmentsReadAppointmentDetailData, appointmentsReadAppointmentDetailErrors, appointmentsReadAppointmentDetailResponses, appointmentsReadAppointmentsHistoryData, appointmentsReadAppointmentsHistoryErrors, appointmentsReadAppointmentsHistoryResponses, appointmentsReadMyAppointmentsData, appointmentsReadMyAppointmentsErrors, appointmentsReadMyAppointmentsResponses, appointmentsUpdateAppointmentData, appointmentsUpdateAppointmentErrors, appointmentsUpdateAppointmentResponses, bookingsAssignTechnicianToAppointmentData, bookingsAssignTechnicianToAppointmentErrors, bookingsAssignTechnicianToAppointmentResponses, bookingsCancelAppointmentData, bookingsCancelAppointmentErrors, bookingsCancelAppointmentResponses, bookingsConfirmAppointmentData, bookingsConfirmAppointmentErrors, bookingsConfirmAppointmentResponses, bookingsCreateAppointmentData, bookingsCreateAppointmentErrors, bookingsCreateAppointmentResponses, bookingsUpdateAppointmentData, bookingsUpdateAppointmentErrors, bookingsUpdateAppointmentResponses, commerceHandoverDeviceData, commerceHandoverDeviceErrors, commerceHandoverDeviceResponses, commerceIssueInvoiceData, commerceIssueInvoiceErrors, commerceIssueInvoiceResponses, commerceMarkNotificationReadData, commerceMarkNotificationReadErrors, commerceMarkNotificationReadResponses, commerceReadInvoiceData, commerceReadInvoiceErrors, commerceReadInvoiceResponses, commerceReadInvoicesData, commerceReadInvoicesErrors, commerceReadInvoicesResponses, commerceReadMyReviewsData, commerceReadMyReviewsErrors, commerceReadMyReviewsResponses, commerceReadNotificationsData, commerceReadNotificationsErrors, commerceReadNotificationsResponses, commerceReadStatisticsData, commerceReadStatisticsErrors, commerceReadStatisticsResponses, commerceRecordPaymentData, commerceRecordPaymentErrors, commerceRecordPaymentResponses, commerceSubmitReviewData, commerceSubmitReviewErrors, commerceSubmitReviewResponses, customersCreateCustomerData, customersCreateCustomerErrors, customersCreateCustomerResponses, customersDeleteCustomerData, customersDeleteCustomerErrors, customersDeleteCustomerResponses, customersReadCustomerAppointmentsData, customersReadCustomerAppointmentsErrors, customersReadCustomerAppointmentsResponses, customersReadCustomerByIdData, customersReadCustomerByIdErrors, customersReadCustomerByIdResponses, customersReadCustomersData, customersReadCustomersErrors, customersReadCustomersResponses, customersUpdateCustomerData, customersUpdateCustomerErrors, customersUpdateCustomerResponses, devicesUpdateDeviceData, devicesUpdateDeviceErrors, devicesUpdateDeviceResponses, intakeCreateDeviceIntakeData, intakeCreateDeviceIntakeErrors, intakeCreateDeviceIntakeResponses, itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginRefreshAccessTokenData, loginRefreshAccessTokenErrors, loginRefreshAccessTokenResponses, loginRegisterUserData, loginRegisterUserErrors, loginRegisterUserResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginRevokeRefreshTokenData, loginRevokeRefreshTokenErrors, loginRevokeRefreshTokenResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, queueAddAppointmentToQueueData, queueAddAppointmentToQueueErrors, queueAddAppointmentToQueueResponses, queueReadQueueData, queueReadQueueErrors, queueReadQueueItemData, queueReadQueueItemErrors, queueReadQueueItemResponses, queueReadQueueResponses, queueUpdateQueueStatusData, queueUpdateQueueStatusErrors, queueUpdateQueueStatusResponses, quotesAcceptQuotationData, quotesAcceptQuotationErrors, quotesAcceptQuotationResponses, quotesApproveQuotationAliasData, quotesApproveQuotationAliasErrors, quotesApproveQuotationAliasResponses, quotesCreateQuotationData, quotesCreateQuotationErrors, quotesCreateQuotationResponses, quotesReadQuotationData, quotesReadQuotationErrors, quotesReadQuotationResponses, quotesReadQuotationsData, quotesReadQuotationsErrors, quotesReadQuotationsResponses, quotesRejectQuotationData, quotesRejectQuotationErrors, quotesRejectQuotationResponses, repairOrdersAssignTechnicianData, repairOrdersAssignTechnicianErrors, repairOrdersAssignTechnicianResponses, repairOrdersReadRepairOrderData, repairOrdersReadRepairOrderErrors, repairOrdersReadRepairOrderResponses, repairOrdersReadRepairOrdersData, repairOrdersReadRepairOrdersErrors, repairOrdersReadRepairOrdersResponses, repairOrdersUpdateRepairStatusData, repairOrdersUpdateRepairStatusErrors, repairOrdersUpdateRepairStatusResponses, servicesCreateServiceData, servicesCreateServiceErrors, servicesCreateServiceResponses, servicesReadManagedServicesData, servicesReadManagedServicesErrors, servicesReadManagedServicesResponses, servicesReadPublicServiceData, servicesReadPublicServiceErrors, servicesReadPublicServiceResponses, servicesReadPublicServicesData, servicesReadPublicServicesErrors, servicesReadPublicServicesResponses, servicesUpdateServiceData, servicesUpdateServiceErrors, servicesUpdateServiceResponses, slotsCheckSlotData, slotsCheckSlotErrors, slotsCheckSlotResponses, slotsGetAvailableSlotsData, slotsGetAvailableSlotsErrors, slotsGetAvailableSlotsResponses, slotsReadBookingTechniciansData, slotsReadBookingTechniciansErrors, slotsReadBookingTechniciansResponses, techniciansCreateTechnicianData, techniciansCreateTechnicianErrors, techniciansCreateTechnicianResponses, techniciansDeleteTechnicianData, techniciansDeleteTechnicianErrors, techniciansDeleteTechnicianResponses, techniciansReadTechnicianAccountsData, techniciansReadTechnicianAccountsResponses, techniciansReadTechnicianByIdData, techniciansReadTechnicianByIdErrors, techniciansReadTechnicianByIdResponses, techniciansReadTechniciansData, techniciansReadTechniciansErrors, techniciansReadTechniciansResponses, techniciansUpdateTechnicianData, techniciansUpdateTechnicianErrors, techniciansUpdateTechnicianResponses, techniciansUpdateTechnicianStatusData, techniciansUpdateTechnicianStatusErrors, techniciansUpdateTechnicianStatusResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses, workSchedulesCreateWorkScheduleData, workSchedulesCreateWorkScheduleErrors, workSchedulesCreateWorkScheduleResponses, workSchedulesDeleteWorkScheduleData, workSchedulesDeleteWorkScheduleErrors, workSchedulesDeleteWorkScheduleResponses, workSchedulesReadWorkScheduleByIdData, workSchedulesReadWorkScheduleByIdErrors, workSchedulesReadWorkScheduleByIdResponses, workSchedulesReadWorkSchedulesData, workSchedulesReadWorkSchedulesErrors, workSchedulesReadWorkSchedulesResponses, workSchedulesUpdateWorkScheduleData, workSchedulesUpdateWorkScheduleErrors, workSchedulesUpdateWorkScheduleResponses, workSchedulesUpdateWorkScheduleStatusData, workSchedulesUpdateWorkScheduleStatusErrors, workSchedulesUpdateWorkScheduleStatusResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -22,7 +22,7 @@ export class LoginService {
     /**
      * Login Access Token
      *
-     * OAuth2 compatible token login, get an access token for future requests
+     * OAuth2 compatible token login, get an access token and refresh token for future requests
      */
     public static loginAccessToken<ThrowOnError extends boolean = true>(options: Options<loginLoginAccessTokenData, ThrowOnError>) {
         return (options.client ?? client).post<loginLoginAccessTokenResponses, loginLoginAccessTokenErrors, ThrowOnError>({
@@ -36,7 +36,66 @@ export class LoginService {
             }
         });
     }
-    
+
+    /**
+     * Refresh Access Token
+     *
+     * Refresh access token using a valid refresh token.
+     *
+     * Thực hiện:
+     * 1. Xác thực định dạng, chữ ký và thời hạn JWT.
+     * 2. Kiểm tra loại token (bắt buộc type == "refresh").
+     * 3. Kiểm tra người dùng trong cơ sở dữ liệu và trạng thái hoạt động.
+     * 4. Kiểm tra trạng thái thu hồi trong DB (Server-Side Revocation).
+     * 5. Phát hiện tái sử dụng token đã thay thế (Token Reuse Detection) và thu hồi phiên nếu có dấu hiệu tấn công.
+     * 6. Thực hiện Refresh Token Rotation (thu hồi token cũ, cấp cặp token mới).
+     */
+    public static refreshAccessToken<ThrowOnError extends boolean = true>(options: Options<loginRefreshAccessTokenData, ThrowOnError>) {
+        return (options.client ?? client).post<loginRefreshAccessTokenResponses, loginRefreshAccessTokenErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/login/refresh-token',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Revoke Refresh Token
+     *
+     * Thu hồi một Refresh Token (hỗ trợ đăng xuất an toàn).
+     */
+    public static revokeRefreshToken<ThrowOnError extends boolean = true>(options: Options<loginRevokeRefreshTokenData, ThrowOnError>) {
+        return (options.client ?? client).post<loginRevokeRefreshTokenResponses, loginRevokeRefreshTokenErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/login/revoke-token',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Register User
+     *
+     * Register a new customer account.
+     */
+    public static registerUser<ThrowOnError extends boolean = true>(options: Options<loginRegisterUserData, ThrowOnError>) {
+        return (options.client ?? client).post<loginRegisterUserResponses, loginRegisterUserErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/login/register',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
     /**
      * Test Token
      *
@@ -50,7 +109,7 @@ export class LoginService {
             ...options
         });
     }
-    
+
     /**
      * Recover Password
      *
@@ -63,7 +122,7 @@ export class LoginService {
             ...options
         });
     }
-    
+
     /**
      * Reset Password
      *
@@ -80,7 +139,7 @@ export class LoginService {
             }
         });
     }
-    
+
     /**
      * Recover Password Html Content
      *
@@ -110,7 +169,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Create User
      *
@@ -128,7 +187,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Delete User Me
      *
@@ -142,7 +201,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Read User Me
      *
@@ -156,7 +215,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Update User Me
      *
@@ -174,7 +233,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Update Password Me
      *
@@ -192,7 +251,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Register User
      *
@@ -209,7 +268,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Delete User
      *
@@ -223,7 +282,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Read User By Id
      *
@@ -237,7 +296,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Update User
      *
@@ -271,7 +330,7 @@ export class UtilsService {
             ...options
         });
     }
-    
+
     /**
      * Health Check
      */
@@ -298,7 +357,7 @@ export class ItemsService {
             ...options
         });
     }
-    
+
     /**
      * Create Item
      *
@@ -316,7 +375,7 @@ export class ItemsService {
             }
         });
     }
-    
+
     /**
      * Delete Item
      *
@@ -330,7 +389,7 @@ export class ItemsService {
             ...options
         });
     }
-    
+
     /**
      * Read Item
      *
@@ -344,7 +403,7 @@ export class ItemsService {
             ...options
         });
     }
-    
+
     /**
      * Update Item
      *
@@ -360,6 +419,1098 @@ export class ItemsService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+}
+
+export class SlotsService {
+    /**
+     * Read Booking Technicians
+     *
+     * Public booking choices: no phone, account ID or internal personnel fields.
+     */
+    public static readBookingTechnicians<ThrowOnError extends boolean = true>(options: Options<slotsReadBookingTechniciansData, ThrowOnError>) {
+        return (options.client ?? client).get<slotsReadBookingTechniciansResponses, slotsReadBookingTechniciansErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/slots/technicians',
+            ...options
+        });
+    }
+
+    /**
+     * Get Available Slots
+     *
+     * API 1: Lấy danh sách khung giờ (slot) còn trống theo ngày, dịch vụ và kỹ thuật viên.
+     */
+    public static getAvailableSlots<ThrowOnError extends boolean = true>(options: Options<slotsGetAvailableSlotsData, ThrowOnError>) {
+        return (options.client ?? client).get<slotsGetAvailableSlotsResponses, slotsGetAvailableSlotsErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/slots/available',
+            ...options
+        });
+    }
+
+    /**
+     * Check Slot
+     *
+     * API 4: Kiểm tra khả năng đặt một khung giờ (slot) cụ thể.
+     */
+    public static checkSlot<ThrowOnError extends boolean = true>(options: Options<slotsCheckSlotData, ThrowOnError>) {
+        return (options.client ?? client).post<slotsCheckSlotResponses, slotsCheckSlotErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/slots/check',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class AppointmentsService {
+    /**
+     * Tra cứu và lọc lịch sử lịch hẹn sửa chữa
+     *
+     * API: Tra cứu và lọc lịch sử lịch hẹn và sửa chữa toàn hệ thống.
+     */
+    public static readAppointmentsHistory<ThrowOnError extends boolean = true>(options?: Options<appointmentsReadAppointmentsHistoryData, ThrowOnError>) {
+        return (options?.client ?? client).get<appointmentsReadAppointmentsHistoryResponses, appointmentsReadAppointmentsHistoryErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/history',
+            ...options
+        });
+    }
+
+    /**
+     * Tra cứu tiến độ lịch hẹn theo mã hoặc số điện thoại
+     *
+     * API: Tra cứu nhanh lịch hẹn sửa chữa theo mã đặt chỗ hoặc số điện thoại.
+     */
+    public static lookupAppointment<ThrowOnError extends boolean = true>(options?: Options<appointmentsLookupAppointmentData, ThrowOnError>) {
+        return (options?.client ?? client).get<appointmentsLookupAppointmentResponses, appointmentsLookupAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/history/lookup',
+            ...options
+        });
+    }
+
+    /**
+     * Lấy lịch hẹn của người dùng đang đăng nhập
+     *
+     * Không nhận customer_id để tránh truy cập lịch của khách hàng khác.
+     */
+    public static readMyAppointments<ThrowOnError extends boolean = true>(options?: Options<appointmentsReadMyAppointmentsData, ThrowOnError>) {
+        return (options?.client ?? client).get<appointmentsReadMyAppointmentsResponses, appointmentsReadMyAppointmentsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/me',
+            ...options
+        });
+    }
+
+    /**
+     * Xem chi tiết lịch hẹn kèm lịch sử trạng thái
+     *
+     * API: Xem chi tiết toàn diện của một lịch hẹn gồm thông tin khách hàng, thiết bị, dịch vụ và nhật ký trạng thái.
+     */
+    public static readAppointmentDetail<ThrowOnError extends boolean = true>(options: Options<appointmentsReadAppointmentDetailData, ThrowOnError>) {
+        return (options.client ?? client).get<appointmentsReadAppointmentDetailResponses, appointmentsReadAppointmentDetailErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/{appointment_id}/detail',
+            ...options
+        });
+    }
+
+    /**
+     * Tạo đặt chỗ mới
+     *
+     * API 1: Tạo mới lịch đặt chỗ sửa chữa khi slot được chọn còn trống.
+     */
+    public static createAppointment<ThrowOnError extends boolean = true>(options: Options<appointmentsCreateAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).post<appointmentsCreateAppointmentResponses, appointmentsCreateAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Cập nhật đặt chỗ
+     *
+     * API 2: Cập nhật thông tin đặt chỗ (đổi ngày giờ, kỹ thuật viên, liên hệ hoặc ghi chú).
+     */
+    public static updateAppointment<ThrowOnError extends boolean = true>(options: Options<appointmentsUpdateAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).patch<appointmentsUpdateAppointmentResponses, appointmentsUpdateAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/{appointment_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Xác nhận lịch hẹn
+     *
+     * API: Cho phép người dùng có quyền quản lý xác nhận một lịch hẹn hợp lệ.
+     */
+    public static confirmAppointment<ThrowOnError extends boolean = true>(options: Options<appointmentsConfirmAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).patch<appointmentsConfirmAppointmentResponses, appointmentsConfirmAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/{appointment_id}/confirm',
+            ...options
+        });
+    }
+
+    /**
+     * Hủy đặt chỗ
+     *
+     * API 3: Cho phép người dùng có quyền hủy đặt chỗ và ghi nhận lý do hủy.
+     */
+    public static cancelAppointment<ThrowOnError extends boolean = true>(options: Options<appointmentsCancelAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).patch<appointmentsCancelAppointmentResponses, appointmentsCancelAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/{appointment_id}/cancel',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Phân công kỹ thuật viên cho lịch hẹn sửa chữa
+     *
+     * API phân công một kỹ thuật viên vào lịch hẹn sửa chữa điện thoại:
+     * - Kiểm tra dữ liệu đầu vào và quyền truy cập (yêu cầu nhân viên cửa hàng `RequireStaff`).
+     * - Kiểm tra lịch hẹn tồn tại và chưa kết thúc (không ở trạng thái COMPLETED hoặc CANCELLED).
+     * - Kiểm tra kỹ thuật viên tồn tại, đang hoạt động (`is_active=True`) và không đăng ký nghỉ phép (`OFF`).
+     * - Kiểm tra kỹ thuật viên có chuyên môn phù hợp với các dịch vụ đã đăng ký trong lịch hẹn.
+     * - Kiểm tra ca làm việc và xung đột trùng giờ với các lịch hẹn khác của kỹ thuật viên.
+     * - Khóa dòng dữ liệu (`with_for_update`) chống xung đột tranh chấp đồng thời.
+     * - Cập nhật phân công và tự động ghi nhật ký vào `repair_status_history` trong cùng transaction an toàn.
+     */
+    public static assignTechnicianToAppointment<ThrowOnError extends boolean = true>(options: Options<appointmentsAssignTechnicianToAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).post<appointmentsAssignTechnicianToAppointmentResponses, appointmentsAssignTechnicianToAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/appointments/{appointment_id}/assign-technician',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class BookingsService {
+    /**
+     * Tạo đặt chỗ mới
+     *
+     * API 1: Tạo mới lịch đặt chỗ sửa chữa khi slot được chọn còn trống.
+     */
+    public static createAppointment<ThrowOnError extends boolean = true>(options: Options<bookingsCreateAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).post<bookingsCreateAppointmentResponses, bookingsCreateAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/bookings',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Cập nhật đặt chỗ
+     *
+     * API 2: Cập nhật thông tin đặt chỗ (đổi ngày giờ, kỹ thuật viên, liên hệ hoặc ghi chú).
+     */
+    public static updateAppointment<ThrowOnError extends boolean = true>(options: Options<bookingsUpdateAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).patch<bookingsUpdateAppointmentResponses, bookingsUpdateAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/bookings/{appointment_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Hủy đặt chỗ
+     *
+     * API 3: Cho phép người dùng có quyền hủy đặt chỗ và ghi nhận lý do hủy.
+     */
+    public static cancelAppointment<ThrowOnError extends boolean = true>(options: Options<bookingsCancelAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).patch<bookingsCancelAppointmentResponses, bookingsCancelAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/bookings/{appointment_id}/cancel',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Xác nhận đặt chỗ
+     *
+     * API: Cho phép người dùng có quyền quản lý xác nhận một lịch hẹn hợp lệ.
+     */
+    public static confirmAppointment<ThrowOnError extends boolean = true>(options: Options<bookingsConfirmAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).patch<bookingsConfirmAppointmentResponses, bookingsConfirmAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/bookings/{appointment_id}/confirm',
+            ...options
+        });
+    }
+
+    /**
+     * Phân công kỹ thuật viên cho lịch hẹn
+     *
+     * API: Phân công kỹ thuật viên cho lịch hẹn sửa chữa.
+     */
+    public static assignTechnicianToAppointment<ThrowOnError extends boolean = true>(options: Options<bookingsAssignTechnicianToAppointmentData, ThrowOnError>) {
+        return (options.client ?? client).post<bookingsAssignTechnicianToAppointmentResponses, bookingsAssignTechnicianToAppointmentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/bookings/{appointment_id}/assign-technician',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class CustomersService {
+    /**
+     * Lấy danh sách khách hàng
+     *
+     * API: Lấy danh sách khách hàng có phân trang và tìm kiếm theo tên, số điện thoại hoặc email.
+     */
+    public static readCustomers<ThrowOnError extends boolean = true>(options?: Options<customersReadCustomersData, ThrowOnError>) {
+        return (options?.client ?? client).get<customersReadCustomersResponses, customersReadCustomersErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/customers',
+            ...options
+        });
+    }
+
+    /**
+     * Tạo khách hàng mới
+     *
+     * API: Tạo khách hàng mới với xác thực số điện thoại và kiểm tra trùng lặp.
+     */
+    public static createCustomer<ThrowOnError extends boolean = true>(options: Options<customersCreateCustomerData, ThrowOnError>) {
+        return (options.client ?? client).post<customersCreateCustomerResponses, customersCreateCustomerErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/customers',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Xóa khách hàng
+     *
+     * API: Xóa khách hàng khi không có dữ liệu lịch hẹn hoặc lịch sử sửa chữa liên quan.
+     */
+    public static deleteCustomer<ThrowOnError extends boolean = true>(options: Options<customersDeleteCustomerData, ThrowOnError>) {
+        return (options.client ?? client).delete<customersDeleteCustomerResponses, customersDeleteCustomerErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/customers/{customer_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Xem chi tiết khách hàng
+     *
+     * API: Xem chi tiết thông tin khách hàng. Khách hàng thông thường chỉ có thể xem hồ sơ của mình.
+     */
+    public static readCustomerById<ThrowOnError extends boolean = true>(options: Options<customersReadCustomerByIdData, ThrowOnError>) {
+        return (options.client ?? client).get<customersReadCustomerByIdResponses, customersReadCustomerByIdErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/customers/{customer_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Cập nhật thông tin khách hàng
+     *
+     * API: Cập nhật thông tin khách hàng với kiểm tra trùng số điện thoại.
+     */
+    public static updateCustomer<ThrowOnError extends boolean = true>(options: Options<customersUpdateCustomerData, ThrowOnError>) {
+        return (options.client ?? client).patch<customersUpdateCustomerResponses, customersUpdateCustomerErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/customers/{customer_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Lấy lịch sử lịch hẹn của khách hàng
+     *
+     * API: Tra cứu toàn bộ lịch sử lịch hẹn và sửa chữa của khách hàng.
+     */
+    public static readCustomerAppointments<ThrowOnError extends boolean = true>(options: Options<customersReadCustomerAppointmentsData, ThrowOnError>) {
+        return (options.client ?? client).get<customersReadCustomerAppointmentsResponses, customersReadCustomerAppointmentsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/customers/{customer_id}/appointments',
+            ...options
+        });
+    }
+}
+
+export class TechniciansService {
+    /**
+     * Read Technician Accounts
+     */
+    public static readTechnicianAccounts<ThrowOnError extends boolean = true>(options?: Options<techniciansReadTechnicianAccountsData, ThrowOnError>) {
+        return (options?.client ?? client).get<techniciansReadTechnicianAccountsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians/accounts',
+            ...options
+        });
+    }
+
+    /**
+     * Lấy danh sách kỹ thuật viên
+     *
+     * API: Lấy danh sách kỹ thuật viên có phân trang, lọc theo trạng thái, chuyên môn và tìm kiếm.
+     */
+    public static readTechnicians<ThrowOnError extends boolean = true>(options?: Options<techniciansReadTechniciansData, ThrowOnError>) {
+        return (options?.client ?? client).get<techniciansReadTechniciansResponses, techniciansReadTechniciansErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians',
+            ...options
+        });
+    }
+
+    /**
+     * Tạo kỹ thuật viên mới
+     *
+     * API: Tạo kỹ thuật viên mới với kiểm tra số điện thoại duy nhất.
+     */
+    public static createTechnician<ThrowOnError extends boolean = true>(options: Options<techniciansCreateTechnicianData, ThrowOnError>) {
+        return (options.client ?? client).post<techniciansCreateTechnicianResponses, techniciansCreateTechnicianErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Xóa kỹ thuật viên
+     *
+     * API: Xóa kỹ thuật viên chỉ khi chưa có liên kết với lịch hẹn hoặc lịch làm việc.
+     */
+    public static deleteTechnician<ThrowOnError extends boolean = true>(options: Options<techniciansDeleteTechnicianData, ThrowOnError>) {
+        return (options.client ?? client).delete<techniciansDeleteTechnicianResponses, techniciansDeleteTechnicianErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians/{technician_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Xem chi tiết kỹ thuật viên
+     *
+     * API: Xem thông tin chi tiết một kỹ thuật viên.
+     */
+    public static readTechnicianById<ThrowOnError extends boolean = true>(options: Options<techniciansReadTechnicianByIdData, ThrowOnError>) {
+        return (options.client ?? client).get<techniciansReadTechnicianByIdResponses, techniciansReadTechnicianByIdErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians/{technician_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Cập nhật thông tin kỹ thuật viên
+     *
+     * API: Cập nhật thông tin kỹ thuật viên.
+     */
+    public static updateTechnician<ThrowOnError extends boolean = true>(options: Options<techniciansUpdateTechnicianData, ThrowOnError>) {
+        return (options.client ?? client).patch<techniciansUpdateTechnicianResponses, techniciansUpdateTechnicianErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians/{technician_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Cập nhật trạng thái hoạt động của kỹ thuật viên
+     *
+     * API: Cập nhật trạng thái hoạt động hoặc tạm nghỉ (is_active: true/false) của kỹ thuật viên.
+     */
+    public static updateTechnicianStatus<ThrowOnError extends boolean = true>(options: Options<techniciansUpdateTechnicianStatusData, ThrowOnError>) {
+        return (options.client ?? client).patch<techniciansUpdateTechnicianStatusResponses, techniciansUpdateTechnicianStatusErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/technicians/{technician_id}/status',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class WorkSchedulesService {
+    /**
+     * Lấy danh sách ca làm việc
+     *
+     * API: Lấy lịch làm việc của các kỹ thuật viên theo ngày hoặc khoảng thời gian.
+     */
+    public static schedulesReadWorkSchedules<ThrowOnError extends boolean = true>(options?: Options<workSchedulesReadWorkSchedulesData, ThrowOnError>) {
+        return (options?.client ?? client).get<workSchedulesReadWorkSchedulesResponses, workSchedulesReadWorkSchedulesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/work-schedules',
+            ...options
+        });
+    }
+
+    /**
+     * Tạo ca làm việc mới
+     *
+     * API: Tạo lịch làm việc mới với kiểm tra thời gian hợp lệ và chống trùng lặp ca.
+     */
+    public static schedulesCreateWorkSchedule<ThrowOnError extends boolean = true>(options: Options<workSchedulesCreateWorkScheduleData, ThrowOnError>) {
+        return (options.client ?? client).post<workSchedulesCreateWorkScheduleResponses, workSchedulesCreateWorkScheduleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/work-schedules',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Xóa ca làm việc
+     *
+     * API: Xóa lịch làm việc khi không có lịch hẹn phân công trong khoảng thời gian này.
+     */
+    public static schedulesDeleteWorkSchedule<ThrowOnError extends boolean = true>(options: Options<workSchedulesDeleteWorkScheduleData, ThrowOnError>) {
+        return (options.client ?? client).delete<workSchedulesDeleteWorkScheduleResponses, workSchedulesDeleteWorkScheduleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/work-schedules/{schedule_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Xem chi tiết ca làm việc
+     *
+     * API: Xem chi tiết một lịch làm việc.
+     */
+    public static schedulesReadWorkScheduleById<ThrowOnError extends boolean = true>(options: Options<workSchedulesReadWorkScheduleByIdData, ThrowOnError>) {
+        return (options.client ?? client).get<workSchedulesReadWorkScheduleByIdResponses, workSchedulesReadWorkScheduleByIdErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/work-schedules/{schedule_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Cập nhật ca làm việc
+     *
+     * API: Cập nhật lịch làm việc với kiểm tra xung đột trùng ca và lịch hẹn hiện hữu.
+     */
+    public static schedulesUpdateWorkSchedule<ThrowOnError extends boolean = true>(options: Options<workSchedulesUpdateWorkScheduleData, ThrowOnError>) {
+        return (options.client ?? client).patch<workSchedulesUpdateWorkScheduleResponses, workSchedulesUpdateWorkScheduleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/work-schedules/{schedule_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Cập nhật trạng thái ca làm việc
+     *
+     * API: Cập nhật trạng thái ca làm việc (AVAILABLE, BUSY, OFF) với kiểm tra an toàn lịch hẹn.
+     */
+    public static schedulesUpdateWorkScheduleStatus<ThrowOnError extends boolean = true>(options: Options<workSchedulesUpdateWorkScheduleStatusData, ThrowOnError>) {
+        return (options.client ?? client).patch<workSchedulesUpdateWorkScheduleStatusResponses, workSchedulesUpdateWorkScheduleStatusErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/work-schedules/{schedule_id}/status',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class QueueService {
+    /**
+     * Lấy danh sách hàng chờ sửa chữa
+     *
+     * API: Lấy danh sách lịch hẹn trong hàng chờ theo thứ tự ưu tiên xử lý (thời gian hẹn và thời điểm tạo tăng dần).
+     */
+    public static readQueue<ThrowOnError extends boolean = true>(options?: Options<queueReadQueueData, ThrowOnError>) {
+        return (options?.client ?? client).get<queueReadQueueResponses, queueReadQueueErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/queue',
+            ...options
+        });
+    }
+
+    /**
+     * Thêm lịch hẹn vào hàng chờ tiếp nhận
+     *
+     * API: Thêm lịch hẹn vào hàng chờ tiếp nhận cho khách vãng lai hoặc đặt hẹn nhanh.
+     */
+    public static addAppointmentToQueue<ThrowOnError extends boolean = true>(options: Options<queueAddAppointmentToQueueData, ThrowOnError>) {
+        return (options.client ?? client).post<queueAddAppointmentToQueueResponses, queueAddAppointmentToQueueErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/queue',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Xem chi tiết mục trong hàng chờ
+     *
+     * API: Xem chi tiết một mục trong hàng chờ và vị trí thứ tự hiện tại của nó.
+     */
+    public static readQueueItem<ThrowOnError extends boolean = true>(options: Options<queueReadQueueItemData, ThrowOnError>) {
+        return (options.client ?? client).get<queueReadQueueItemResponses, queueReadQueueItemErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/queue/{appointment_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Cập nhật trạng thái tiếp nhận và xử lý trong hàng chờ
+     *
+     * API: Cập nhật trạng thái xử lý hàng chờ (CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED) và ghi nhận nhật ký lịch sử.
+     */
+    public static updateQueueStatus<ThrowOnError extends boolean = true>(options: Options<queueUpdateQueueStatusData, ThrowOnError>) {
+        return (options.client ?? client).patch<queueUpdateQueueStatusResponses, queueUpdateQueueStatusErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/queue/{appointment_id}/status',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class IntakeService {
+    /**
+     * Tạo phiếu tiếp nhận thiết bị sửa chữa
+     *
+     * API tạo phiếu tiếp nhận thiết bị sửa chữa:
+     * - Hỗ trợ tiếp nhận theo lịch hẹn có sẵn (`appointment_id`) hoặc tiếp nhận trực tiếp khách vãng lai (walk-in).
+     * - Ghi nhận thông tin thiết bị, tình trạng ngoại quan (`physical_condition`), mô tả lỗi (`fault_description`), và phụ kiện bàn giao (`accessories_received`).
+     * - Tự động sinh mã phiếu tiếp nhận (APPT-YYYYMMDD-XXXX).
+     * - Khởi tạo trạng thái phiếu theo quy định (`CONFIRMED` hoặc `IN_PROGRESS`).
+     * - Tự động ghi nhật ký kiểm toán vào `repair_status_history`.
+     * - Quyền truy cập: Nhân viên cửa hàng (`RequireStaff`: Admin, Manager, Staff, Technician).
+     */
+    public static createDeviceIntake<ThrowOnError extends boolean = true>(options: Options<intakeCreateDeviceIntakeData, ThrowOnError>) {
+        return (options.client ?? client).post<intakeCreateDeviceIntakeResponses, intakeCreateDeviceIntakeErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/intake',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class QuotesService {
+    /**
+     * Read Quotations
+     */
+    public static readQuotations<ThrowOnError extends boolean = true>(options?: Options<quotesReadQuotationsData, ThrowOnError>) {
+        return (options?.client ?? client).get<quotesReadQuotationsResponses, quotesReadQuotationsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/quotes',
+            ...options
+        });
+    }
+
+    /**
+     * Tạo báo giá sửa chữa mới
+     *
+     * API tạo báo giá sửa chữa cho một phiếu sửa chữa (Appointment):
+     * - Nhận định danh phiếu sửa chữa qua `appointment_id` hoặc `appointment_number`.
+     * - Nhận danh sách các hạng mục báo giá (dịch vụ có sẵn hoặc hạng mục tùy biến linh kiện/công thợ).
+     * - Xác minh phiếu sửa chữa đang ở trạng thái hợp lệ để báo giá (chưa bị hủy hoặc đã hoàn thành).
+     * - Tự động tính toán thành tiền từng hạng mục và tổng tiền ở backend (tránh sai số số thực).
+     * - Khởi tạo trạng thái báo giá (mặc định là `DRAFT`).
+     * - Gắn mã báo giá duy nhất (ví dụ: `QUO-YYYYMMDD-XXXX`).
+     * - Lưu trữ an toàn bằng transaction.
+     * - Quyền truy cập: Nhân viên cửa hàng (`RequireStaff`: Admin, Manager, Staff, Technician).
+     */
+    public static createQuotation<ThrowOnError extends boolean = true>(options: Options<quotesCreateQuotationData, ThrowOnError>) {
+        return (options.client ?? client).post<quotesCreateQuotationResponses, quotesCreateQuotationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/quotes',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Quotation
+     */
+    public static readQuotation<ThrowOnError extends boolean = true>(options: Options<quotesReadQuotationData, ThrowOnError>) {
+        return (options.client ?? client).get<quotesReadQuotationResponses, quotesReadQuotationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/quotes/{quote_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Reject Quotation
+     */
+    public static rejectQuotation<ThrowOnError extends boolean = true>(options: Options<quotesRejectQuotationData, ThrowOnError>) {
+        return (options.client ?? client).post<quotesRejectQuotationResponses, quotesRejectQuotationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/quotes/{quote_id}/reject',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Duyệt báo giá sửa chữa
+     *
+     * API duyệt báo giá sửa chữa (Quotation Approval):
+     * - Nhận `quote_id` của báo giá cần duyệt.
+     * - Kiểm tra báo giá tồn tại và đang ở trạng thái cho phép duyệt (`DRAFT` hoặc `SENT`).
+     * - Từ chối duyệt nếu báo giá đã được duyệt trước đó (`ACCEPTED`) hoặc đã bị từ chối (`REJECTED`) với mã lỗi `409 Conflict`.
+     * - Phân quyền:
+     * + Khách hàng (`customer`): Chỉ được duyệt báo giá thuộc phiếu sửa chữa của chính mình.
+     * + Nhân viên (`staff`, `technician`, `manager`, `admin`): Có quyền duyệt báo giá khi được khách hàng đồng ý trực tiếp/qua điện thoại.
+     * - Khóa dòng bi quan (`with_for_update`) nhằm xử lý an toàn tình huống hai yêu cầu duyệt đồng thời hoặc cạnh tranh trạng thái.
+     * - Cập nhật trạng thái báo giá sang `ACCEPTED` và ghi nhận nhật ký kiểm toán vào `repair_status_history`.
+     * - Không tự ý thay đổi trạng thái sửa chữa của phiếu sửa chữa.
+     */
+    public static acceptQuotation<ThrowOnError extends boolean = true>(options: Options<quotesAcceptQuotationData, ThrowOnError>) {
+        return (options.client ?? client).post<quotesAcceptQuotationResponses, quotesAcceptQuotationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/quotes/{quote_id}/accept',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Duyệt báo giá sửa chữa (Alias)
+     *
+     * Endpoint bí danh trỏ tới cùng luồng xử lý duyệt báo giá sửa chữa.
+     */
+    public static approveQuotationAlias<ThrowOnError extends boolean = true>(options: Options<quotesApproveQuotationAliasData, ThrowOnError>) {
+        return (options.client ?? client).post<quotesApproveQuotationAliasResponses, quotesApproveQuotationAliasErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/quotes/{quote_id}/approve',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class DevicesService {
+    /**
+     * Cập nhật thông tin thiết bị sửa chữa
+     *
+     * API cập nhật thông tin thiết bị sửa chữa:
+     * - Kiểm tra thiết bị có tồn tại hay không.
+     * - Phân quyền: Nhân viên cửa hàng hoặc Khách hàng sở hữu thiết bị.
+     * - Chỉ cập nhật những trường nghiệp vụ được gửi trong request (không ghi đè các trường không gửi).
+     * - Không cho phép sửa đổi ID, customer_id hoặc các trường hệ thống ngoài phạm vi.
+     * - Trả về dữ liệu thiết bị sau khi cập nhật thành công.
+     */
+    public static updateDevice<ThrowOnError extends boolean = true>(options: Options<devicesUpdateDeviceData, ThrowOnError>) {
+        return (options.client ?? client).patch<devicesUpdateDeviceResponses, devicesUpdateDeviceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/devices/{device_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class RepairOrdersService {
+    /**
+     * Read Repair Orders
+     */
+    public static ordersReadRepairOrders<ThrowOnError extends boolean = true>(options?: Options<repairOrdersReadRepairOrdersData, ThrowOnError>) {
+        return (options?.client ?? client).get<repairOrdersReadRepairOrdersResponses, repairOrdersReadRepairOrdersErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/repair-orders',
+            ...options
+        });
+    }
+
+    /**
+     * Read Repair Order
+     */
+    public static ordersReadRepairOrder<ThrowOnError extends boolean = true>(options: Options<repairOrdersReadRepairOrderData, ThrowOnError>) {
+        return (options.client ?? client).get<repairOrdersReadRepairOrderResponses, repairOrdersReadRepairOrderErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/repair-orders/{repair_order_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Cập nhật trạng thái xử lý của phiếu sửa chữa
+     *
+     * API cập nhật trạng thái xử lý của phiếu sửa chữa:
+     * - Kiểm tra phiếu sửa chữa tồn tại.
+     * - Kiểm tra chuyển trạng thái hợp lệ theo chu trình sửa chữa.
+     * - Chặn cập nhật khi phiếu sửa chữa đã kết thúc (COMPLETED hoặc CANCELLED).
+     * - Tự động cập nhật `actual_completion_date` khi hoàn tất hoặc `cancellation_reason` khi hủy.
+     * - Ghi nhận lịch sử thay đổi vào `repair_status_history` trong cùng một transaction.
+     * - Quyền truy cập: Nhân viên cửa hàng (`RequireStaff`: Admin, Manager, Staff, Technician).
+     */
+    public static ordersUpdateRepairStatus<ThrowOnError extends boolean = true>(options: Options<repairOrdersUpdateRepairStatusData, ThrowOnError>) {
+        return (options.client ?? client).patch<repairOrdersUpdateRepairStatusResponses, repairOrdersUpdateRepairStatusErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/repair-orders/{repair_order_id}/status',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Phân công kỹ thuật viên phụ trách phiếu sửa chữa
+     *
+     * API phân công hoặc thay đổi kỹ thuật viên cho phiếu sửa chữa:
+     * - Kiểm tra phiếu sửa chữa tồn tại và chưa kết thúc.
+     * - Kiểm tra kỹ thuật viên tồn tại, đang hoạt động (`is_active=True`) và không đăng ký nghỉ (`OFF`) trong ngày.
+     * - Ghi nhận lịch sử phân công vào `repair_status_history` trong cùng một transaction.
+     * - Quyền truy cập: Nhân viên cửa hàng (`RequireStaff`: Admin, Manager, Staff, Technician).
+     */
+    public static ordersAssignTechnician<ThrowOnError extends boolean = true>(options: Options<repairOrdersAssignTechnicianData, ThrowOnError>) {
+        return (options.client ?? client).patch<repairOrdersAssignTechnicianResponses, repairOrdersAssignTechnicianErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/repair-orders/{repair_order_id}/technician',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class ServicesService {
+    /**
+     * Read Managed Services
+     */
+    public static readManagedServices<ThrowOnError extends boolean = true>(options?: Options<servicesReadManagedServicesData, ThrowOnError>) {
+        return (options?.client ?? client).get<servicesReadManagedServicesResponses, servicesReadManagedServicesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/services/manage',
+            ...options
+        });
+    }
+
+    /**
+     * Lấy dịch vụ sửa chữa công khai
+     *
+     * Trả các dịch vụ đang hoạt động để khách hàng chọn khi đặt lịch.
+     */
+    public static readPublicServices<ThrowOnError extends boolean = true>(options?: Options<servicesReadPublicServicesData, ThrowOnError>) {
+        return (options?.client ?? client).get<servicesReadPublicServicesResponses, servicesReadPublicServicesErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/services',
+            ...options
+        });
+    }
+
+    /**
+     * Create Service
+     */
+    public static createService<ThrowOnError extends boolean = true>(options: Options<servicesCreateServiceData, ThrowOnError>) {
+        return (options.client ?? client).post<servicesCreateServiceResponses, servicesCreateServiceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/services',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Public Service
+     */
+    public static readPublicService<ThrowOnError extends boolean = true>(options: Options<servicesReadPublicServiceData, ThrowOnError>) {
+        return (options.client ?? client).get<servicesReadPublicServiceResponses, servicesReadPublicServiceErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/services/{service_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Update Service
+     */
+    public static updateService<ThrowOnError extends boolean = true>(options: Options<servicesUpdateServiceData, ThrowOnError>) {
+        return (options.client ?? client).put<servicesUpdateServiceResponses, servicesUpdateServiceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/services/{service_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class CommerceService {
+    /**
+     * Read Invoices
+     */
+    public static readInvoices<ThrowOnError extends boolean = true>(options?: Options<commerceReadInvoicesData, ThrowOnError>) {
+        return (options?.client ?? client).get<commerceReadInvoicesResponses, commerceReadInvoicesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/invoices',
+            ...options
+        });
+    }
+
+    /**
+     * Issue Invoice
+     */
+    public static issueInvoice<ThrowOnError extends boolean = true>(options: Options<commerceIssueInvoiceData, ThrowOnError>) {
+        return (options.client ?? client).post<commerceIssueInvoiceResponses, commerceIssueInvoiceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/invoices',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Invoice
+     */
+    public static readInvoice<ThrowOnError extends boolean = true>(options: Options<commerceReadInvoiceData, ThrowOnError>) {
+        return (options.client ?? client).get<commerceReadInvoiceResponses, commerceReadInvoiceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/invoices/{invoice_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Record Payment
+     */
+    public static recordPayment<ThrowOnError extends boolean = true>(options: Options<commerceRecordPaymentData, ThrowOnError>) {
+        return (options.client ?? client).post<commerceRecordPaymentResponses, commerceRecordPaymentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/invoices/{invoice_id}/payments',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Handover Device
+     */
+    public static handoverDevice<ThrowOnError extends boolean = true>(options: Options<commerceHandoverDeviceData, ThrowOnError>) {
+        return (options.client ?? client).post<commerceHandoverDeviceResponses, commerceHandoverDeviceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/invoices/{invoice_id}/handover',
+            ...options
+        });
+    }
+
+    /**
+     * Read Statistics
+     */
+    public static readStatistics<ThrowOnError extends boolean = true>(options?: Options<commerceReadStatisticsData, ThrowOnError>) {
+        return (options?.client ?? client).get<commerceReadStatisticsResponses, commerceReadStatisticsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/statistics',
+            ...options
+        });
+    }
+
+    /**
+     * Read My Reviews
+     */
+    public static readMyReviews<ThrowOnError extends boolean = true>(options?: Options<commerceReadMyReviewsData, ThrowOnError>) {
+        return (options?.client ?? client).get<commerceReadMyReviewsResponses, commerceReadMyReviewsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/reviews',
+            ...options
+        });
+    }
+
+    /**
+     * Submit Review
+     */
+    public static submitReview<ThrowOnError extends boolean = true>(options: Options<commerceSubmitReviewData, ThrowOnError>) {
+        return (options.client ?? client).post<commerceSubmitReviewResponses, commerceSubmitReviewErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/reviews',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Notifications
+     */
+    public static readNotifications<ThrowOnError extends boolean = true>(options?: Options<commerceReadNotificationsData, ThrowOnError>) {
+        return (options?.client ?? client).get<commerceReadNotificationsResponses, commerceReadNotificationsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/notifications',
+            ...options
+        });
+    }
+
+    /**
+     * Mark Notification Read
+     */
+    public static markNotificationRead<ThrowOnError extends boolean = true>(options: Options<commerceMarkNotificationReadData, ThrowOnError>) {
+        return (options.client ?? client).patch<commerceMarkNotificationReadResponses, commerceMarkNotificationReadErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/notifications/{notification_id}/read',
+            ...options
         });
     }
 }

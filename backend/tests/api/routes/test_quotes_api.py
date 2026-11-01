@@ -425,9 +425,17 @@ def test_create_quotation_rbac_permissions(client: TestClient, db: Session) -> N
     res2 = client.post("/api/v1/quotes", json=payload)
     assert res2.status_code == 401
 
-    # 3. Kỹ thuật viên gọi API -> 201 Created
+    # 3. Kỹ thuật viên chỉ được lập báo giá cho việc đã được phân công.
     tech_user = create_role_user(db, "technician")
     tech_headers = get_token_headers(tech_user)
+    forbidden = client.post("/api/v1/quotes", json=payload, headers=tech_headers)
+    assert forbidden.status_code == 403
+    technician = Technician(full_name="Assigned test technician", user_id=tech_user.id)
+    db.add(technician)
+    db.flush()
+    appt.technician_id = technician.id
+    db.add(appt)
+    db.commit()
     res3 = client.post("/api/v1/quotes", json=payload, headers=tech_headers)
     assert res3.status_code == 201
 
@@ -715,7 +723,7 @@ def test_accept_quotation_forbidden_other_customer(
         headers=cust_b_headers,
     )
     assert response.status_code == 403
-    assert "Bạn không có quyền duyệt báo giá" in response.json()["detail"]
+    assert "không có quyền" in response.json()["detail"]
 
 
 def test_accept_quotation_unauthorized_no_token(client: TestClient) -> None:

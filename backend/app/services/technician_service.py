@@ -90,6 +90,11 @@ def create_technician(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Tài khoản người dùng liên kết không tồn tại",
             )
+        if user.role != "technician" or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Cần tài khoản kỹ thuật viên đang hoạt động",
+            )
         existing_tech_user = session.exec(
             select(Technician).where(Technician.user_id == data.user_id)
         ).first()
