@@ -612,6 +612,7 @@ def create_booking_appointment(
             service_names=[s.name for s in selected_services],
         )
     except HTTPException:
+        session.rollback()
         raise
     except Exception as e:
         session.rollback()
@@ -851,6 +852,7 @@ def update_booking_appointment(
             total_amount=appointment.total_amount,
         )
     except HTTPException:
+        session.rollback()
         raise
     except Exception as e:
         session.rollback()
@@ -1000,6 +1002,7 @@ def confirm_appointment(
             ),
         )
     except HTTPException:
+        session.rollback()
         raise
     except Exception as e:
         session.rollback()
@@ -1107,6 +1110,7 @@ def cancel_appointment(
             ),
         )
     except HTTPException:
+        session.rollback()
         raise
     except Exception as e:
         session.rollback()
