@@ -12,13 +12,18 @@ from app.api.routes import appointments as appointments_route
 from app.api.routes import customers as customers_route
 from app.api.routes import devices as devices_route
 from app.api.routes import intake as intake_route
+from app.api.routes import invoices as invoices_route
 from app.api.routes import login as login_route
+from app.api.routes import notifications as notifications_route
+from app.api.routes import payments as payments_route
 from app.api.routes import queue as queue_route
 from app.api.routes import quotes as quotes_route
 from app.api.routes import repair_orders as repair_orders_route
+from app.api.routes import reviews as reviews_route
 from app.api.routes import services as services_route
 from app.api.routes import slots as slots_route
 from app.api.routes import technicians as technicians_route
+from app.api.routes import users as users_route
 from app.api.routes import work_schedules as work_schedules_route
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
@@ -70,7 +75,6 @@ app.add_middleware(
 
 # Keep the versioned API contract in one router (including commerce endpoints).
 app.include_router(api_router, prefix=settings.API_V1_STR)
-# Direct /api route aliases matching proposed endpoints without /v1
 app.include_router(slots_route.router, prefix="/api", include_in_schema=False)
 app.include_router(appointments_route.router, prefix="/api", include_in_schema=False)
 app.include_router(
@@ -84,7 +88,12 @@ app.include_router(intake_route.router, prefix="/api", include_in_schema=False)
 app.include_router(quotes_route.router, prefix="/api", include_in_schema=False)
 app.include_router(devices_route.router, prefix="/api", include_in_schema=False)
 app.include_router(repair_orders_route.router, prefix="/api", include_in_schema=False)
-app.include_router(services_route.router, prefix="/api", include_in_schema=False)
+app.include_router(invoices_route.router, prefix="/api", include_in_schema=False)
+app.include_router(payments_route.router, prefix="/api", include_in_schema=False)
+app.include_router(reviews_route.router, prefix="/api", include_in_schema=False)
+app.include_router(notifications_route.router, prefix="/api", include_in_schema=False)
 app.include_router(login_route.router, prefix="/api", include_in_schema=False)
+app.include_router(users_route.router, prefix="/api", include_in_schema=False)
+app.include_router(services_route.router, prefix="/api", include_in_schema=False)
 if FRONTEND_DIR.exists():
     app.frontend("/", directory=FRONTEND_DIR)

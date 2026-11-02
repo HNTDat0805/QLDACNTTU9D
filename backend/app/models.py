@@ -94,6 +94,9 @@ class User(UserBase, table=True):
     refresh_tokens: list["RefreshToken"] = Relationship(  # noqa: UP037
         back_populates="user", cascade_delete=True
     )
+    password_reset_tokens: list["PasswordResetToken"] = Relationship(  # noqa: UP037
+        back_populates="user", cascade_delete=True
+    )
 
 
 class UserPublic(UserBase):
@@ -278,23 +281,120 @@ class DevicePublic(DeviceBase):
 
 
 class ServiceBase(SQLModel):
-    name: str = Field(unique=True, index=True, max_length=255)
+    code: str | None = Field(
+        default=None,
+        unique=True,
+        index=True,
+        max_length=50,
+        description="Mã định danh dịch vụ duy nhất (ví dụ: SVC-SCREEN-01)",
+    )
+    name: str = Field(
+        unique=True,
+        index=True,
+        max_length=255,
+        description="Tên dịch vụ sửa chữa",
+    )
+    description: str | None = Field(
+        default=None, max_length=1000, description="Mô tả chi tiết dịch vụ"
+    )
+    base_price: float = Field(
+        default=0.0, ge=0.0, description="Giá dịch vụ khởi điểm (VNĐ, >= 0)"
+    )
+    estimated_duration_minutes: int = Field(
+        default=30,
+        gt=0,
+        description="Thời gian sửa chữa ước tính (phút, > 0)",
+    )
+    is_active: bool = Field(
+        default=True,
+        index=True,
+        description="Trạng thái dịch vụ đang kinh doanh (ẩn/hiện)",
+    )
+
+
+class ServiceCreate(SQLModel):
+    code: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Mã dịch vụ duy nhất (nếu không cung cấp, hệ thống tự động sinh)",
+    )
+    name: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Tên dịch vụ sửa chữa (bắt buộc, không để trống)",
+    )
     description: str | None = Field(default=None, max_length=1000)
-    base_price: float = Field(default=0.0)
-    estimated_duration_minutes: int = Field(default=30)
-    is_active: bool = Field(default=True, index=True)
+    base_price: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Giá dịch vụ khởi điểm (phải >= 0)",
+    )
+    estimated_duration_minutes: int = Field(
+        default=30,
+        gt=0,
+        description="Thời gian sửa chữa dự kiến (phút, phải > 0)",
+    )
+    is_active: bool = Field(default=True)
 
+    @field_validator("name")
+    @classmethod
+    def validate_name_not_empty(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError(
+                "Tên dịch vụ không được để trống hoặc chỉ chứa khoảng trắng"
+            )
+        return cleaned
 
-class ServiceCreate(ServiceBase):
-    pass
+    @field_validator("code")
+    @classmethod
+    def validate_code_not_empty(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError(
+                "Mã dịch vụ không được để trống hoặc chỉ chứa khoảng trắng"
+            )
+        return cleaned.upper()
 
 
 class ServiceUpdate(SQLModel):
-    name: str | None = Field(default=None, max_length=255)
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+        description="Tên dịch vụ mới",
+    )
     description: str | None = Field(default=None, max_length=1000)
-    base_price: float | None = None
-    estimated_duration_minutes: int | None = None
-    is_active: bool | None = None
+    base_price: float | None = Field(
+        default=None, ge=0.0, description="Giá dịch vụ mới (>= 0)"
+    )
+    estimated_duration_minutes: int | None = Field(
+        default=None,
+        gt=0,
+        description="Thời gian sửa chữa dự kiến mới (phút, > 0)",
+    )
+    is_active: bool | None = Field(
+        default=None, description="Trạng thái hiển thị dịch vụ"
+    )
+    code: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Mã định danh không được phép sửa đổi",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_update_name(cls, v: str | None) -> str | None:
+        if v is not None:
+            cleaned = v.strip()
+            if not cleaned:
+                raise ValueError(
+                    "Tên dịch vụ không được để trống hoặc chỉ chứa khoảng trắng"
+                )
+            return cleaned
+        return v
 
 
 class Service(ServiceBase, table=True):
@@ -326,6 +426,18 @@ class Service(ServiceBase, table=True):
 class ServicePublic(ServiceBase):
     id: uuid.UUID
     created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ServicesPublic(SQLModel):
+    data: list[ServicePublic]
+    count: int
+
+
+class ServiceResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: ServicePublic
 
 
 class ServicesPublic(SQLModel):
@@ -912,14 +1024,30 @@ class PaymentPublic(PaymentBase):
 
 
 class ReviewBase(SQLModel):
-    rating: int = Field(nullable=False)  # 1 to 5
-    comment: str | None = Field(default=None, max_length=1000)
+    rating: int = Field(
+        nullable=False, ge=1, le=5, description="Điểm đánh giá từ 1 đến 5 sao"
+    )
+    comment: str | None = Field(
+        default=None, max_length=1000, description="Nội dung nhận xét"
+    )
 
 
 class ReviewCreate(ReviewBase):
     appointment_id: uuid.UUID
-    customer_id: uuid.UUID
+    customer_id: uuid.UUID | None = None
     technician_id: uuid.UUID | None = None
+
+
+class ReviewCreateRequest(SQLModel):
+    appointment_id: uuid.UUID
+    rating: int = Field(ge=1, le=5, description="Điểm đánh giá từ 1 đến 5 sao")
+    comment: str | None = Field(
+        default=None, max_length=1000, description="Nội dung nhận xét"
+    )
+    customer_id: uuid.UUID | None = Field(
+        default=None,
+        description="ID khách hàng (tùy chọn, tự động xác định từ lịch hẹn)",
+    )
 
 
 class Review(ReviewBase, table=True):
@@ -965,6 +1093,21 @@ class ReviewPublic(ReviewBase):
     customer_id: uuid.UUID
     technician_id: uuid.UUID | None = None
     created_at: datetime | None = None
+    customer_name: str | None = None
+    technician_name: str | None = None
+    appointment_number: str | None = None
+
+
+class ReviewsPublic(SQLModel):
+    data: list[ReviewPublic]
+    count: int
+    average_rating: float | None = None
+
+
+class ReviewResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: ReviewPublic
 
 
 # ============================================================================
@@ -973,8 +1116,8 @@ class ReviewPublic(ReviewBase):
 
 
 class NotificationBase(SQLModel):
-    title: str = Field(max_length=255)
-    message: str = Field(max_length=1000)
+    title: str = Field(min_length=1, max_length=255)
+    message: str = Field(min_length=1, max_length=1000)
     notification_type: str = Field(
         default="STATUS_UPDATE", max_length=50
     )  # APPOINTMENT_REMINDER, STATUS_UPDATE, PAYMENT_CONFIRMATION, PROMOTION
@@ -1020,6 +1163,21 @@ class NotificationPublic(NotificationBase):
     customer_id: uuid.UUID | None = None
     user_id: uuid.UUID | None = None
     created_at: datetime | None = None
+
+
+class NotificationsPublic(SQLModel):
+    data: list[NotificationPublic]
+    count: int
+    unread_count: int
+
+
+class UnreadNotificationCount(SQLModel):
+    unread_count: int
+
+
+class MarkAllReadResponse(SQLModel):
+    message: str = "Đã đánh dấu tất cả thông báo là đã đọc"
+    updated_count: int
 
 
 # ============================================================================
@@ -1125,6 +1283,39 @@ class RefreshToken(RefreshTokenBase, table=True):
     )
 
     user: User = Relationship(back_populates="refresh_tokens")
+
+
+# ============================================================================
+# FIXPHONE ENTITY: PASSWORD RESET TOKEN (DATABASE-BACKED & SINGLE-USE)
+# ============================================================================
+
+
+class PasswordResetTokenBase(SQLModel):
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", ondelete="CASCADE", nullable=False, index=True
+    )
+    token_hash: str = Field(unique=True, index=True, max_length=64)
+    expires_at: datetime = Field(
+        sa_type=DateTime(timezone=True),
+        index=True,  # type: ignore
+    )
+    is_used: bool = Field(default=False, index=True)
+    used_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class PasswordResetToken(PasswordResetTokenBase, table=True):
+    __tablename__ = "password_reset_token"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+    user: User = Relationship(back_populates="password_reset_tokens")
 
 
 class NewPassword(SQLModel):
@@ -1772,3 +1963,198 @@ class AppointmentAssignTechnicianResponse(SQLModel):
     success: bool = True
     message: str
     data: AppointmentAssignTechnicianData
+
+
+# ============================================================================
+# TASK 315 & 319: INVOICE & PAYMENT API SCHEMAS
+# ============================================================================
+
+
+class InvoiceStatus(StrEnum):
+    UNPAID = "unpaid"
+    PARTIALLY_PAID = "partially_paid"
+    PAID = "paid"
+    CANCELLED = "cancelled"
+
+
+class PaymentMethod(StrEnum):
+    CASH = "cash"
+    COD = "cod"
+    BANK_TRANSFER = "bank_transfer"
+    CARD = "card"
+    E_WALLET = "e_wallet"
+
+
+class PaymentStatus(StrEnum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    REFUNDED = "refunded"
+
+
+class InvoiceCreateRequest(SQLModel):
+    repair_order_id: uuid.UUID | str | int = Field(
+        description="ID hoặc mã đơn sửa chữa (UUID, mã số hoặc chuỗi định danh)"
+    )
+    notes: str | None = Field(
+        default=None, max_length=1000, description="Ghi chú hóa đơn"
+    )
+
+
+class InvoiceItemDetail(SQLModel):
+    id: uuid.UUID
+    item_name: str
+    quantity: int
+    unit_price: float
+    total_price: float
+
+
+class InvoiceDetail(SQLModel):
+    id: uuid.UUID
+    invoice_code: str
+    invoice_number: str
+    repair_order_id: uuid.UUID
+    appointment_number: str
+    customer_id: uuid.UUID
+    customer_name: str
+    customer_phone: str | None = None
+    subtotal: float
+    discount_amount: float = 0.0
+    tax_amount: float = 0.0
+    total_amount: float
+    paid_amount: float = 0.0
+    remaining_amount: float = 0.0
+    status: str
+    items: list[InvoiceItemDetail] = Field(default_factory=list)
+    created_at: datetime | None = None
+    notes: str | None = None
+
+
+class InvoiceResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: InvoiceDetail
+
+
+class InvoicesPublic(SQLModel):
+    data: list[InvoiceDetail]
+    count: int
+
+
+class PaymentCreateRequest(SQLModel):
+    invoice_id: uuid.UUID | str | int = Field(
+        description="ID hoặc mã số của hóa đơn cần thanh toán"
+    )
+    amount: float = Field(
+        gt=0,
+        description="Số tiền thanh toán (phải lớn hơn 0)",
+    )
+    payment_method: str = Field(
+        default="cash",
+        description="Phương thức thanh toán: cash (tiền mặt), cod (khi nhận máy), bank_transfer (chuyển khoản/QR), card (thẻ ATM/Visa), e_wallet (ví điện tử)",
+    )
+    transaction_code: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Mã giao dịch / mã tham chiếu từ ngân hàng hoặc cổng thanh toán (nếu có)",
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Ghi chú giao dịch thanh toán",
+    )
+
+
+class PaymentDetail(SQLModel):
+    id: uuid.UUID
+    payment_code: str
+    payment_number: str
+    invoice_id: uuid.UUID
+    invoice_code: str
+    amount: float
+    payment_method: str
+    status: str
+    paid_at: datetime
+    transaction_code: str | None = None
+    transaction_reference: str | None = None
+    recorded_by: str | None = None
+    recorded_by_user_id: uuid.UUID | None = None
+    note: str | None = None
+    created_at: datetime | None = None
+    invoice_status_after_payment: str | None = None
+    invoice_remaining_amount: float | None = None
+
+
+class PaymentResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: PaymentDetail
+
+
+class PaymentsPublic(SQLModel):
+    data: list[PaymentDetail]
+    count: int
+
+
+# ============================================================================
+# TASK 321 & 322: ACCOUNT MANAGEMENT & PASSWORD RESET SCHEMAS
+# ============================================================================
+
+
+class UserLockRequest(SQLModel):
+    reason: str | None = Field(
+        default=None, max_length=500, description="Lý do khóa tài khoản (tùy chọn)"
+    )
+
+
+class UserLockResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: UserPublic
+
+
+class UserUnlockResponse(SQLModel):
+    success: bool = True
+    message: str
+    data: UserPublic
+
+
+class ForgotPasswordRequest(SQLModel):
+    email: EmailStr = Field(
+        description="Email đăng ký của tài khoản cần đặt lại mật khẩu"
+    )
+
+
+class ForgotPasswordResponse(SQLModel):
+    success: bool = True
+    message: str
+
+
+class VerifyResetTokenRequest(SQLModel):
+    token: str = Field(
+        min_length=1, description="Mã token đặt lại mật khẩu cần xác thực"
+    )
+
+
+class VerifyResetTokenResponse(SQLModel):
+    success: bool = True
+    valid: bool = True
+    email: str | None = None
+    message: str
+
+
+class ResetPasswordRequest(SQLModel):
+    token: str = Field(min_length=1, description="Mã token đặt lại mật khẩu")
+    new_password: str = Field(min_length=8, max_length=128, description="Mật khẩu mới")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Mật khẩu không được để trống hoặc chỉ có khoảng trắng")
+        return v
+
+
+class ResetPasswordResponse(SQLModel):
+    success: bool = True
+    message: str

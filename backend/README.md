@@ -1,4 +1,4 @@
-# FastAPI Project - Backend
+# FixPhone - Backend FastAPI
 
 ## Requirements
 
