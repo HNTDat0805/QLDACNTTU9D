@@ -29,5 +29,5 @@ test("dịch vụ công khai có chi tiết và đường dẫn đặt lịch", 
   await page.reload()
   await expect(page.getByRole("heading", { name: service.name })).toBeVisible()
   await page.goto("/about")
-  await expect(page.getByRole("main")).toContainText("FixCare")
+  await expect(page.getByRole("main")).toContainText("FixPhone")
 })

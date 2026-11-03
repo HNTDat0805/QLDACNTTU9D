@@ -51,6 +51,14 @@ const refreshAccessToken = async (): Promise<string | null> => {
   return refreshPromise
 }
 
+const PUBLIC_PATHS = ["/", "/services", "/booking", "/about"]
+const isPublicPathname = (pathname: string) =>
+  PUBLIC_PATHS.some(
+    (prefix) =>
+      pathname === prefix ||
+      (prefix !== "/" && pathname.startsWith(`${prefix}/`)),
+  )
+
 client.instance.interceptors.response.use(
   (response) => response,
   async (error: unknown) => {
@@ -64,7 +72,7 @@ client.instance.interceptors.response.use(
 
     const requestUrl = error.config.url ?? ""
     const isRefreshRequest = requestUrl.includes("/login/refresh-token")
-    const alreadyRetried = error.config.headers?.["x-fixcare-retry"] === "true"
+    const alreadyRetried = error.config.headers?.["x-fixphone-retry"] === "true"
 
     if (isRefreshRequest || alreadyRetried) {
       return Promise.reject(error)
@@ -72,23 +80,40 @@ client.instance.interceptors.response.use(
 
     const accessToken = await refreshAccessToken()
     if (!accessToken) {
+      if (isPublicPathname(window.location.pathname)) {
+        localStorage.removeItem("access_token")
+        localStorage.removeItem("refresh_token")
+        error.config.headers.delete("Authorization")
+        error.config.headers.set("x-fixphone-retry", "true")
+        return client.instance.request(error.config)
+      }
       return Promise.reject(error)
     }
 
     error.config.headers.set("Authorization", `Bearer ${accessToken}`)
-    error.config.headers.set("x-fixcare-retry", "true")
+    error.config.headers.set("x-fixphone-retry", "true")
     return client.instance.request(error.config)
   },
 )
 
 let isRedirectingToLogin = false
 
+const isInvalidCurrentUserResponse = (error: unknown): boolean => {
+  if (!isAxiosError(error)) return false
+  const url = error.config?.url ?? ""
+  const status = error.response?.status
+  return url.endsWith("/users/me") && (status === 404 || status === 400)
+}
+
 const redirectToLoginForExpiredSession = (error: unknown): boolean => {
   const hasAccessToken = localStorage.getItem("access_token") !== null
   const isOnLoginPage = window.location.pathname === "/login"
+  const status = getApiErrorStatus(error)
+  const expiredOrInvalidUser =
+    status === 401 || isInvalidCurrentUserResponse(error)
 
   if (
-    getApiErrorStatus(error) !== 401 ||
+    !expiredOrInvalidUser ||
     !hasAccessToken ||
     isOnLoginPage ||
     isRedirectingToLogin
@@ -98,6 +123,7 @@ const redirectToLoginForExpiredSession = (error: unknown): boolean => {
 
   isRedirectingToLogin = true
   localStorage.removeItem("access_token")
+  localStorage.removeItem("refresh_token")
   window.location.assign("/login")
   return true
 }
@@ -112,7 +138,7 @@ const showGlobalApiError = (error: unknown) => {
 
 const shouldRetryQuery = (failureCount: number, error: unknown) => {
   const status = getApiErrorStatus(error)
-  const nonRetryableStatuses = [401, 403, 404, 422]
+  const nonRetryableStatuses = [400, 401, 403, 404, 422]
 
   if (status !== undefined && nonRetryableStatuses.includes(status)) {
     return false
@@ -128,10 +154,14 @@ const queryClient = new QueryClient({
     },
   },
   queryCache: new QueryCache({
-    onError: (error) => {
-      if (!redirectToLoginForExpiredSession(error)) {
-        showGlobalApiError(error)
+    onError: (error, query) => {
+      if (query.meta?.silent === true) {
+        return
       }
+      if (redirectToLoginForExpiredSession(error)) {
+        return
+      }
+      showGlobalApiError(error)
     },
   }),
   mutationCache: new MutationCache({

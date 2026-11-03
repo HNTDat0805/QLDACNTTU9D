@@ -52,7 +52,7 @@ test("Log in with invalid email", async ({ page }) => {
   await fillForm(page, "invalidemail", firstSuperuserPassword)
   await page.getByRole("button", { name: "Đăng nhập" }).click()
 
-  await expect(page.getByText("Invalid email address")).toBeVisible()
+  await expect(page.getByText("Địa chỉ email không hợp lệ")).toBeVisible()
 })
 
 test("Log in with invalid password", async ({ page }) => {

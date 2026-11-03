@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button"
 
 export function LandingCta() {
   return (
-    <section
-      aria-labelledby="cta-title"
-      className="bg-white border-t"
-    >
+    <section aria-labelledby="cta-title" className="bg-card border-t">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-12 sm:px-12 sm:py-16 lg:flex lg:items-center lg:justify-between lg:gap-16">
           {/* Decorations */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+          >
             <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-white/8 blur-3xl" />
             <div className="absolute -bottom-12 -left-12 h-60 w-60 rounded-full bg-violet-600/30 blur-3xl" />
             <div
@@ -43,8 +43,8 @@ export function LandingCta() {
               Sẵn sàng khám phá FixPhone?
             </h2>
             <p className="mt-4 text-base leading-7 text-white/80 sm:text-lg max-w-xl">
-              Tạo tài khoản để đặt lịch sửa chữa, hoặc đăng nhập nếu bạn đã
-              có quyền truy cập hệ thống.
+              Tạo tài khoản để đặt lịch sửa chữa, hoặc đăng nhập nếu bạn đã có
+              quyền truy cập hệ thống.
             </p>
           </div>
 
@@ -60,6 +60,14 @@ export function LandingCta() {
                 Đặt lịch ngay
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full border-white/30 bg-transparent text-white hover:bg-white/12 hover:text-white hover:border-white/50 font-semibold rounded-xl transition-all duration-200 sm:w-auto"
+            >
+              <Link to="/signup">Tạo tài khoản</Link>
             </Button>
             <Button
               asChild

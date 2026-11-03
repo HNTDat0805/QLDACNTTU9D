@@ -20,8 +20,10 @@ import {
 } from "@/components/Operations/shared"
 import { Button } from "@/components/ui/button"
 import useAuth from "@/hooks/useAuth"
+import { pageHead } from "@/lib/seo"
 export const Route = createFileRoute("/_layout/workspace/repairs")({
   component: Repairs,
+  head: pageHead("Phiếu sửa chữa"),
 })
 function Repairs() {
   const { user } = useAuth()
@@ -265,14 +267,25 @@ function Repairs() {
                       })
                     }
                   />
-                  <Button
-                    className="mt-3"
-                    variant="outline"
-                    disabled={items >= 20}
-                    onClick={() => setItems(items + 1)}
-                  >
-                    Thêm hạng mục
-                  </Button>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={items >= 20}
+                      onClick={() => setItems(items + 1)}
+                    >
+                      Thêm hạng mục
+                    </Button>
+                    {items > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setItems(items - 1)}
+                      >
+                        Bớt hạng mục
+                      </Button>
+                    )}
+                  </div>
                 </Panel>
               )}
               <QuotesPanel appointmentId={a.id} />

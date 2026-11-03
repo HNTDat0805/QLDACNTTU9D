@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import col, delete
+from sqlmodel import col, delete, select
 
 from app import crud
 from app.api.deps import (
@@ -14,6 +14,7 @@ from app.api.deps import (
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    Customer,
     Item,
     Message,
     UpdatePassword,
@@ -192,6 +193,16 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
         is_superuser=False,
     )
     user = crud.create_user(session=session, user_create=user_create)
+    existing_customer = session.exec(
+        select(Customer).where(
+            Customer.email == user.email,
+            col(Customer.user_id).is_(None),
+        )
+    ).first()
+    if existing_customer:
+        existing_customer.user_id = user.id
+        session.add(existing_customer)
+        session.commit()
     return user
 
 

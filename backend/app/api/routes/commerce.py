@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 
 from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import col, func, or_, select
 
 from app.api.deps import CurrentUser, RequireManager, RequireStaff, SessionDep
@@ -85,7 +86,7 @@ def handover_device(
     invoice = session.exec(
         select(Invoice).where(Invoice.id == invoice_id).with_for_update()
     ).first()
-    if not invoice or invoice.status != "PAID":
+    if not invoice or (invoice.status or "").upper() != "PAID":
         raise HTTPException(
             status_code=409,
             detail="Chỉ bàn giao thiết bị sau khi hóa đơn đã thanh toán đủ",
@@ -192,7 +193,7 @@ def submit_review(
     return ReviewPublic.model_validate(review)
 
 
-def notification_filter(user_id: uuid.UUID):
+def notification_filter(user_id: uuid.UUID) -> ColumnElement[bool]:
     customer_ids = select(Customer.id).where(Customer.user_id == user_id)
     return or_(
         Notification.user_id == user_id, col(Notification.customer_id).in_(customer_ids)

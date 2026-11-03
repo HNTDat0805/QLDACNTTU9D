@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy import or_
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, func, select
 
 from app.core.logging import get_logger
 from app.models import (
@@ -435,12 +435,16 @@ def list_invoices(
 ) -> tuple[list[InvoiceDetail], int]:
     """Danh sách hóa đơn phân trang với bộ lọc."""
     query = select(Invoice)
+    count_query = select(func.count()).select_from(Invoice)
     if status_filter:
-        query = query.where(Invoice.status == status_filter.strip().lower())
+        normalized_status = status_filter.strip().upper()
+        query = query.where(func.upper(Invoice.status) == normalized_status)
+        count_query = count_query.where(func.upper(Invoice.status) == normalized_status)
     if customer_id:
         query = query.where(Invoice.customer_id == customer_id)
+        count_query = count_query.where(Invoice.customer_id == customer_id)
 
-    total_count = len(session.exec(query).all())
+    total_count = int(session.exec(count_query).one())
 
     query = query.order_by(col(Invoice.created_at).desc()).offset(skip).limit(limit)
     invoices = session.exec(query).all()

@@ -51,10 +51,7 @@ const features: Feature[] = [
 
 export function LandingFeatures() {
   return (
-    <section
-      aria-labelledby="features-title"
-      className="bg-white border-y"
-    >
+    <section aria-labelledby="features-title" className="bg-white border-y">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         {/* Section header */}
         <div className="max-w-2xl">
@@ -76,22 +73,24 @@ export function LandingFeatures() {
 
         {/* Features grid */}
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map(({ icon: Icon, title, description, iconColor, iconBg }) => (
-            <div
-              key={title}
-              className="card-lift group rounded-2xl border bg-white p-6 shadow-sm"
-            >
-              <span
-                className={`grid size-12 place-items-center rounded-xl ${iconBg} ${iconColor} transition-all duration-200 group-hover:scale-110`}
+          {features.map(
+            ({ icon: Icon, title, description, iconColor, iconBg }) => (
+              <div
+                key={title}
+                className="card-lift group rounded-2xl border bg-white p-6 shadow-sm"
               >
-                <Icon aria-hidden="true" className="size-5" />
-              </span>
-              <h3 className="mt-5 text-base font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {description}
-              </p>
-            </div>
-          ))}
+                <span
+                  className={`grid size-12 place-items-center rounded-xl ${iconBg} ${iconColor} transition-all duration-200 group-hover:scale-110`}
+                >
+                  <Icon aria-hidden="true" className="size-5" />
+                </span>
+                <h3 className="mt-5 text-base font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {description}
+                </p>
+              </div>
+            ),
+          )}
         </div>
       </div>
     </section>

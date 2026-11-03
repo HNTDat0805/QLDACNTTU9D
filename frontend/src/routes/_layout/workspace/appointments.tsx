@@ -19,11 +19,19 @@ import {
 } from "@/components/Operations/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import useAuth from "@/hooks/useAuth"
+import { pageHead } from "@/lib/seo"
 
 export const Route = createFileRoute("/_layout/workspace/appointments")({
   component: StaffAppointments,
+  head: pageHead("Quản lý lịch hẹn"),
 })
 function StaffAppointments() {
+  const { user } = useAuth()
+  const isReception = Boolean(
+    user?.is_superuser ||
+      ["admin", "manager", "staff"].includes(user?.role ?? ""),
+  )
   const [q, setQ] = useState("")
   const [status, setStatus] = useState("")
   const [page, setPage] = useState(0)
@@ -54,6 +62,7 @@ function StaffAppointments() {
   })
   const technicians = useQuery({
     queryKey: ["operations", "technicians", "active"],
+    enabled: isReception,
     queryFn: async () =>
       (
         await TechniciansService.readTechnicians({
@@ -63,7 +72,9 @@ function StaffAppointments() {
   })
   const appointment = detail.data
   const canChange =
-    appointment && ["PENDING", "CONFIRMED"].includes(appointment.status)
+    isReception &&
+    appointment &&
+    ["PENDING", "CONFIRMED"].includes(appointment.status)
   return (
     <section className="space-y-6">
       <PageTitle

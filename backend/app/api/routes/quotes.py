@@ -28,6 +28,30 @@ def read_quotations(
     appointment_id: uuid.UUID | None = None,
 ) -> QuotationsPublic:
     ids = access_service.accessible_appointment_ids(session, current_user)
+
+    # Tự động đồng bộ báo giá cho tất cả các lịch hẹn được phép truy cập
+    appts_query = select(Appointment)
+    if ids is not None:
+        appts_query = appts_query.where(col(Appointment.id).in_(ids))
+    if appointment_id:
+        appts_query = appts_query.where(Appointment.id == appointment_id)
+    all_appts = session.exec(appts_query).all()
+    created_any = False
+    for appt in all_appts:
+        existing_q = session.exec(
+            select(Quote).where(Quote.appointment_id == appt.id)
+        ).first()
+        if not existing_q:
+            quote_service.ensure_quote_for_appointment(session, appt)
+            created_any = True
+        elif (appt.status or "").upper() in ("CONFIRMED", "COMPLETED", "IN_PROGRESS"):
+            if existing_q.status in ("DRAFT", "SENT"):
+                existing_q.status = "ACCEPTED"
+                session.add(existing_q)
+                created_any = True
+    if created_any:
+        session.commit()
+
     query = select(Quote)
     count = select(func.count()).select_from(Quote)
     if ids is not None:
