@@ -1,6 +1,12 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+import sys
 from pathlib import Path
+
+# Đảm bảo đường dẫn backend nằm trong sys.path khi chạy từ root hoặc Vercel serverless loader
+_backend_dir = str(Path(__file__).resolve().parent.parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 import sentry_sdk
 from fastapi import FastAPI
