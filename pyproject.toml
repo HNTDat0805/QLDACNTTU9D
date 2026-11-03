@@ -35,4 +35,4 @@ extend-ignore-re = [
 [tool.typos.default.extend-identifiers]
 alls = "alls"
 
-
+requires-python = ">=3.12,<4.0"
