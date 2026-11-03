@@ -115,9 +115,7 @@ def _calculate_checksum(data_str: str) -> str:
     return hashlib.sha256(data_str.encode("utf-8")).hexdigest()
 
 
-def _deserialize_column_value(
-    model: type[SQLModel], key: str, value: Any
-) -> Any:
+def _deserialize_column_value(model: type[SQLModel], key: str, value: Any) -> Any:
     if value is None or not isinstance(value, str):
         return value
 
