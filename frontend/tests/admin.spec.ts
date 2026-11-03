@@ -6,9 +6,13 @@ import { logInUser } from "./utils/user"
 
 test("Admin page is accessible and shows correct title", async ({ page }) => {
   await page.goto("/admin")
-  await expect(page.getByRole("heading", { name: "Users" })).toBeVisible()
   await expect(
-    page.getByText("Manage user accounts and permissions"),
+    page.getByRole("heading", { name: "Quản trị tài khoản" }),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      /Quản lý tài khoản, trạng thái hoạt động và vai trò trong (FixPhone|FixCare)/,
+    ),
   ).toBeVisible()
 })
 
@@ -63,7 +67,7 @@ test.describe("Admin user management", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible()
 
     const userRow = page.getByRole("row").filter({ hasText: email })
-    await expect(userRow.getByText("Superuser")).toBeVisible()
+    await expect(userRow.getByText("Quản trị viên")).toBeVisible()
   })
 
   test("Edit a user successfully", async ({ page }) => {
@@ -191,7 +195,9 @@ test.describe("Admin page access control", () => {
 
     await page.goto("/admin")
 
-    await expect(page.getByRole("heading", { name: "Users" })).not.toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Quản trị tài khoản" }),
+    ).not.toBeVisible()
     await expect(page).not.toHaveURL(/\/admin/)
   })
 
@@ -200,6 +206,8 @@ test.describe("Admin page access control", () => {
 
     await page.goto("/admin")
 
-    await expect(page.getByRole("heading", { name: "Users" })).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Quản trị tài khoản" }),
+    ).toBeVisible()
   })
 })

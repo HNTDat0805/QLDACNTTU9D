@@ -119,6 +119,19 @@ def update_user(
             detail="Chỉ tài khoản Superuser mới có quyền sửa đổi thông tin của Superuser",
         )
 
+    if user_in.is_superuser is True and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Superuser mới có quyền cấp quyền Superuser",
+        )
+
+    if not current_user.is_superuser and current_user.role != "admin":
+        if db_user.role == "admin" or user_in.role == "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Quản lý không có quyền thay đổi hoặc gán vai trò Quản trị viên",
+            )
+
     if user_in.email:
         existing_user = crud.get_user_by_email(session=session, email=user_in.email)
         if existing_user and existing_user.id != user_id:

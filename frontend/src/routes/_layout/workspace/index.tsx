@@ -4,9 +4,11 @@ import { CalendarCheck, ClipboardList, Clock, Users } from "lucide-react"
 import { AppointmentsService, CustomersService, QueueService } from "@/client"
 import { DataState, PageTitle } from "@/components/Operations/shared"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageHead } from "@/lib/seo"
 
 export const Route = createFileRoute("/_layout/workspace/")({
   component: StaffDashboard,
+  head: pageHead("Trung tâm tiếp nhận"),
 })
 function StaffDashboard() {
   const data = useQuery({

@@ -51,6 +51,7 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
+      queryClient.removeQueries()
       navigate({ to: "/app" })
     },
     onError: handleError.bind(showErrorToast),

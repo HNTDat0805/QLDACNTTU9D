@@ -25,7 +25,7 @@ services:
       - --api.insecure=true
   db:
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   adminer:
     ports:
@@ -33,16 +33,14 @@ services:
 
   backend:
     ports:
-      - "8000:8000"
+      - "8001:8000"
     build:
       context: .
       dockerfile: backend/Dockerfile
-    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     command:
-      - fastapi
-      - dev
-      - --host
-      - "0.0.0.0"
+      - sh
+      - -lc
+      - "uv run alembic upgrade head && uv run python app/initial_data.py && uv run fastapi dev --host 0.0.0.0 --port 8000"
     develop:
       watch:
         - path: ./backend
@@ -61,6 +59,8 @@ services:
             - ./frontend/test-results
     # TODO: remove once coverage is done locally
     volumes:
+      - ./backend/app:/app/backend/app
+      - ./backend/tests:/app/backend/tests
       - ./backend/htmlcov:/app/backend/htmlcov
     environment:
       FASTAPI_ENV: "development"
@@ -73,6 +73,19 @@ services:
     ports:
       - "8025:8025"
       - "1025:1025"
+
+  frontend:
+    image: oven/bun:1
+    working_dir: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend-node-modules:/app/frontend/node_modules
+    command: sh -lc "[ -x node_modules/.bin/vite ] || bun install; exec bun run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8001
+      CHOKIDAR_USEPOLLING: "true"
 
   playwright:
     build:
@@ -97,4 +110,7 @@ services:
       - ./frontend/blob-report:/app/frontend/blob-report
       - ./frontend/test-results:/app/frontend/test-results
     ports:
-      - 9323:9323
+      - "9323:9323"
+
+volumes:
+  frontend-node-modules:

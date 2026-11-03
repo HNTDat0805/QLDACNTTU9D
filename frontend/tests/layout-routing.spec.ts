@@ -51,9 +51,12 @@ test("sidebar mobile mở, đóng và giao diện đổi theme", async ({ page }
   })
   await expect(sidebarButton).toBeVisible()
   await sidebarButton.click()
-  await expect(page.getByRole("link", { name: "Tổng quan" })).toBeVisible()
-  await page.getByRole("link", { name: "Tổng quan" }).click()
-  await expect(page.getByRole("link", { name: "Tổng quan" })).not.toBeVisible()
+  const mobileNav = page.getByRole("navigation", { name: "Điều hướng di động" })
+  await expect(
+    mobileNav.getByRole("link", { name: "Trang chủ", exact: true }),
+  ).toBeVisible()
+  await mobileNav.getByRole("link", { name: "Trang chủ", exact: true }).click()
+  await expect(mobileNav).not.toBeVisible()
 
   await page.goto("/")
   await page.getByTestId("theme-button").click()
@@ -71,7 +74,7 @@ test("bố cục công khai đáp ứng trên mobile, tablet và desktop", async
       page.getByRole("navigation", { name: "Điều hướng công khai" }),
     ).toBeVisible()
     await expect(
-      page.locator("footer").filter({ hasText: "FixCare · Quản lý sửa chữa" }),
+      page.locator("footer").filter({ hasText: /FixPhone · Quản lý sửa chữa/ }),
     ).toBeVisible()
   }
 })

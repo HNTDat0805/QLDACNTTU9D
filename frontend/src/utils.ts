@@ -101,10 +101,18 @@ export const handleError = function (
 }
 
 export const getInitials = (name: string): string => {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase()
+  const trimmed = name.trim()
+  if (!trimmed) return "FP"
+  const words = trimmed.split(/\s+/).filter(Boolean)
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase()
+  }
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase()
+}
+
+export const formatLocalDate = (date: Date = new Date()): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
 }

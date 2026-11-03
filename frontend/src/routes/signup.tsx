@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { pageHead } from "@/lib/seo"
 
 const formSchema = z
   .object({
@@ -48,13 +49,7 @@ export const Route = createFileRoute("/signup")({
       })
     }
   },
-  head: () => ({
-    meta: [
-      {
-        title: "Sign Up - FastAPI Template",
-      },
-    ],
-  }),
+  head: pageHead("Tạo tài khoản"),
 })
 
 function SignUp() {

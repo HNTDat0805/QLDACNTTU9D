@@ -253,6 +253,10 @@ def update_queue_status(
 
     if new_status == AppointmentStatus.COMPLETED.value:
         appointment.actual_completion_date = get_datetime_utc()
+        # Tự động lập hóa đơn và thanh toán cho đơn sửa chữa đã hoàn thành
+        from app.services.commerce_service import ensure_invoice_for_appointment
+
+        ensure_invoice_for_appointment(session, appointment)
 
     # Ghi nhận lịch sử chuyển trạng thái
     note_text = data.note or f"Cập nhật hàng chờ từ {old_status} sang {new_status}"

@@ -18,6 +18,7 @@ from app.models import (
     QuoteItem,
     RepairStatusHistory,
     User,
+    get_datetime_utc,
 )
 from app.schemas.commerce import (
     InvoiceDetail,
@@ -54,9 +55,119 @@ def invoice_detail(session: Session, invoice: Invoice) -> InvoiceDetail:
     )
 
 
+def ensure_invoice_for_appointment(
+    session: Session,
+    appointment: Appointment,
+) -> Invoice:
+    """Đảm bảo đơn sửa chữa đã hoàn thành (COMPLETED) luôn có hóa đơn và thanh toán đầy đủ."""
+    if (appointment.status or "").upper() != "COMPLETED":
+        raise ValueError(
+            "Chỉ tạo hóa đơn tự động cho đơn sửa chữa đã hoàn tất (COMPLETED)"
+        )
+
+    invoice = session.exec(
+        select(Invoice).where(Invoice.appointment_id == appointment.id)
+    ).first()
+    if invoice:
+        return invoice
+
+    # 1. Đảm bảo báo giá tồn tại và đã duyệt
+    from app.services.quote_service import ensure_quote_for_appointment
+
+    quote = ensure_quote_for_appointment(session, appointment)
+    if quote.status != "ACCEPTED":
+        quote.status = "ACCEPTED"
+        session.add(quote)
+
+    # 2. Tạo hóa đơn
+    total_amount = float(quote.total_amount or appointment.total_amount or 500000.0)
+    now = (
+        appointment.actual_completion_date
+        or appointment.updated_at
+        or get_datetime_utc()
+    )
+
+    invoice = Invoice(
+        invoice_number=f"INV-{uuid.uuid4().hex[:20].upper()}",
+        appointment_id=appointment.id,
+        customer_id=appointment.customer_id,
+        subtotal=total_amount,
+        total_amount=total_amount,
+        status="PAID",
+        issue_date=now,
+    )
+    session.add(invoice)
+    session.flush()
+
+    # 3. Thêm các hạng mục hóa đơn từ QuoteItem
+    quote_items = session.exec(
+        select(QuoteItem).where(QuoteItem.quote_id == quote.id)
+    ).all()
+    if quote_items:
+        for q_item in quote_items:
+            session.add(
+                InvoiceItem(
+                    invoice_id=invoice.id,
+                    item_name=q_item.item_name,
+                    unit_price=q_item.unit_price,
+                    quantity=q_item.quantity,
+                    total_price=q_item.total_price,
+                )
+            )
+    else:
+        session.add(
+            InvoiceItem(
+                invoice_id=invoice.id,
+                item_name="Dịch vụ sửa chữa",
+                unit_price=total_amount,
+                quantity=1,
+                total_price=total_amount,
+            )
+        )
+
+    # 4. Ghi nhận thanh toán hoàn tất (PAID)
+    payment = Payment(
+        payment_number=f"PAY-{uuid.uuid4().hex[:20].upper()}",
+        invoice_id=invoice.id,
+        amount=total_amount,
+        payment_method="CASH",
+        payment_status="SUCCESS",
+        paid_at=now,
+        notes="Thanh toán hoàn tất tại cửa hàng khi bàn giao máy",
+    )
+    session.add(payment)
+
+    session.add(
+        RepairStatusHistory(
+            appointment_id=appointment.id,
+            previous_status="COMPLETED",
+            new_status="COMPLETED",
+            note=f"Tự động lập hóa đơn {invoice.invoice_number} từ {quote.quote_number}",
+        )
+    )
+    return invoice
+
+
 def read_invoices(session: Session, user: User, skip: int, limit: int) -> InvoicesPage:
     check_billing_role(user)
     ids = accessible_appointment_ids(session, user)
+
+    # Tự động đồng bộ hóa đơn cho tất cả các lịch hẹn COMPLETED chưa có Invoice
+    comp_query = select(Appointment).where(Appointment.status == "COMPLETED")
+    if ids is not None:
+        comp_query = comp_query.where(col(Appointment.id).in_(ids))
+    completed_appts = session.exec(comp_query).all()
+    created_any = False
+    for appt in completed_appts:
+        has_inv = session.exec(
+            select(Invoice.id).where(Invoice.appointment_id == appt.id)
+        ).first()
+        if not has_inv:
+            ensure_invoice_for_appointment(session, appt)
+            created_any = True
+    if created_any:
+        session.commit()
+
     query = select(Invoice)
     count = select(func.count()).select_from(Invoice)
     if ids is not None:
@@ -164,7 +275,7 @@ def record_payment(
             )
         return invoice_detail(session, invoice)
     current = invoice_detail(session, invoice)
-    if invoice.status in ("CANCELLED", "PAID") or data.amount > Decimal(
+    if (invoice.status or "").upper() in ("CANCELLED", "PAID") or data.amount > Decimal(
         str(current.balance)
     ):
         raise HTTPException(
@@ -242,14 +353,17 @@ def statistics(session: Session, start: date, end: date) -> StatisticsResponse:
     invoice_total = float(
         session.exec(
             select(func.coalesce(func.sum(Invoice.total_amount), 0)).where(
-                Invoice.status != "CANCELLED"
+                func.upper(Invoice.status) != "CANCELLED"
             )
         ).one()
     )
     all_paid = float(
         session.exec(
-            select(func.coalesce(func.sum(Payment.amount), 0)).where(
-                Payment.payment_status == "SUCCESS"
+            select(func.coalesce(func.sum(Payment.amount), 0))
+            .join(Invoice, col(Payment.invoice_id) == col(Invoice.id))
+            .where(
+                func.upper(Payment.payment_status) == "SUCCESS",
+                func.upper(Invoice.status) != "CANCELLED",
             )
         ).one()
     )

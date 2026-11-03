@@ -1,7 +1,9 @@
 import warnings
-from typing import Literal, Self
+from typing import Annotated, Any, Literal, Self
 
 from pydantic import (
+    AnyUrl,
+    BeforeValidator,
     EmailStr,
     HttpUrl,
     PostgresDsn,
@@ -10,6 +12,14 @@ from pydantic import (
     model_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def parse_cors(v: Any) -> list[str] | str:
+    if isinstance(v, str) and not v.startswith("["):
+        return [i.strip() for i in v.split(",") if i.strip()]
+    elif isinstance(v, list | str):
+        return v
+    raise ValueError(v)
 
 
 class Settings(BaseSettings):
@@ -27,6 +37,28 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     FRONTEND_HOST: str = "http://localhost:5173"
     FASTAPI_ENV: Literal["development"] | None = None
+
+    BACKEND_CORS_ORIGINS: Annotated[
+        list[AnyUrl] | str, BeforeValidator(parse_cors)
+    ] = []
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def all_cors_origins(self) -> list[str]:
+        origins = [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS]
+        defaults = [
+            self.FRONTEND_HOST.rstrip("/"),
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:4173",
+            "http://localhost",
+            "http://localhost:8000",
+            "http://localhost:8001",
+        ]
+        for origin in defaults:
+            if origin and origin not in origins:
+                origins.append(origin)
+        return origins
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
@@ -79,6 +111,14 @@ class Settings(BaseSettings):
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
+    FIRST_MANAGER: EmailStr = "manager@example.com"
+    FIRST_MANAGER_PASSWORD: str | None = None
+    FIRST_STAFF: EmailStr = "staff@example.com"
+    FIRST_STAFF_PASSWORD: str | None = None
+    FIRST_TECHNICIAN: EmailStr = "technician@example.com"
+    FIRST_TECHNICIAN_PASSWORD: str | None = None
+    FIRST_CUSTOMER: EmailStr = "customer@example.com"
+    FIRST_CUSTOMER_PASSWORD: str | None = None
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":

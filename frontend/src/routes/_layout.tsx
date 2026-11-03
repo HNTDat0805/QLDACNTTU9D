@@ -1,9 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 
-import { AppHeader } from "@/components/Common/AppHeader"
 import { Footer } from "@/components/Common/Footer"
-import AppSidebar from "@/components/Sidebar/AppSidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { TopNavbar } from "@/components/Common/TopNavbar"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
@@ -19,17 +17,14 @@ export const Route = createFileRoute("/_layout")({
 
 function Layout() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
-        <div className="flex-1 p-6 md:p-8">
-          <div className="mx-auto max-w-7xl">
-            <Outlet />
-          </div>
+    <div className="flex min-h-svh flex-col bg-[#F6F5FF]/70 dark:bg-background">
+      <TopNavbar />
+      <main id="main-content" className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <Outlet />
         </div>
-        <Footer />
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+      <Footer />
+    </div>
   )
 }

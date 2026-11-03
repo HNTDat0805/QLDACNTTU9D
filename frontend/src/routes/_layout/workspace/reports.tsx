@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router"
 import { useState } from "react"
 import { CommerceService, UsersService } from "@/client"
 import {
@@ -10,13 +10,22 @@ import {
 } from "@/components/Operations/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { pageHead } from "@/lib/seo"
 export const Route = createFileRoute("/_layout/workspace/reports")({
   beforeLoad: async () => {
-    const { data: user } = await UsersService.readUserMe()
-    if (!user.is_superuser && !["admin", "manager"].includes(user.role ?? ""))
-      throw redirect({ to: "/app" })
+    try {
+      const { data: user } = await UsersService.readUserMe()
+      if (!user.is_superuser && !["admin", "manager"].includes(user.role ?? ""))
+        throw redirect({ to: "/app" })
+    } catch (error) {
+      if (isRedirect(error)) throw error
+      localStorage.removeItem("access_token")
+      localStorage.removeItem("refresh_token")
+      throw redirect({ to: "/login" })
+    }
   },
   component: Reports,
+  head: pageHead("Báo cáo quản trị"),
 })
 function Reports() {
   const [start, setStart] = useState("")
@@ -105,7 +114,7 @@ function Reports() {
                 )
                 const link = document.createElement("a")
                 link.href = url
-                link.download = "fixcare-revenue.csv"
+                link.download = "fixphone-revenue.csv"
                 link.click()
                 URL.revokeObjectURL(url)
               }}

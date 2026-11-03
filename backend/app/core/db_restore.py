@@ -10,12 +10,12 @@ Provides robust functions to:
 import hashlib
 import json
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import delete, text
-from sqlmodel import Session, select
+from sqlalchemy import Date, DateTime, Time, delete
+from sqlmodel import Session, SQLModel, select
 
 from app.core.logging import get_logger
 from app.models import (
@@ -24,13 +24,18 @@ from app.models import (
     Customer,
     Device,
     Invoice,
+    InvoiceItem,
+    Item,
     Notification,
+    PasswordResetToken,
     Payment,
     Quote,
     QuoteItem,
+    RefreshToken,
     RepairStatusHistory,
     Review,
     Service,
+    SystemLog,
     Technician,
     TechnicianSchedule,
     User,
@@ -39,10 +44,11 @@ from app.models import (
 logger = get_logger("app.core.db_restore")
 
 # Dependency order for table deletion (children first)
-TABLE_MODELS_DELETION_ORDER = [
+TABLE_MODELS_DELETION_ORDER: list[type[SQLModel]] = [
     Review,
     Notification,
     Payment,
+    InvoiceItem,
     Invoice,
     QuoteItem,
     Quote,
@@ -54,12 +60,20 @@ TABLE_MODELS_DELETION_ORDER = [
     Service,
     Technician,
     Customer,
+    RefreshToken,
+    PasswordResetToken,
+    Item,
+    SystemLog,
     User,
 ]
 
 # Dependency order for table restoration (parents first)
-TABLE_MODELS_RESTORATION_ORDER = [
+TABLE_MODELS_RESTORATION_ORDER: list[type[SQLModel]] = [
     User,
+    SystemLog,
+    Item,
+    RefreshToken,
+    PasswordResetToken,
     Customer,
     Technician,
     Service,
@@ -71,6 +85,7 @@ TABLE_MODELS_RESTORATION_ORDER = [
     Quote,
     QuoteItem,
     Invoice,
+    InvoiceItem,
     Payment,
     Notification,
     Review,
@@ -100,6 +115,59 @@ def _calculate_checksum(data_str: str) -> str:
     return hashlib.sha256(data_str.encode("utf-8")).hexdigest()
 
 
+def _deserialize_column_value(
+    model: type[SQLModel], key: str, value: Any
+) -> Any:
+    if value is None or not isinstance(value, str):
+        return value
+
+    sa_table = getattr(model, "__table__", None)
+    if sa_table is not None and key in sa_table.columns:
+        col_type = sa_table.columns[key].type
+        try:
+            if col_type.python_type is uuid.UUID:
+                return uuid.UUID(value)
+        except NotImplementedError, ValueError:
+            pass
+        if isinstance(col_type, DateTime):
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return value
+        if isinstance(col_type, Date) and not isinstance(col_type, DateTime):
+            try:
+                return date.fromisoformat(value)
+            except ValueError:
+                return value
+        if isinstance(col_type, Time):
+            try:
+                return time.fromisoformat(value)
+            except ValueError:
+                return value
+
+    if key == "id" or key.endswith("_id"):
+        try:
+            return uuid.UUID(value)
+        except ValueError:
+            return value
+    if key.endswith("_at") or key in ("valid_until", "appointment_date"):
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            return value
+    if key.endswith("_date"):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return value
+    if key.endswith("_time"):
+        try:
+            return time.fromisoformat(value)
+        except ValueError:
+            return value
+    return value
+
+
 def export_database_backup(session: Session, file_path: str | Path) -> dict[str, Any]:
     """Xuất toàn bộ dữ liệu database hiện tại thành file backup có checksum."""
     file_path = Path(file_path)
@@ -109,18 +177,17 @@ def export_database_backup(session: Session, file_path: str | Path) -> dict[str,
     table_counts: dict[str, int] = {}
 
     for model in TABLE_MODELS_RESTORATION_ORDER:
-        table_name = getattr(model, "__tablename__", model.__name__.lower())
-        rows = session.exec(select(model)).all()
+        table_name = str(getattr(model, "__tablename__", model.__name__.lower()))
+        rows: list[SQLModel] = list(session.exec(select(model)).all())
         table_counts[table_name] = len(rows)
 
-        serialized_rows = []
+        serialized_rows: list[dict[str, Any]] = []
         for row in rows:
             row_dict = row.model_dump()
-            # Convert non-serializable objects (UUID, datetime, date, time) to str
             for k, v in row_dict.items():
                 if isinstance(v, uuid.UUID):
                     row_dict[k] = str(v)
-                elif isinstance(v, datetime):
+                elif isinstance(v, datetime | date | time):
                     row_dict[k] = v.isoformat()
             serialized_rows.append(row_dict)
 
@@ -152,16 +219,7 @@ def restore_database_from_backup(
     file_path: str | Path,
     clean_existing: bool = True,
 ) -> dict[str, int]:
-    """Khôi phục dữ liệu database từ file backup.
-
-    Quy trình:
-    1. Kiểm tra sự tồn tại của file backup.
-    2. Đọc và kiểm tra cấu trúc JSON, tính toàn vẹn (checksum).
-    3. Kiểm tra kết nối tới cơ sở dữ liệu đích.
-    4. Xóa dữ liệu cũ theo đúng thứ tự khóa ngoại nếu clean_existing=True.
-    5. Nạp dữ liệu các bảng theo đúng thứ tự phụ thuộc cha-con.
-    6. Commit transaction hoặc Rollback nếu có lỗi phát sinh.
-    """
+    """Khôi phục dữ liệu database từ file backup."""
     path = Path(file_path)
     if not path.is_file():
         raise FileNotFoundError(f"Không tìm thấy file backup tại đường dẫn: {path}")
@@ -196,7 +254,7 @@ def restore_database_from_backup(
 
     # 3. Kiểm tra kết nối database đích
     try:
-        session.exec(text("SELECT 1"))
+        session.exec(select(1)).one()
     except Exception as exc:
         raise TargetDatabaseError(
             f"Không thể kết nối hoặc database đích không khả dụng: {exc}"
@@ -215,38 +273,15 @@ def restore_database_from_backup(
         raw_data = envelope["data"]
 
         for model in TABLE_MODELS_RESTORATION_ORDER:
-            table_name = getattr(model, "__tablename__", model.__name__.lower())
+            table_name = str(getattr(model, "__tablename__", model.__name__.lower()))
             table_rows = raw_data.get(table_name, [])
 
             count = 0
             for row_dict in table_rows:
-                # Convert date/datetime/uuid string fields back to appropriate objects
-                clean_row = {}
-                for k, v in row_dict.items():
-                    if v is None:
-                        clean_row[k] = None
-                    elif isinstance(v, str):
-                        # Attempt UUID parse
-                        if k.endswith("_id") or k == "id":
-                            try:
-                                clean_row[k] = uuid.UUID(v)
-                            except ValueError:
-                                clean_row[k] = v
-                        # Attempt ISO datetime parse
-                        elif (
-                            k.endswith("_at")
-                            or k.endswith("_date")
-                            or k in ("valid_until",)
-                        ):
-                            try:
-                                clean_row[k] = datetime.fromisoformat(v)
-                            except ValueError:
-                                clean_row[k] = v
-                        else:
-                            clean_row[k] = v
-                    else:
-                        clean_row[k] = v
-
+                clean_row: dict[str, Any] = {
+                    k: _deserialize_column_value(model, k, v)
+                    for k, v in row_dict.items()
+                }
                 db_instance = model(**clean_row)
                 session.add(db_instance)
                 count += 1

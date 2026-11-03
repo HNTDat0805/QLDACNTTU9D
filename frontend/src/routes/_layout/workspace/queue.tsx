@@ -13,8 +13,10 @@ import {
 } from "@/components/Operations/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { pageHead } from "@/lib/seo"
 export const Route = createFileRoute("/_layout/workspace/queue")({
   component: Queue,
+  head: pageHead("Hàng chờ"),
 })
 function Queue() {
   const [date, setDate] = useState("")

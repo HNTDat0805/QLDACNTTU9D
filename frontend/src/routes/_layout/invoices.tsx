@@ -14,9 +14,13 @@ import {
 } from "@/components/Operations/shared"
 import { Button } from "@/components/ui/button"
 import useAuth from "@/hooks/useAuth"
+import { pageHead } from "@/lib/seo"
+
 export const Route = createFileRoute("/_layout/invoices")({
   component: Invoices,
+  head: pageHead("Hóa đơn & thanh toán"),
 })
+
 function Invoices() {
   const { user } = useAuth()
   const staff =
@@ -80,21 +84,46 @@ function Invoices() {
       >
         {invoices.data?.data.map((invoice) => (
           <Panel title={invoice.invoice_number} key={invoice.id}>
-            <div className="mb-4 flex flex-wrap justify-between gap-3">
-              <p>{dateTime(invoice.issue_date)}</p>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                Ngày phát hành: {dateTime(invoice.issue_date)}
+              </p>
               <Status value={invoice.status ?? "UNPAID"} />
             </div>
-            <ul className="space-y-2">
-              {invoice.items.map((item) => (
-                <li key={item.id} className="flex justify-between gap-3">
-                  <span>
-                    {item.item_name} × {item.quantity}
-                  </span>
-                  <span>{money(item.total_price ?? 0)}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="my-4 grid gap-3 sm:grid-cols-3">
+
+            {/* Invoice Line Items Table (Figma KH18) */}
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b bg-muted/50 text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2">Hạng mục</th>
+                    <th className="px-3 py-2 text-right">SL</th>
+                    <th className="px-3 py-2 text-right">Đơn giá</th>
+                    <th className="px-3 py-2 text-right">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {invoice.items.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-3 py-2.5 font-medium">
+                        {item.item_name} × {item.quantity}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        {item.quantity}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        {money(item.unit_price ?? 0)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-semibold">
+                        {money(item.total_price ?? 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="my-4 grid gap-3 rounded-lg bg-muted/40 p-3 text-sm sm:grid-cols-3">
               <p>
                 Tổng: <strong>{money(invoice.total_amount ?? 0)}</strong>
               </p>
