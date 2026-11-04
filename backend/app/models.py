@@ -86,7 +86,7 @@ class User(UserBase, table=True):
     hashed_password: str
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)  # noqa: UP037
     customer_profile: Optional["Customer"] = Relationship(back_populates="user")  # noqa: UP037, UP045
@@ -134,7 +134,7 @@ class Item(ItemBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
@@ -197,11 +197,11 @@ class Customer(CustomerBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     user: User | None = Relationship(back_populates="customer_profile")
@@ -258,11 +258,11 @@ class Device(DeviceBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     customer: Customer = Relationship(back_populates="devices")
@@ -411,11 +411,11 @@ class Service(ServiceBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     appointment_services: list[AppointmentService] = Relationship(
@@ -438,11 +438,6 @@ class ServiceResponse(SQLModel):
     success: bool = True
     message: str
     data: ServicePublic
-
-
-class ServicesPublic(SQLModel):
-    data: list[ServicePublic]
-    count: int
 
 
 # ============================================================================
@@ -484,11 +479,11 @@ class Technician(TechnicianBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     user: User | None = Relationship(back_populates="technician_profile")
@@ -542,7 +537,7 @@ class TechnicianSchedule(TechnicianScheduleBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     technician: Technician = Relationship(back_populates="schedules")
@@ -563,7 +558,7 @@ class AppointmentBase(SQLModel):
     # Unique appointment tracking code for customer status checking (e.g. APPT-2026-0001)
     appointment_number: str = Field(unique=True, index=True, max_length=50)
     # Index on appointment_date: Essential for filtering schedule by day/week/month
-    appointment_date: datetime = Field(sa_type=DateTime(timezone=True), index=True)  # type: ignore
+    appointment_date: datetime = Field(sa_type=DateTime(timezone=True), index=True)
     # Index on status: Filter appointments by PENDING, IN_PROGRESS, COMPLETED, CANCELLED
     status: str = Field(default="PENDING", max_length=50, index=True)
     cancellation_reason: str | None = Field(default=None, max_length=500)
@@ -571,11 +566,11 @@ class AppointmentBase(SQLModel):
     technician_diagnosis: str | None = Field(default=None, max_length=1000)
     estimated_completion_date: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     actual_completion_date: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     total_amount: float = Field(default=0.0)
 
@@ -623,11 +618,11 @@ class Appointment(AppointmentBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     customer: Customer = Relationship(back_populates="appointments")
@@ -689,7 +684,7 @@ class AppointmentService(AppointmentServiceBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     appointment: Appointment = Relationship(back_populates="services")
@@ -731,7 +726,7 @@ class RepairStatusHistory(RepairStatusHistoryBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
         index=True,
     )
 
@@ -757,7 +752,7 @@ class QuoteBase(SQLModel):
     status: str = Field(
         default="DRAFT", max_length=50, index=True
     )  # DRAFT, SENT, ACCEPTED, REJECTED
-    valid_until: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    valid_until: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     customer_notes: str | None = Field(default=None, max_length=1000)
 
 
@@ -786,11 +781,11 @@ class Quote(QuoteBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     appointment: Appointment = Relationship(back_populates="quotes")
@@ -862,9 +857,9 @@ class InvoiceBase(SQLModel):
     )  # UNPAID, PAID, PARTIALLY_PAID, CANCELLED
     issue_date: datetime = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
-    due_date: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    due_date: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     notes: str | None = Field(default=None, max_length=1000)
 
 
@@ -910,11 +905,11 @@ class Invoice(InvoiceBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     appointment: Appointment = Relationship(back_populates="invoice")
@@ -985,7 +980,7 @@ class PaymentBase(SQLModel):
     transaction_reference: str | None = Field(default=None, max_length=100)
     paid_at: datetime = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     notes: str | None = Field(default=None, max_length=500)
 
@@ -1006,7 +1001,7 @@ class Payment(PaymentBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     invoice: Invoice = Relationship(back_populates="payments")
@@ -1079,7 +1074,7 @@ class Review(ReviewBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     appointment: Appointment = Relationship(back_populates="review")
@@ -1150,7 +1145,7 @@ class Notification(NotificationBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
         index=True,
     )
 
@@ -1210,7 +1205,7 @@ class SystemLog(SystemLogBase, table=True):
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
         index=True,
     )
 
@@ -1263,12 +1258,12 @@ class RefreshTokenBase(SQLModel):
     jti: str = Field(unique=True, index=True, max_length=64)
     expires_at: datetime = Field(
         sa_type=DateTime(timezone=True),
-        index=True,  # type: ignore
+        index=True,
     )
     is_revoked: bool = Field(default=False, index=True)
     revoked_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     replaced_by_jti: str | None = Field(default=None, max_length=64)
 
@@ -1279,7 +1274,7 @@ class RefreshToken(RefreshTokenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     user: User = Relationship(back_populates="refresh_tokens")
@@ -1297,12 +1292,12 @@ class PasswordResetTokenBase(SQLModel):
     token_hash: str = Field(unique=True, index=True, max_length=64)
     expires_at: datetime = Field(
         sa_type=DateTime(timezone=True),
-        index=True,  # type: ignore
+        index=True,
     )
     is_used: bool = Field(default=False, index=True)
     used_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
 
@@ -1312,7 +1307,7 @@ class PasswordResetToken(PasswordResetTokenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     user: User = Relationship(back_populates="password_reset_tokens")
@@ -1381,6 +1376,11 @@ class AppointmentBookingCreate(SQLModel):
             self.customer_phone and self.customer_phone.strip()
         ):
             raise ValueError("Cần cung cấp customer_id hoặc customer_phone")
+        if self.customer_phone is not None:
+            cleaned_phone = self.customer_phone.strip()
+            if len(cleaned_phone) < 8 or len(cleaned_phone) > 20:
+                raise ValueError("Số điện thoại phải từ 8 đến 20 ký tự")
+            self.customer_phone = cleaned_phone
         if not self.service_id and not self.service_ids:
             raise ValueError(
                 "Cần chọn ít nhất một dịch vụ sửa chữa (service_id hoặc service_ids)"
@@ -1398,6 +1398,18 @@ class AppointmentBookingUpdate(SQLModel):
     contact_phone: str | None = None
     device_brand: str | None = None
     device_model: str | None = None
+
+    @field_validator("contact_phone")
+    @classmethod
+    def validate_contact_phone(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = v.strip()
+        if not cleaned:
+            return None
+        if len(cleaned) < 8 or len(cleaned) > 20:
+            raise ValueError("Số điện thoại liên hệ phải từ 8 đến 20 ký tự")
+        return cleaned
 
 
 class AppointmentBookingResponse(SQLModel):
@@ -1650,6 +1662,18 @@ class DeviceIntakeCreate(SQLModel):
         if not v or not v.strip():
             raise ValueError("Tình trạng ngoại quan thiết bị không được để trống")
         return v.strip()
+
+    @field_validator("customer_phone")
+    @classmethod
+    def validate_intake_phone(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = v.strip()
+        if not cleaned:
+            return None
+        if len(cleaned) < 8 or len(cleaned) > 20:
+            raise ValueError("Số điện thoại khách hàng phải từ 8 đến 20 ký tự")
+        return cleaned
 
     @field_validator("fault_description")
     @classmethod

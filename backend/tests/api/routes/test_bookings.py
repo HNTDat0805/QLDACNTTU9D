@@ -646,6 +646,7 @@ def test_update_booking_unauthorized_403(
 def test_update_booking_slot_conflict_409(
     client: TestClient,
     booking_test_env: dict[str, object],
+    superuser_token_headers: dict[str, str],
 ) -> None:
     """12. Đổi lịch sang khung giờ đã bị trùng với lịch hẹn khác trả về 409 Conflict."""
     cust_a = booking_test_env["customer_a"]
@@ -685,6 +686,7 @@ def test_update_booking_slot_conflict_409(
     # Đổi Appt 2 sang 08:30 (trùng với Appt 1 08:00-09:00)
     patch_res = client.patch(
         f"/api/bookings/{appt2_id}",
+        headers=superuser_token_headers,
         json={"start_time": "08:30"},
     )
     assert patch_res.status_code == 409
@@ -695,6 +697,7 @@ def test_update_booking_disallowed_status_409(
     client: TestClient,
     booking_test_env: dict[str, object],
     db: Session,
+    superuser_token_headers: dict[str, str],
 ) -> None:
     """13. Không thể sửa đặt chỗ đã bị hủy hoặc đã hoàn thành (409 Conflict)."""
     cust_a = booking_test_env["customer_a"]
@@ -724,6 +727,7 @@ def test_update_booking_disallowed_status_409(
 
     patch_res = client.patch(
         f"/api/bookings/{booking_id}",
+        headers=superuser_token_headers,
         json={"start_time": "12:30"},
     )
     assert patch_res.status_code == 409

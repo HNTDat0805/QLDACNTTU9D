@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { QuotesPanel } from "@/components/Operations/QuotesPanel"
 import { PageTitle } from "@/components/Operations/shared"
-export const Route = createFileRoute("/_layout/quotes")({ component: MyQuotes })
+import { pageHead } from "@/lib/seo"
+export const Route = createFileRoute("/_layout/quotes")({
+  component: MyQuotes,
+  head: pageHead("Báo giá sửa chữa"),
+})
 function MyQuotes() {
   return (
     <section>

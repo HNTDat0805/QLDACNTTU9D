@@ -25,7 +25,10 @@ def check_appointment_access(
         customer = session.get(Customer, appointment.customer_id)
         if customer and customer.user_id == user.id:
             return
-    raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập phiếu này")
+    raise HTTPException(
+        status_code=403,
+        detail="Không có quyền truy cập: bạn không có quyền thao tác trên phiếu này",
+    )
 
 
 def accessible_appointment_ids(session: Session, user: User) -> list[uuid.UUID] | None:

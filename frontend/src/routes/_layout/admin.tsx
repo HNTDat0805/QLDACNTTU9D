@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router"
 import { Suspense } from "react"
 
 import { type UserPublic, UsersService } from "@/client"
@@ -8,11 +8,17 @@ import { columns, type UserTableData } from "@/components/Admin/columns"
 import { DataTable } from "@/components/Common/DataTable"
 import PendingUsers from "@/components/Pending/PendingUsers"
 import useAuth from "@/hooks/useAuth"
+import { APP_NAME, pageHead } from "@/lib/seo"
 
 function getUsersQueryOptions() {
   return {
     queryFn: async () =>
-      (await UsersService.readUsers({ query: { skip: 0, limit: 100 } })).data,
+      (
+        await UsersService.readUsers({
+          query: { skip: 0, limit: 100 },
+          throwOnError: true,
+        })
+      ).data,
     queryKey: ["users"],
   }
 }
@@ -20,20 +26,21 @@ function getUsersQueryOptions() {
 export const Route = createFileRoute("/_layout/admin")({
   component: Admin,
   beforeLoad: async () => {
-    const { data: user } = await UsersService.readUserMe()
-    if (!user.is_superuser) {
-      throw redirect({
-        to: "/app",
-      })
+    try {
+      const { data: user } = await UsersService.readUserMe()
+      if (!user.is_superuser) {
+        throw redirect({
+          to: "/app",
+        })
+      }
+    } catch (error) {
+      if (isRedirect(error)) throw error
+      localStorage.removeItem("access_token")
+      localStorage.removeItem("refresh_token")
+      throw redirect({ to: "/login" })
     }
   },
-  head: () => ({
-    meta: [
-      {
-        title: "Quản trị tài khoản | FixCare",
-      },
-    ],
-  }),
+  head: pageHead("Quản trị tài khoản"),
 })
 
 function UsersTableContent() {
@@ -65,7 +72,7 @@ function Admin() {
             Quản trị tài khoản
           </h1>
           <p className="text-muted-foreground">
-            Quản lý tài khoản, trạng thái hoạt động và vai trò trong FixCare
+            Quản lý tài khoản, trạng thái hoạt động và vai trò trong {APP_NAME}
           </p>
         </div>
         <AddUser />

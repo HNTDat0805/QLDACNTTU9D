@@ -1,5 +1,6 @@
 import secrets
 import uuid
+from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import TypedDict
 
@@ -9,6 +10,7 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.models import (
     Appointment,
+    AppointmentService,
     Customer,
     Device,
     Notification,
@@ -117,6 +119,98 @@ def generate_quote_number(session: Session, appointment: Appointment) -> str:
             return candidate
 
     return f"QUO-{date_str}-{uuid.uuid4().hex[:6].upper()}"
+
+
+def ensure_quote_for_appointment(
+    session: Session,
+    appointment: Appointment,
+) -> Quote:
+    """Đảm bảo lịch hẹn luôn có báo giá sửa chữa tương ứng.
+    - Nếu đã có báo giá: Cập nhật trạng thái phù hợp (nếu CONFIRMED/COMPLETED thì duyệt ACCEPTED).
+    - Nếu chưa có: Tự động lập báo giá từ các dịch vụ liên kết với đơn hoặc giá của đơn.
+    """
+    quote = session.exec(
+        select(Quote).where(Quote.appointment_id == appointment.id)
+    ).first()
+
+    status_upper = (appointment.status or "").upper()
+    target_status = (
+        "ACCEPTED"
+        if status_upper in ("CONFIRMED", "COMPLETED", "IN_PROGRESS")
+        else "SENT"
+    )
+
+    if quote:
+        # Nếu đơn đã xác nhận hoặc hoàn tất mà báo giá vẫn là DRAFT/SENT, tự động chuyển ACCEPTED
+        if target_status == "ACCEPTED" and quote.status in ("DRAFT", "SENT"):
+            quote.status = "ACCEPTED"
+            quote.updated_at = get_datetime_utc()
+            session.add(quote)
+        return quote
+
+    # Lấy các dịch vụ đã liên kết với appointment
+    appt_services = session.exec(
+        select(AppointmentService).where(
+            AppointmentService.appointment_id == appointment.id
+        )
+    ).all()
+
+    quote_number = generate_quote_number(session, appointment)
+    total_amount = float(appointment.total_amount or 0.0)
+
+    now = get_datetime_utc()
+    valid_until = now + timedelta(days=30)
+    quote = Quote(
+        quote_number=quote_number,
+        appointment_id=appointment.id,
+        total_amount=total_amount,
+        status=target_status,
+        valid_until=valid_until,
+        customer_notes=appointment.customer_notes,
+        created_at=appointment.created_at or now,
+    )
+    session.add(quote)
+    session.flush()
+
+    total_calc = Decimal("0.00")
+    if appt_services:
+        for asvc in appt_services:
+            svc = session.get(Service, asvc.service_id) if asvc.service_id else None
+            svc_name = svc.name if svc else "Dịch vụ sửa chữa"
+            unit_price = float(
+                asvc.price_at_booking
+                or (svc.base_price if svc else total_amount)
+                or 0.0
+            )
+            qty = asvc.quantity or 1
+            tot = unit_price * qty
+            total_calc += Decimal(str(unit_price)) * qty
+            quote_item = QuoteItem(
+                quote_id=quote.id,
+                service_id=asvc.service_id,
+                item_name=svc_name,
+                unit_price=unit_price,
+                quantity=qty,
+                total_price=tot,
+            )
+            session.add(quote_item)
+    else:
+        # Nếu chưa có AppointmentService, tạo 1 item chung
+        unit_price = total_amount if total_amount > 0 else 500000.0
+        quote_item = QuoteItem(
+            quote_id=quote.id,
+            service_id=None,
+            item_name="Dịch vụ sửa chữa thiết bị",
+            unit_price=unit_price,
+            quantity=1,
+            total_price=unit_price,
+        )
+        session.add(quote_item)
+        total_calc = Decimal(str(unit_price))
+
+    quote.total_amount = float(total_calc)
+    session.add(quote)
+    return quote
 
 
 def create_repair_quotation(

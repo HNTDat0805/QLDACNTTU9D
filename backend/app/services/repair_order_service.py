@@ -91,6 +91,10 @@ def update_repair_status(
         # Cập nhật các trường đặc thù theo trạng thái đích
         if new_status == AppointmentStatus.COMPLETED.value:
             appointment.actual_completion_date = now
+            # Tự động lập hóa đơn và thanh toán cho đơn sửa chữa đã hoàn thành
+            from app.services.commerce_service import ensure_invoice_for_appointment
+
+            ensure_invoice_for_appointment(session, appointment)
 
         if new_status == AppointmentStatus.CANCELLED.value:
             reason = data.cancellation_reason or data.note or "Hủy bởi nhân viên"

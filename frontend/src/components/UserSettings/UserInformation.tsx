@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  full_name: z.string().max(30).optional(),
+  full_name: z.string().max(255).optional(),
   email: z.email({ message: "Invalid email address" }),
 })
 
@@ -38,9 +38,9 @@ const UserInformation = () => {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: {
+    values: {
       full_name: currentUser?.full_name ?? undefined,
-      email: currentUser?.email,
+      email: currentUser?.email ?? "",
     },
   })
 

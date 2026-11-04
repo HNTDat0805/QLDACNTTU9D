@@ -10,9 +10,12 @@ lerna-debug.log*
 # Dependencies
 node_modules/
 
-# Production build outputs
+# Production build outputs & Local Env
 dist/
 dist-ssr/
+.env
+.env.*
+!.env.example
 *.local
 *.tsbuildinfo
 .eslintcache

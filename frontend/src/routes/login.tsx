@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { APP_NAME, pageHead } from "@/lib/seo"
 
 const formSchema = z.object({
   username: z.email({ message: "Địa chỉ email không hợp lệ" }),
@@ -41,13 +42,7 @@ export const Route = createFileRoute("/login")({
       })
     }
   },
-  head: () => ({
-    meta: [
-      {
-        title: "Đăng nhập | FixCare",
-      },
-    ],
-  }),
+  head: pageHead("Đăng nhập"),
 })
 
 function Login() {
@@ -71,13 +66,14 @@ function Login() {
     <AuthLayout>
       <Form {...form}>
         <form
+          noValidate
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-6"
         >
           <div className="flex flex-col gap-1.5">
             <h1 className="text-2xl font-bold tracking-tight">Đăng nhập</h1>
             <p className="text-sm text-muted-foreground">
-              Nhập thông tin tài khoản FixCare của bạn
+              Nhập thông tin tài khoản {APP_NAME} của bạn
             </p>
           </div>
 
@@ -108,7 +104,9 @@ function Login() {
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center">
-                    <FormLabel className="text-sm font-medium">Mật khẩu</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      Mật khẩu
+                    </FormLabel>
                     <RouterLink
                       to="/recover-password"
                       className="ml-auto text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline transition-colors"

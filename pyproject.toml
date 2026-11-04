@@ -36,4 +36,6 @@ extend-ignore-re = [
 alls = "alls"
 
 [tool.vercel]
-entrypoint = "backend.app.main:app"
+entrypoint = "backend/app/main.py"
+
+

@@ -11,9 +11,11 @@ import {
 } from "@/components/Operations/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { pageHead } from "@/lib/seo"
 
 export const Route = createFileRoute("/_layout/workspace/customers")({
   component: Customers,
+  head: pageHead("Khách hàng"),
 })
 function Customers() {
   const [q, setQ] = useState("")

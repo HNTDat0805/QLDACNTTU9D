@@ -12,8 +12,10 @@ import {
 } from "@/components/Operations/shared"
 import { Input } from "@/components/ui/input"
 import useAuth from "@/hooks/useAuth"
+import { pageHead } from "@/lib/seo"
 export const Route = createFileRoute("/_layout/workspace/technicians")({
   component: Technicians,
+  head: pageHead("Kỹ thuật viên & ca làm việc"),
 })
 function Technicians() {
   const { user } = useAuth()

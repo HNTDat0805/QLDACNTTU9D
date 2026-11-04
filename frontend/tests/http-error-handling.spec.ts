@@ -64,7 +64,7 @@ test("401 refreshes a valid session once and retries the request", async ({
     return route.fulfill({
       body: JSON.stringify({
         email: "customer@example.com",
-        full_name: "FixCare Customer",
+        full_name: "FixPhone Customer",
         id: "00000000-0000-0000-0000-000000000001",
         is_active: true,
         is_superuser: false,
@@ -91,7 +91,7 @@ test("401 refreshes a valid session once and retries the request", async ({
 
   await expect(page).toHaveURL(/\/settings$/)
   await expect(
-    page.getByLabel("My profile").getByText("FixCare Customer", {
+    page.getByLabel("My profile").getByText("FixPhone Customer", {
       exact: true,
     }),
   ).toBeVisible()

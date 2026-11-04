@@ -10,8 +10,10 @@ import {
   PageTitle,
   Panel,
 } from "@/components/Operations/shared"
+import { pageHead } from "@/lib/seo"
 export const Route = createFileRoute("/_layout/notifications")({
   component: Notifications,
+  head: pageHead("Thông báo"),
 })
 function Notifications() {
   const [page, setPage] = useState(0)

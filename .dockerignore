@@ -1,4 +1,7 @@
 .git
+**/.env
+frontend/.env*
+!frontend/.env.example
 **/__pycache__
 **/.venv
 backend/htmlcov

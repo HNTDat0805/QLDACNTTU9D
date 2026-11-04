@@ -374,22 +374,23 @@ def create_booking_appointment(
             if linked:
                 data = data.model_copy(update={"customer_id": linked.id})
         if data.customer_id:
-            if current_user is None:
-                raise HTTPException(
-                    status_code=401, detail="Cần đăng nhập để dùng hồ sơ khách hàng"
-                )
             customer = session.get(Customer, data.customer_id)
             if not customer:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Không tìm thấy khách hàng",
                 )
-            from app.services.access_service import is_reception
+            if current_user is not None:
+                from app.services.access_service import is_reception
 
-            if not is_reception(current_user) and customer.user_id != current_user.id:
-                raise HTTPException(
-                    status_code=403, detail="Không có quyền dùng hồ sơ khách hàng này"
-                )
+                if (
+                    not is_reception(current_user)
+                    and customer.user_id != current_user.id
+                ):
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Không có quyền dùng hồ sơ khách hàng này",
+                    )
         elif data.customer_phone and data.customer_phone.strip():
             phone = data.customer_phone.strip()
             customer = session.exec(
@@ -412,6 +413,20 @@ def create_booking_appointment(
                 or current_user.role in ("admin", "manager", "staff")
                 or customer.user_id == current_user.id
             ):
+                if data.customer_name:
+                    customer.full_name = data.customer_name
+                if data.customer_email:
+                    customer.email = data.customer_email
+                if data.customer_address:
+                    customer.address = data.customer_address
+                session.add(customer)
+                session.flush()
+            elif (
+                current_user
+                and current_user.role == "customer"
+                and customer.user_id is None
+            ):
+                customer.user_id = current_user.id
                 if data.customer_name:
                     customer.full_name = data.customer_name
                 if data.customer_email:
@@ -514,6 +529,11 @@ def create_booking_appointment(
             )
 
         slot_end_dt = slot_start_dt + timedelta(minutes=duration_minutes)
+        if slot_end_dt.date() != data.appointment_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Khung giờ sửa chữa vượt quá thời gian làm việc trong ngày",
+            )
         end_time = slot_end_dt.time()
 
         # 5. Technician assignment with row lock
@@ -626,6 +646,11 @@ def create_booking_appointment(
         )
         session.add(history)
 
+        # Tự động tạo báo giá cho lịch hẹn mới
+        from app.services.quote_service import ensure_quote_for_appointment
+
+        ensure_quote_for_appointment(session, appointment)
+
         session.commit()
         session.refresh(appointment)
 
@@ -703,7 +728,18 @@ def update_booking_appointment(
             if cust:
                 if data.contact_name:
                     cust.full_name = data.contact_name
-                if data.contact_phone:
+                if data.contact_phone and data.contact_phone != cust.phone_number:
+                    duplicate_cust = session.exec(
+                        select(Customer).where(
+                            Customer.phone_number == data.contact_phone,
+                            Customer.id != cust.id,
+                        )
+                    ).first()
+                    if duplicate_cust:
+                        raise HTTPException(
+                            status_code=status.HTTP_409_CONFLICT,
+                            detail="Số điện thoại liên hệ đã được sử dụng bởi khách hàng khác",
+                        )
                     cust.phone_number = data.contact_phone
                 session.add(cust)
 
@@ -1023,6 +1059,14 @@ def confirm_appointment(
             changed_by_user_id=current_user.id,
         )
         session.add(history)
+
+        # Tự động đồng bộ / cập nhật báo giá sang ACCEPTED cho lịch hẹn đã xác nhận
+        from app.services.quote_service import ensure_quote_for_appointment
+
+        quote = ensure_quote_for_appointment(session, appointment)
+        if quote.status != "ACCEPTED":
+            quote.status = "ACCEPTED"
+            session.add(quote)
 
         session.commit()
         session.refresh(appointment)

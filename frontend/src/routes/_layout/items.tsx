@@ -2,12 +2,12 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Search } from "lucide-react"
 import { Suspense } from "react"
-
 import { ItemsService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
 import AddItem from "@/components/Items/AddItem"
 import { columns } from "@/components/Items/columns"
 import PendingItems from "@/components/Pending/PendingItems"
+import { pageHead } from "@/lib/seo"
 
 function getItemsQueryOptions() {
   return {
@@ -19,13 +19,7 @@ function getItemsQueryOptions() {
 
 export const Route = createFileRoute("/_layout/items")({
   component: Items,
-  head: () => ({
-    meta: [
-      {
-        title: "Items - FastAPI Template",
-      },
-    ],
-  }),
+  head: pageHead("Danh sách mục"),
 })
 
 function ItemsTableContent() {

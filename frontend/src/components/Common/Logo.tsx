@@ -15,18 +15,18 @@ export function Logo({
   asLink = true,
 }: LogoProps) {
   const content = (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      <span className="rounded-md bg-primary p-1 text-primary-foreground">
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
         <Smartphone aria-hidden="true" className="size-4" />
       </span>
       {variant !== "icon" && (
         <span
           className={cn(
-            "text-lg font-bold tracking-tight",
+            "text-lg font-bold tracking-tight text-foreground",
             variant === "responsive" && "group-data-[collapsible=icon]:hidden",
           )}
         >
-          FixCare
+          FixPhone
         </span>
       )}
     </span>
@@ -37,7 +37,7 @@ export function Logo({
   }
 
   return (
-    <Link to="/" aria-label="FixCare - Trang chủ">
+    <Link to="/" aria-label="FixPhone - Trang chủ">
       {content}
     </Link>
   )

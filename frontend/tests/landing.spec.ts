@@ -17,7 +17,7 @@ test("landing page hiển thị nội dung và CTA công khai", async ({ page })
   await expect(
     page
       .getByRole("contentinfo")
-      .getByText("FixCare · Quản lý sửa chữa điện thoại"),
+      .getByText(/FixPhone · Quản lý sửa chữa điện thoại/),
   ).toBeVisible()
   await expect(
     page.getByRole("link", { name: "Tạo tài khoản" }).first(),
