@@ -38,4 +38,3 @@ alls = "alls"
 [tool.vercel]
 entrypoint = "backend/app/main.py"
 
-
